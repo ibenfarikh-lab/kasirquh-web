@@ -93,6 +93,21 @@
     db = firebase.firestore();
     auth = firebase.auth();
     FieldValue = firebase.firestore.FieldValue;
+    // Penegasan eksplisit (SOP 2026-10-07): sesi bertahan antar tab
+    // sampai logout manual. LOCAL adalah default SDK — ditulis eksplisit
+    // agar niatnya jelas dan kegagalan tampil jujur, bukan diam-diam.
+    try {
+      var setP = auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      if (setP && typeof setP.catch === 'function') {
+        setP.catch(function (err) {
+          showBanner('Gagal mengunci penyimpanan sesi: '
+            + (err && err.message ? err.message : err));
+        });
+      }
+    } catch (e) {
+      showBanner('Gagal mengunci penyimpanan sesi: '
+        + (e && e.message ? e.message : e));
+    }
     probeSessionStorage();
   } catch (error) {
     initError = (error && error.message) || String(error);
