@@ -1118,7 +1118,16 @@ Object.assign(Store, {
       try {
         const token = await user.getIdTokenResult();
         isAdmin = !!(token && token.claims && token.claims.admin === true);
-      } catch (e) { isAdmin = false; }
+      } catch (e) {
+        // Gagal transient (jaringan belum siap saat tab baru dibuka):
+        // coba sekali lagi sebelum menyerah. Kegagalan di sini tidak
+        // boleh menghancurkan sesi (lihat bawah: tanpa signOut).
+        try {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          const retryToken = await user.getIdTokenResult();
+          isAdmin = !!(retryToken && retryToken.claims && retryToken.claims.admin === true);
+        } catch (e2) { isAdmin = false; }
+      }
 
       if (isAdmin) {
         S.isGuest = false;
@@ -1147,7 +1156,9 @@ Object.assign(Store, {
       } catch (e) { snap = null; }
       const data = snap && snap.exists ? snap.data() : null;
       if (!data || data.approvalStatus !== 'approved') {
-        try { await FB.auth.signOut(); } catch (e) {}
+        // JALUR RESTORE: jangan hancurkan sesi Firebase di sini — cukup
+        // tampilkan mode tamu. signOut hanya untuk penolakan login
+        // eksplisit (sudah diurus form login masing-masing).
         this.render('session', 'profile');
         return;
       }

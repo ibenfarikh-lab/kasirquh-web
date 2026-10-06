@@ -213,7 +213,7 @@ $('#applyAdminSettings').onclick=()=>{S.adminTheme=$('[data-admin-theme].active'
 function toggleSimpleSetting(button,onText,offText){const on=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(on));button.textContent=on?onText:offText;return on}
 $('#navAnimationToggle').onclick=()=>{const on=toggleSimpleSetting($('#navAnimationToggle'),'NYALA','MATI');$('#admin').dataset.navMotion=on?'on':'off';toast(on?'Animasi navigasi aktif':'Animasi navigasi dimatikan')};
 
-$('#logoutAdmin').onclick=()=>{S.sessionRole=null;S.sessionName=null;S.sessionStartedAt=null;S.activeCustomerId=null;S.isGuest=true;Store.logout();go('gateway')};
+$('#logoutAdmin').onclick=()=>{S.sessionRole=null;S.sessionName=null;S.sessionStartedAt=null;S.activeCustomerId=null;S.isGuest=true;Store.logout();go('gateway');openAdminAccess()};
 const refreshSystemTheme=()=>{if(S.customerTheme==='system')applyRoleTheme('customer');if(S.adminTheme==='system')applyRoleTheme('admin')};if(S.schemeQuery.addEventListener)S.schemeQuery.addEventListener('change',refreshSystemTheme);else if(S.schemeQuery.addListener)S.schemeQuery.addListener(refreshSystemTheme);
 
 function barcodeRects(value,y,height){let x=18,out='';('*'+value+'*').split('').forEach(ch=>{S.code39[ch].split('').forEach((kind,i)=>{const w=kind==='w'?5:2;if(i%2===0)out+=`<rect x="${x}" y="${y}" width="${w}" height="${height}" fill="#171313"/>`;x+=w});x+=2});return {rects:out,width:x+18}}
