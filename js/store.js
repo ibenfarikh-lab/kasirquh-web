@@ -863,6 +863,11 @@ Object.assign(Store, {
         S.activeCustomerId = null;
         this.startAdminSubs();
         this.render('session', 'profile');
+        // Sesi pulih/login: yang sudah login langsung lewati gateway
+        // (keputusan terkunci) + pastikan timer gateway mati.
+        if (typeof stopGatewayTimer === 'function') stopGatewayTimer();
+        if (typeof go === 'function'
+            && document.getElementById('gateway').classList.contains('active')) go('admin');
         return;
       }
 
@@ -887,6 +892,10 @@ Object.assign(Store, {
       S.coinBalance = Math.max(0, Math.round(Number(data.coins) || 0));
       this.startCustomerSubs(uid);
       this.render('session', 'profile');
+      // Sesi pulih: yang sudah login langsung lewati gateway (keputusan terkunci).
+      if (typeof stopGatewayTimer === 'function') stopGatewayTimer();
+      if (typeof go === 'function'
+          && document.getElementById('gateway').classList.contains('active')) go('customer');
     } finally {
       this.endSession();
     }
@@ -979,6 +988,18 @@ Object.assign(Store, {
       throw new Error('Akun ini bukan admin');
     }
     await this.whenSessionReady();
+    if (S.sessionRole !== 'admin') {
+      // Sesi auth tidak berubah (pengguna sudah masuk) sehingga handleAuthState
+      // tidak jalan ulang — pasang status admin eksplisit (klaim sudah terverifikasi).
+      this.clearRoleSubs();
+      S.isGuest = false;
+      S.sessionRole = 'admin';
+      S.sessionName = 'Admin Warunge Mimi';
+      S.sessionStartedAt = new Date().toISOString();
+      S.activeCustomerId = null;
+      this.startAdminSubs();
+      this.render('session', 'profile');
+    }
     return { email: email };
   },
 
