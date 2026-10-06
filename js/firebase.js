@@ -37,6 +37,11 @@
   }
 
   function showInitBanner(message) {
+    showBanner('KasirQuh Web belum tersambung ke server: ' + message
+      + ' Data tidak akan tersimpan.');
+  }
+
+  function showBanner(message) {
     try {
       if (document.getElementById('firebaseInitBanner')) return;
       var banner = document.createElement('div');
@@ -45,13 +50,34 @@
       banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;'
         + 'background:#8f2f23;color:#fff;font:600 13px/1.5 system-ui,sans-serif;'
         + 'padding:10px 14px;text-align:center;';
-      banner.textContent = 'KasirQuh Web belum tersambung ke server: ' + message
-        + ' Data tidak akan tersimpan.';
+      banner.textContent = message;
       if (document.body) document.body.prepend(banner);
       else document.addEventListener('DOMContentLoaded', function () {
         document.body.prepend(banner);
       });
     } catch (e) { /* jangan pernah mematikan boot karena banner */ }
+  }
+
+  /* Diagnostik penyimpanan sesi (SOP 2026-10-07): Firebase Auth web
+   * memakai IndexedDB (LOCAL) agar login bertahan antar tab. Kalau
+   * browser/HP memblokirnya, SDK diam-diam jatuh ke memori → login
+   * hilang tiap tab ditutup. Probe ini mengubah kegagalan diam
+   * menjadi pesan jujur di layar. */
+  function probeSessionStorage() {
+    var blocked = function () {
+      showBanner('Browser memblokir penyimpanan di HP ini — login tidak bisa'
+        + ' tersimpan, tiap tutup tab harus login lagi. Coba: matikan mode'
+        + ' incognito/private, cek Setelan Chrome → Privasi dan keamanan,'
+        + ' atau nonaktifkan aplikasi pembersih.');
+    };
+    try {
+      if (typeof indexedDB === 'undefined') { blocked(); return; }
+      var req = indexedDB.open('__kasirquh_probe');
+      req.onerror = blocked;
+      req.onsuccess = function () {
+        try { indexedDB.deleteDatabase('__kasirquh_probe'); } catch (e) {}
+      };
+    } catch (e) { blocked(); }
   }
 
   try {
@@ -67,6 +93,7 @@
     db = firebase.firestore();
     auth = firebase.auth();
     FieldValue = firebase.firestore.FieldValue;
+    probeSessionStorage();
   } catch (error) {
     initError = (error && error.message) || String(error);
     showInitBanner(initError);
