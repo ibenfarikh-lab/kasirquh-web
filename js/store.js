@@ -1096,6 +1096,10 @@ Object.assign(Store, {
   },
 
   async handleAuthState(user) {
+    // Catat status SEBELUM reset: bila sesi pulih setelah timer gateway
+    // kadung memasukkan aplikasi ke mode tamu (balapan timer), layar
+    // harus dikembalikan ke layar peran yang benar.
+    const sessionWasGuest = S.isGuest;
     this.beginSession();
     try {
       this.clearRoleSubs();
@@ -1126,9 +1130,13 @@ Object.assign(Store, {
         this.render('session', 'profile');
         // Sesi pulih/login: yang sudah login langsung lewati gateway
         // (keputusan terkunci) + pastikan timer gateway mati.
+        // Juga kembalikan layar bila sesi pulih setelah aplikasi kadung
+        // masuk mode tamu (balapan timer di tab baru).
         if (typeof stopGatewayTimer === 'function') stopGatewayTimer();
-        if (typeof go === 'function'
-            && document.getElementById('gateway').classList.contains('active')) go('admin');
+        if (typeof go === 'function') {
+          const gw = document.getElementById('gateway');
+          if ((gw && gw.classList.contains('active')) || sessionWasGuest) go('admin');
+        }
         return;
       }
 
@@ -1154,9 +1162,13 @@ Object.assign(Store, {
       this.startCustomerSubs(uid);
       this.render('session', 'profile');
       // Sesi pulih: yang sudah login langsung lewati gateway (keputusan terkunci).
+      // Juga kembalikan layar bila sesi pulih setelah aplikasi kadung
+      // masuk mode tamu (balapan timer di tab baru).
       if (typeof stopGatewayTimer === 'function') stopGatewayTimer();
-      if (typeof go === 'function'
-          && document.getElementById('gateway').classList.contains('active')) go('customer');
+      if (typeof go === 'function') {
+        const gw = document.getElementById('gateway');
+        if ((gw && gw.classList.contains('active')) || sessionWasGuest) go('customer');
+      }
     } finally {
       this.endSession();
     }
