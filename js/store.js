@@ -1,9 +1,8 @@
 /*
  * KasirQuh Web — js/store.js
  *
- * 1) `const S` — satu-satunya wadah state aplikasi (92 variabel prototipe,
+ * 1) `const S` — satu-satunya wadah state aplikasi (92 variabel state,
  *    tanpa data dummy; koleksi terisi dari Firestore lewat adapter di bawah).
- *    Variabel simulasi auth prototipe (PIN admin & kode reset demo)
  *    DIHAPUS TOTAL — diganti Firebase Auth.
  *    Kunci baru: promos, storeSettings, storeModal, customerNotesList,
  *    adminCustomerNotes, myCustomerDoc (semuanya dari Firestore).
@@ -25,7 +24,6 @@ const S = {
   products: [], // koleksi Firestore `products` (publik, live via onSnapshot)
   riwayatBelanjaPelanggan: [], // diturunkan dari `orders` milik pelanggan
   penjualanGlobal: [], // diturunkan dari `orders` (admin) / topProductIds (tamu)
-  adminRecipes: [],
   myRecipes: [],
   editingRecipeId: null,
   pendingAdminRecipePhoto: '',
@@ -44,7 +42,7 @@ const S = {
   priceAlerts: [],
   coinBalance: 0, // dari customers/{uid}.coins (live)
   activeOrder: null,
-  promoUnitPrice: {indomie:3000},
+  promoUnitPrice: {},
   pendingProductDeleteId: null,
   customerTheme: 'light',
   adminTheme: 'dark',
@@ -71,8 +69,31 @@ const S = {
   coinEvents: {checkin:true,mission:true,guess:true,spend:true},
   coinRewards: {checkin:25,mission:250,guess:100},
   coinHistory: [], // koleksi `coin_ledger` milik pelanggan (live)
-  flashProductId: 'indomie',
-  customerNotesCount: 1,
+  flashProductId: null, // dari store_settings/main.flashProductId (live)
+  flashRule: '', // dari store_settings/main.flashRule (live)
+  flashEndsAt: null, // dari store_settings/main.flashEndsAt (live, Timestamp)
+  promoTitle: '', // dari store_settings/main.promoTitle (live)
+  promoProductId: null, // dari store_settings/main.promoProductId (live)
+  promoCopy: '', // dari store_settings/main.promoCopy (live)
+  gatewaySlides: { // dari store_settings/main.gatewayTitle1..Copy3 (live)
+    title1: 'Hemat belanja, senang di rumah',
+    copy1: 'Promo pilihan Warunge Mimi untuk kebutuhan harian keluarga.',
+    title2: 'Sembako lengkap, tinggal pilih',
+    copy2: 'Minyak, gula, mi, dan kebutuhan dapur siap untuk stok rumah.',
+    title3: 'Jajan dan minuman favoritmu',
+    copy3: 'Camilan renyah dan minuman segar untuk teman santai kapan saja.',
+  },
+  kabarStatus: '', // dari store_settings/main.kabarStatus (live)
+  kabarMood: '', // dari store_settings/main.kabarMood (live)
+  payMethod: 'cod', // metode bayar checkout terakhir
+  homeSections: { // dari store_settings/main.homeSections (live)
+    restock: { show: true, order: 1 },
+    popular: { show: true, order: 3 },
+    recipe: { show: true, order: 2 },
+  },
+  storeMemos: [], // koleksi `store_memos` (admin, live)
+  titipRequests: [], // koleksi `titip_requests` (admin, live)
+  recipes: [], // koleksi `recipes` (live) — menggantikan adminRecipes
   dailyCheckedIn: false,
   calcExpression: '',
   lowStockThreshold: 5, // dari store_settings/main.lowStockDefault (live)
@@ -119,7 +140,6 @@ const S = {
   directThreads: {}, // koleksi `chat_threads` + sub `messages` (live)
   activeDirectThread: 'toko',
   directChatRole: 'customer',
-  storeReplyTimer: null,
   adminAiReplies: null, // diisi di js/app.js (merujuk fungsi adminAi* dalam IIFE)
   promoIndex: 0,
   promoTimer: null,
@@ -130,7 +150,6 @@ const S = {
   guessDone: false,
   schemeQuery: window.matchMedia('(prefers-color-scheme: dark)'),
   code39: {"0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn","*":"nwnnwnwnn"},
-  budgetBundles: {50000:{minyak:1,indomie:4,kopi:2,aqua:2},75000:{minyak:2,indomie:5,kopi:3,aqua:1},100000:{minyak:2,indomie:8,aqua:3,teh:2,kopi:2}},
   promos: [], // koleksi `promos` (publik, live) — mentah, untuk pemakaian lanjutan
   storeSettings: {}, // dokumen `store_settings/main` (live)
   storeModal: 0, // store_settings/main.modal — sisa modal belanja (live)
@@ -144,7 +163,7 @@ const S = {
  *
  * - Adapter onSnapshot per koleksi → tulis ke S.* → panggil ulang
  *   render* yang didaftarkan js/app.js lewat Store.renderers.
- * - Auth Firebase penuh (menggantikan total simulasi PIN/akun demo):
+ * - Auth Firebase penuh (menggantikan total auth lama PIN/akun demo):
  *   pelanggan = Email/Password + persetujuan admin; admin = Email/Password
  *   + custom claim admin:true (TIDAK ADA pendaftaran admin mandiri);
  *   tamu = default (katalog terbuka, checkout & chat dikunci).
@@ -257,6 +276,19 @@ const Store = {
     } catch (e) { return 'Baru saja'; }
   },
 
+  /* Kunci tanggal YYYY-MM-DD → 'Senin, 7 Oktober 2026' (id-ID) */
+  formatTanggalIndonesia(key) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(key || ''));
+    if (!m) return '';
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    if (isNaN(d.getTime())) return '';
+    try {
+      return new Intl.DateTimeFormat('id-ID', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      }).format(d);
+    } catch (e) { return String(key); }
+  },
+
   /* Sortir dokumen di klien berdasar timestamp (menghindari composite index manual) */
   sortDocs(docs, field, desc) {
     const ms = ts => (ts && ts.toMillis ? ts.toMillis() : 0);
@@ -293,6 +325,10 @@ const Store = {
       barcode: d.barcode || '',
       promo: !!d.promo,
       lowStockAt: Number(d.lowStockAt) || 5,
+      wholesaleQty: Math.max(0, Number(d.wholesaleQty) || 0),
+      wholesalePrice: Math.max(0, Math.round(Number(d.wholesalePrice) || 0)),
+      wholesaleLabel: String(d.wholesaleLabel || ''),
+      oldPrice: Math.max(0, Math.round(Number(d.oldPrice) || 0)),
     };
   },
 
@@ -322,7 +358,7 @@ const Store = {
   mapOrder(doc) {
     const d = doc.data() || {};
     const raw = d.status || 'menunggu';
-    if (raw === 'dibatalkan') return null; // 1:1 prototipe: pesanan batal keluar dari daftar
+    if (raw === 'dibatalkan') return null; // 1:1 alur yang dikunci: pesanan batal keluar dari daftar
     const fulfillment = d.fulfillment || 'pickup';
     const items = (d.items || []).map(it => ([
       String(it.name || 'Produk'),
@@ -404,6 +440,7 @@ const Store = {
       photoAlt: 'Foto yang dibagikan',
       admin: d.authorRole === 'admin',
       seed: !!d.isSeed,
+      likeCount: Math.max(0, Math.round(Number(d.likeCount) || 0)),
     };
   },
 
@@ -427,8 +464,28 @@ const Store = {
       type: d.type || 'catatan',
       amount: Math.round(Number(d.amount) || 0),
       note: String(d.note || ''),
-      time: d.createdAt ? this.dateTimeOf(d.createdAt) : '',
+      /* Tanggal catatan (noteDate) didahulukan; bila tidak ada pakai createdAt */
+      time: d.noteDate ? this.formatTanggalIndonesia(d.noteDate) : (d.createdAt ? this.dateTimeOf(d.createdAt) : ''),
     };
+  },
+
+  mapRecipe(doc) {
+    const d = doc.data() || {};
+    return {
+      id: doc.id,
+      nama: String(d.nama || ''),
+      desc: String(d.desc || ''),
+      foto: String(d.foto || ''),
+      items: this.cleanRecipeItems(d.items),
+    };
+  },
+
+  /* Baris bahan resep dari form → bentuk Firestore */
+  cleanRecipeItems(items) {
+    return (items || []).map(it => ({
+      productId: String(it.productId || ''),
+      qty: Math.max(1, Math.round(Number(it.qty) || 1)),
+    })).filter(it => it.productId);
   },
 
   mapStockNote(doc) {
@@ -493,7 +550,58 @@ Object.assign(Store, {
     if (typeof d.coinRedeemLimit === 'number') S.coinRedeemPercent = Math.min(100, Math.max(0, Math.round(d.coinRedeemLimit)));
     if (typeof d.lowStockDefault === 'number') S.lowStockThreshold = Math.min(99, Math.max(1, Math.round(d.lowStockDefault)));
     if (typeof d.modal === 'number') S.storeModal = Math.round(d.modal);
-    /* Terapkan yang tampil: nama warung (satu sumber) + running text */
+    /* Program koin: nyala/mati + event + hadiah (live) */
+    if (typeof d.coinProgramEnabled === 'boolean') S.coinProgramEnabled = d.coinProgramEnabled;
+    if (d.coinEvents && typeof d.coinEvents === 'object') {
+      ['checkin', 'mission', 'guess', 'spend'].forEach(k => {
+        if (typeof d.coinEvents[k] === 'boolean') S.coinEvents[k] = d.coinEvents[k];
+      });
+    }
+    if (d.coinRewards && typeof d.coinRewards === 'object') {
+      ['checkin', 'mission', 'guess'].forEach(k => {
+        if (typeof d.coinRewards[k] === 'number') S.coinRewards[k] = Math.max(0, Math.round(d.coinRewards[k]));
+      });
+    }
+    if (typeof d.coinSpendReward === 'number') S.coinSpendReward = Math.max(0, Math.round(d.coinSpendReward));
+    if (typeof d.coinSpendRule === 'number') S.coinSpendRule = Math.max(1, Math.round(d.coinSpendRule));
+    /* Promo kilat: produk + harga → peta harga promo (live) */
+    const flashId = (typeof d.flashProductId === 'string' && d.flashProductId.trim()) ? d.flashProductId.trim() : null;
+    S.flashProductId = flashId;
+    const flashPrice = Number(d.flashPrice) > 0 ? Math.round(Number(d.flashPrice)) : 0;
+    S.promoUnitPrice = (flashId && flashPrice > 0) ? { [flashId]: flashPrice } : {};
+    if (typeof d.flashRule === 'string') S.flashRule = d.flashRule;
+    S.flashEndsAt = (d.flashEndsAt && typeof d.flashEndsAt.toDate === 'function') ? d.flashEndsAt : null;
+    /* Promo utama + slide gateway + kabar (live) */
+    if (typeof d.promoTitle === 'string') S.promoTitle = d.promoTitle;
+    if (typeof d.promoProductId === 'string') S.promoProductId = d.promoProductId || null;
+    if (typeof d.promoCopy === 'string') S.promoCopy = d.promoCopy;
+    const gs = S.gatewaySlides || {};
+    const gsText = (v, fb) => (typeof v === 'string' && v.trim()) ? v : fb;
+    S.gatewaySlides = {
+      title1: gsText(d.gatewayTitle1, gs.title1),
+      copy1: gsText(d.gatewayCopy1, gs.copy1),
+      title2: gsText(d.gatewayTitle2, gs.title2),
+      copy2: gsText(d.gatewayCopy2, gs.copy2),
+      title3: gsText(d.gatewayTitle3, gs.title3),
+      copy3: gsText(d.gatewayCopy3, gs.copy3),
+    };
+    if (typeof d.kabarStatus === 'string') S.kabarStatus = d.kabarStatus;
+    if (typeof d.kabarMood === 'string') S.kabarMood = d.kabarMood;
+    /* Bagian Beranda (live) */
+    ['restock', 'popular', 'recipe'].forEach(k => {
+      const sec = d.homeSections && d.homeSections[k];
+      if (sec && typeof sec === 'object') {
+        if (typeof sec.show === 'boolean') S.homeSections[k].show = sec.show;
+        const ord = Number(sec.order);
+        if (ord >= 1 && ord <= 3) S.homeSections[k].order = ord;
+      }
+    });
+    /* Jam operasional (live, format HH:MM) */
+    const hhmm = v => (typeof v === 'string' && /^\d{2}:\d{2}$/.test(v.trim())) ? v.trim() : '';
+    d.openTime = hhmm(d.openTime);
+    d.closeTime = hhmm(d.closeTime);
+    /* Terapkan yang tampil: nama warung (satu sumber) + running text.
+     * Input form TIDAK disentuh di sini — pakai syncSettingsForms() saat sheet dibuka. */
     try {
       const name = (String(d.storeName || 'Warunge Mimi')).trim() || 'Warunge Mimi';
       const adminTitle = document.querySelector('.admin-home-link h2');
@@ -509,6 +617,87 @@ Object.assign(Store, {
     } catch (e) { /* DOM belum siap — render berikutnya memperbaiki */ }
     this.rebuildPopular();
     this.render('settings');
+    /* Tampilan promo & tata letak Beranda dipegang app.js (guard: boleh belum ada) */
+    if (typeof renderFlashCard === 'function') renderFlashCard();
+    if (typeof renderPromoCarousel === 'function') renderPromoCarousel();
+    if (typeof syncHomeSectionLayout === 'function') syncHomeSectionLayout();
+    if (typeof syncGatewayPromo === 'function') syncGatewayPromo();
+  },
+
+  /* Isi semua input form admin dari state — dipanggil app.js saat sheet
+   * pengaturan dibuka. Hanya input form; tampilan display ditangani
+   * applyStoreSettings/render. Tiap elemen di-guard (boleh tidak ada). */
+  syncSettingsForms() {
+    const d = S.storeSettings || {};
+    const setVal = (id, v) => {
+      try {
+        const el = document.getElementById(id);
+        if (el && v !== undefined && v !== null) el.value = String(v);
+      } catch (e) {}
+    };
+    /* Profil toko */
+    setVal('adminStoreNameInput', String(d.storeName || 'Warunge Mimi'));
+    setVal('adminOpenTime', d.openTime || '');
+    setVal('adminCloseTime', d.closeTime || '');
+    setVal('adminStoreAddress', String(d.storeAddress || ''));
+    setVal('adminStorePhone', String(d.storePhone || ''));
+    /* Koin Warga */
+    setVal('coinValueInput', S.coinValue);
+    setVal('coinRedeemPercentInput', S.coinRedeemPercent);
+    setVal('coinCheckinInput', S.coinRewards.checkin);
+    setVal('coinMissionInput', S.coinRewards.mission);
+    setVal('coinGuessInput', S.coinRewards.guess);
+    setVal('coinSpendRewardInput', S.coinSpendReward);
+    setVal('coinSpendInput', S.coinSpendRule);
+    setVal('coinRuleInput', String(d.coinRule || ''));
+    /* Beranda pelanggan */
+    setVal('homeInfoInput', String(d.runningText || ''));
+    const slides = S.gatewaySlides || {};
+    setVal('gatewayTitle1Input', slides.title1 || '');
+    setVal('gatewayCopy1Input', slides.copy1 || '');
+    setVal('gatewayTitle2Input', slides.title2 || '');
+    setVal('gatewayCopy2Input', slides.copy2 || '');
+    setVal('gatewayTitle3Input', slides.title3 || '');
+    setVal('gatewayCopy3Input', slides.copy3 || '');
+    setVal('promoTitleInput', S.promoTitle || '');
+    setVal('flashPriceInput', (S.flashProductId && S.promoUnitPrice[S.flashProductId]) || '');
+    setVal('flashRuleInput', S.flashRule || '');
+    setVal('kabarStatusInput', S.kabarStatus || '');
+    setVal('kabarMoodInput', S.kabarMood || '');
+    /* Toggle tampil/sembunyi + urutan bagian Beranda */
+    try {
+      document.querySelectorAll('.home-section-toggle[data-section]').forEach(btn => {
+        const sec = (S.homeSections || {})[btn.getAttribute('data-section')];
+        if (!sec) return;
+        btn.setAttribute('aria-pressed', String(!!sec.show));
+        btn.textContent = sec.show ? 'TAMPIL' : 'SEMBUNYI';
+      });
+      document.querySelectorAll('[data-section-order]').forEach(sel => {
+        const sec = (S.homeSections || {})[sel.getAttribute('data-section-order')];
+        if (sec && sec.order) sel.value = String(sec.order);
+      });
+    } catch (e) {}
+  },
+
+  /* Simpan pengaturan toko (admin). Snapshot store_settings/main otomatis
+   * menerapkan balik lewat applyStoreSettings. */
+  async saveStoreSettings(patch) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('store_settings').doc('main').set(
+      Object.assign({ updatedAt: FB.serverTimestamp() }, patch || {}),
+      { merge: true }
+    );
+  },
+
+  /* Langganan koleksi `recipes` (baca: yang login saja, sesuai aturan).
+   * Dipasang di langganan pelanggan DAN admin. */
+  watchRecipes() {
+    const db = FB.db;
+    this.onRole(db.collection('recipes').orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
+      S.recipes = snap.docs.map(d => this.mapRecipe(d));
+      this.render('recipes');
+    }, err => this.onSubError('recipes', err)));
   },
 
   /* ---------------- langganan pelanggan ---------------- */
@@ -539,6 +728,25 @@ Object.assign(Store, {
     this.onRole(db.collection('orders').where('customerId', '==', uid)
       .limit(50).onSnapshot(snap => {
         S.onlineOrders = this.sortDocs(snap.docs, 'createdAt').map(d => this.mapOrder(d)).filter(o => o);
+        /* Pulihkan banner pesanan aktif — hanya bila slot masih kosong */
+        if (S.activeOrder == null) {
+          const first = (S.onlineOrders || []).find(o => o.status === 'active');
+          if (first) {
+            const step = { menunggu: 0, dikemas: 1, dikirim: 2 }[first._rawStatus] || 0;
+            S.activeOrder = {
+              id: first.id,
+              customerId: uid,
+              status: ['Menunggu konfirmasi', 'Sedang dikemas', 'Sedang dikirim'][step],
+              detail: (first.address || '') + (first.method ? ' · ' + first.method : ''),
+              method: first.method,
+              step: step,
+            };
+          }
+        } else {
+          /* Pesanan yang dilacak sudah selesai → kosongkan banner */
+          const tracked = (S.onlineOrders || []).find(o => o.id === S.activeOrder.id);
+          if (tracked && tracked.status !== 'active') S.activeOrder = null;
+        }
         this.rebuildRiwayat();
         this.rebuildPopular();
         this.render('orders');
@@ -557,6 +765,16 @@ Object.assign(Store, {
         S.customerNotesList = this.sortDocs(snap.docs, 'createdAt').map(d => this.mapCustomerNote(d));
         this.render('customerNotes');
       }, err => this.onSubError('customer_notes', err)));
+
+    /* Ide Masak / resep warung (koleksi `recipes`) */
+    this.watchRecipes();
+
+    /* Resepku pelanggan (subkoleksi sendiri) — diam bila aturan belum dipublish */
+    this.onRole(db.collection('customers').doc(uid).collection('my_recipes')
+      .orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
+        S.myRecipes = snap.docs.map(d => this.mapRecipe(d));
+        this.render('recipes');
+      }, err => this.onSubError('my_recipes', err, true)));
 
     /* Chat toko: thread deterministik `toko_<uid>` */
     const threadId = 'toko_' + uid;
@@ -628,7 +846,43 @@ Object.assign(Store, {
 
     this.onRole(db.collection('customer_notes').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
       S.adminCustomerNotes = snap.docs.map(d => this.mapCustomerNote(d));
+      this.render('kasbon');
     }, err => this.onSubError('customer_notes', err)));
+
+    /* Catatan Toko (pengingat internal admin) */
+    this.onRole(db.collection('store_memos').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
+      S.storeMemos = snap.docs.map(d => {
+        const dd = d.data() || {};
+        return {
+          id: d.id,
+          text: String(dd.text || ''),
+          time: dd.createdAt ? this.dateTimeOf(dd.createdAt) : 'Baru saja',
+        };
+      });
+      this.render('memos');
+    }, err => this.onSubError('store_memos', err)));
+
+    /* Ide Masak / resep warung (koleksi `recipes`) */
+    this.watchRecipes();
+
+    /* Titipan barang pelanggan */
+    this.onRole(db.collection('titip_requests').orderBy('createdAt', 'desc').limit(50).onSnapshot(snap => {
+      S.titipRequests = snap.docs.map(d => {
+        const dd = d.data() || {};
+        return {
+          id: d.id,
+          customerId: String(dd.customerId || ''),
+          customerName: String(dd.customerName || 'Pelanggan'),
+          item: String(dd.item || ''),
+          note: String(dd.note || ''),
+          method: String(dd.method || ''),
+          status: String(dd.status || 'baru'),
+          time: dd.createdAt ? this.dateTimeOf(dd.createdAt) : 'Baru saja',
+        };
+      });
+      this.rebuildInbox();
+      this.render('inbox');
+    }, err => this.onSubError('titip_requests', err)));
 
     this.onRole(db.collection('chat_threads').where('type', '==', 'toko')
       .limit(50).onSnapshot(snap => {
@@ -761,6 +1015,13 @@ Object.assign(Store, {
         target: 'online', read: read('order-' + o.id),
       });
     });
+    (S.titipRequests || []).filter(r => r.status === 'baru').slice(0, 20).forEach(r => {
+      derived.push({
+        id: 'titip-' + r.id, kind: 'titip', icon: 'bag',
+        title: 'Titipan · ' + r.item + ' (' + r.customerName + ')',
+        time: r.time || 'Baru saja', target: 'dashboard', read: read('titip-' + r.id),
+      });
+    });
     (S.products || []).filter(p => p.stock <= S.lowStockThreshold).slice(0, 20).forEach(p => {
       derived.push({
         id: 'notif-stock-' + p.id, kind: 'stock', icon: 'box',
@@ -788,7 +1049,7 @@ Object.assign(Store, {
   },
 });
 
-/* ---------------- autentikasi Firebase (menggantikan total simulasi) ---------------- */
+/* ---------------- autentikasi Firebase (implementasi penuh) ---------------- */
 
 Object.assign(Store, {
 
@@ -916,7 +1177,7 @@ Object.assign(Store, {
 
   /* Daftar pelanggan: Auth + customers/{uid} {approvalStatus:'pending'}.
    * Setelah daftar langsung signOut → kembali mode tamu dengan pesan
-   * "menunggu persetujuan" (1:1 alur prototipe). */
+   * "menunggu persetujuan" (1:1 alur yang dikunci). */
   async registerCustomer({ name, email, password, wa }) {
     if (!this.needOnline()) throw __offlineError();
     let cred;
@@ -1019,7 +1280,7 @@ Object.assign(Store, {
   /* CHECKOUT pelanggan — WAJIB transaksi Firestore:
    * nomor urut counters/orders → validasi stok (baca ulang) → decrement
    * atomik → buat dokumen orders. Batal total + pesan jujur bila stok kurang. */
-  async checkoutCustomer({ cart, fulfillment, address, slot, name }) {
+  async checkoutCustomer({ cart, fulfillment, address, slot, name, payMethod }) {
     if (!this.needOnline()) throw __offlineError();
     const uid = S.activeCustomerId;
     if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
@@ -1099,7 +1360,7 @@ Object.assign(Store, {
         items: items.map(it => ({ productId: it.productId, name: it.name, price: it.price, qty: it.qty, subtotal: it.subtotal })),
         total: paidTotal,
         fullTotal: fullTotal,
-        paymentMethod: 'cod',
+        paymentMethod: payMethod === 'transfer' ? 'transfer' : 'cod',
         fulfillment: fulfillment,
         status: 'menunggu',
         note: fulfillment === 'delivery' ? ('Diantar · ' + address) : 'Ambil di warung',
@@ -1133,7 +1394,7 @@ Object.assign(Store, {
         redeemCoins: redeemCoins,
         redeemValue: redeemValue,
         earned: earned,
-        method: fulfillment === 'delivery' ? 'COD' : 'Bayar di warung',
+        method: payMethod === 'transfer' ? 'Transfer' : (fulfillment === 'delivery' ? 'COD' : 'Bayar di warung'),
         itemCount: entries.reduce((a, [, q]) => a + q, 0),
       };
     });
@@ -1610,7 +1871,9 @@ Object.assign(Store, {
 
   async likeRumpi(postId) {
     if (!this.needOnline()) throw __offlineError();
-    const uid = S.activeCustomerId || (S.sessionRole === 'admin' ? 'admin' : null);
+    /* uid WAJIB uid Auth asli (bukan 'admin') agar lolos aturan Firestore */
+    const user = FB.auth ? FB.auth.currentUser : null;
+    const uid = user ? user.uid : null;
     if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
     const db = FB.db;
     await db.runTransaction(async t => {
@@ -1621,25 +1884,142 @@ Object.assign(Store, {
         t.delete(likeRef);
         t.update(postRef, { likeCount: FB.FieldValue.increment(-1) });
       } else {
-        t.set(likeRef, { createdAt: FB.serverTimestamp() });
+        t.set(likeRef, { uid: uid, createdAt: FB.serverTimestamp() });
         t.update(postRef, { likeCount: FB.FieldValue.increment(1) });
       }
     });
   },
 
-  /* Catatan toko / kasbon digital: admin tulis, pelanggan baca di Akun */
-  async addCustomerNote({ customerId, type, amount, note }) {
+  /* Catatan toko / kasbon digital: admin tulis, pelanggan baca di Akun.
+   * `date` opsional (string YYYY-MM-DD) — disimpan sebagai noteDate. */
+  async addCustomerNote({ customerId, type, amount, note, date }) {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
     if (!customerId) throw new Error('Pilih pelanggan dulu');
     if (!String(note || '').trim()) throw new Error('Tulis isi catatan dulu');
-    await FB.db.collection('customer_notes').add({
+    const payload = {
       customerId: customerId,
       type: type || 'catatan',
       amount: Math.round(Number(amount) || 0),
       note: String(note).trim(),
       createdAt: FB.serverTimestamp(),
+    };
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
+      payload.noteDate = date.trim();
+    }
+    await FB.db.collection('customer_notes').add(payload);
+  },
+
+  /* ---------------- Catatan Toko, resep, titip, profil (API tulis baru) ---------------- */
+
+  /* Catatan Toko: pengingat internal admin (koleksi `store_memos`) */
+  async addStoreMemo(text) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const isi = String(text || '').trim();
+    if (!isi) throw new Error('Tulis catatan dulu');
+    await FB.db.collection('store_memos').add({
+      text: isi.slice(0, 500),
+      createdAt: FB.serverTimestamp(),
     });
+  },
+
+  async deleteStoreMemo(id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('store_memos').doc(id).delete();
+  },
+
+  /* Resep warung (Ide Masak): admin tulis ke koleksi `recipes` */
+  async saveRecipe(data, id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const rec = data || {};
+    const nama = String(rec.nama || '').trim();
+    if (!nama) throw new Error('Isi nama resep dulu');
+    const items = this.cleanRecipeItems(rec.items);
+    if (!items.length) throw new Error('Isi bahan resep dulu');
+    const payload = {
+      nama: nama.slice(0, 54),
+      desc: String(rec.desc || '').slice(0, 500),
+      foto: String(rec.foto || ''),
+      items: items,
+      updatedAt: FB.serverTimestamp(),
+    };
+    if (id) {
+      await FB.db.collection('recipes').doc(id).update(payload);
+    } else {
+      payload.createdAt = FB.serverTimestamp();
+      await FB.db.collection('recipes').add(payload);
+    }
+  },
+
+  async deleteRecipe(id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('recipes').doc(id).delete();
+  },
+
+  /* Resepku: pelanggan tulis ke subkoleksi `customers/{uid}/my_recipes` */
+  async saveMyRecipe(data) {
+    if (!this.needOnline()) throw __offlineError();
+    const uid = S.activeCustomerId;
+    if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
+    const rec = data || {};
+    const nama = String(rec.nama || '').trim();
+    if (!nama) throw new Error('Isi nama resep dulu');
+    const items = this.cleanRecipeItems(rec.items);
+    if (!items.length) throw new Error('Isi bahan resep dulu');
+    await FB.db.collection('customers').doc(uid).collection('my_recipes').add({
+      nama: nama.slice(0, 54),
+      desc: String(rec.desc || '').slice(0, 500),
+      foto: String(rec.foto || ''),
+      items: items,
+      createdAt: FB.serverTimestamp(),
+      updatedAt: FB.serverTimestamp(),
+    });
+  },
+
+  async deleteMyRecipe(id) {
+    if (!this.needOnline()) throw __offlineError();
+    const uid = S.activeCustomerId;
+    if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
+    await FB.db.collection('customers').doc(uid).collection('my_recipes').doc(id).delete();
+  },
+
+  /* Titip barang: pelanggan tulis ke `titip_requests` (status awal 'baru') */
+  async submitTitipRequest({ item, note, method }) {
+    if (!this.needOnline()) throw __offlineError();
+    const uid = S.activeCustomerId;
+    if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
+    const barang = String(item || '').trim();
+    if (!barang) throw new Error('Tulis barang yang dititip dulu');
+    await FB.db.collection('titip_requests').add({
+      customerId: uid,
+      customerName: S.sessionName || 'Pelanggan',
+      item: barang.slice(0, 100),
+      note: String(note || '').slice(0, 300),
+      method: String(method || 'Ambil di warung'),
+      status: 'baru',
+      createdAt: FB.serverTimestamp(),
+    });
+  },
+
+  /* Ganti nama pelanggan sendiri. Izin ditolak → diam (nama tetap sesi-saja), tanpa crash. */
+  async updateCustomerName(name) {
+    if (!this.needOnline()) throw __offlineError();
+    const uid = S.activeCustomerId;
+    if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
+    const nama = String(name || '').trim().slice(0, 50);
+    if (!nama) throw new Error('Isi nama dulu');
+    S.sessionName = nama; // langsung berlaku di sesi
+    try {
+      await FB.db.collection('customers').doc(uid).update({ name: nama });
+    } catch (error) {
+      if (!error || error.code !== 'permission-denied') throw error;
+      // permission-denied → diam: nama tetap sesi-saja, tanpa crash
+    }
+    this.render('profile', 'session');
   },
 });
 
