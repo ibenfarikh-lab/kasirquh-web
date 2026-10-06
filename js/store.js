@@ -1522,6 +1522,53 @@ Object.assign(Store, {
     return { created, updated, total: ops.length };
   },
 
+  /* Impor catatan belanja dari JSON (admin) — ARSIP SAJA.
+   * items: [{fsId, date, supplier, items:[{name, qty}], total, source,
+   *   legacyId, legacyDocId, legacyWaktu, legacySubjudul?, createdAtMs}]
+   * (sudah tervalidasi UI). Doc ID deterministik 'impor_…' + set() overwrite
+   * sehingga impor ulang file yang sama tidak dobel.
+   * PRINSIP: tidak membuat journal, tidak mengubah modal/stok.
+   * onProgress(done, total) opsional. Gagal di tengah -> throw dengan
+   * properti importedSoFar = jumlah doc yang sudah ter-commit. */
+  async importStockNotes(items, onProgress) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const db = FB.db;
+    const BATCH = 400;
+    const ops = (items || []).filter(it => it && it.fsId && it.supplier && it.date);
+    let done = 0, imported = 0;
+    try {
+      for (let i = 0; i < ops.length; i += BATCH) {
+        const batch = db.batch();
+        const slice = ops.slice(i, i + BATCH);
+        slice.forEach(it => {
+          const data = {
+            date: it.date,
+            supplier: String(it.supplier),
+            items: (it.items || []).map(x => ({ name: String(x.name || ''), qty: '' })),
+            total: Math.max(0, Math.round(Number(it.total) || 0)),
+            source: 'impor',
+            legacyId: String(it.legacyId || ''),
+            legacyDocId: String(it.legacyDocId || ''),
+            legacyWaktu: String(it.legacyWaktu || ''),
+            createdAt: it.createdAtMs ? new Date(it.createdAtMs) : FB.serverTimestamp(),
+            updatedAt: FB.serverTimestamp(),
+          };
+          if (it.legacySubjudul) data.legacySubjudul = String(it.legacySubjudul);
+          batch.set(db.collection('stock_notes').doc(it.fsId), data);
+          imported++;
+        });
+        await batch.commit();
+        done += slice.length;
+        if (onProgress) onProgress(done, ops.length);
+      }
+    } catch (e) {
+      e.importedSoFar = imported;
+      throw e;
+    }
+    return { imported, total: ops.length };
+  },
+
   /* Jurnal manual / dari alur lain (bentuk UI -> skema) */
   async recordJournal(entry) {
     if (!this.needOnline()) throw __offlineError();
