@@ -96,8 +96,8 @@ function dashboardShortcutById(id){return S.dashboardShortcutCatalog.find(item=>
 function runDashboardShortcut(id){const item=dashboardShortcutById(id);if(!item)return;const action=item.action;if(action.kind==='view')showAdminView(action.value);else if(action.kind==='tab'){showAdminView('data');setDataTab(action.value)}else if(action.kind==='sheet')openSheet(action.value)}
 function renderDashboardShortcuts(){const container=$('#dashboardShortcuts');if(!container)return;container.innerHTML=S.dashboardShortcutIds.map(id=>{const item=dashboardShortcutById(id);if(!item)return '';return `<button class="dashboard-shortcut${S.dashboardShortcutEdit?' is-editing':''}" data-dashboard-shortcut="${item.id}" aria-label="${S.dashboardShortcutEdit?'Hapus ':'Buka '}${escapeHtml(item.label)}">${iconSvg(item.icon)}<b>${escapeHtml(item.label)}</b>${S.dashboardShortcutEdit?'<span class="dashboard-shortcut-remove" aria-hidden="true">×</span>':''}</button>`}).join('')+(S.dashboardShortcutEdit&&S.dashboardShortcutIds.length<6?`<button class="dashboard-shortcut add-shortcut" data-add-dashboard-shortcut aria-label="Tambah shortcut">${iconSvg('grid')}<b>＋ Tambah</b></button>`:'');$$('[data-dashboard-shortcut]').forEach(button=>button.onclick=()=>{if(S.dashboardShortcutEdit){S.dashboardShortcutIds=S.dashboardShortcutIds.filter(id=>id!==button.dataset.dashboardShortcut);renderDashboardShortcuts();renderShortcutPicker();toast('Shortcut dihapus · tambah lagi untuk mengubah urutan')}else runDashboardShortcut(button.dataset.dashboardShortcut)});const add=$('[data-add-dashboard-shortcut]');if(add)add.onclick=()=>{if(S.dashboardShortcutIds.length>=6)return toast('Maksimal 6 shortcut. Hapus satu terlebih dahulu.');openSheet('shortcutPickerModal')};$('#shortcutEditToggle').textContent=S.dashboardShortcutEdit?'Selesai':'Ubah';$('#shortcutEditToggle').setAttribute('aria-pressed',String(S.dashboardShortcutEdit));$('#shortcutEditNote').hidden=!S.dashboardShortcutEdit;if(S.dashboardShortcutEdit&&S.dashboardShortcutIds.length>=6)$('#shortcutEditNote span').innerHTML='<span class="shortcut-limit">Batas 6 shortcut tercapai.</span> Hapus satu untuk memilih tujuan lain. Susunan hanya berlaku selama sesi prototipe.';else $('#shortcutEditNote span').textContent='Susunan berlaku selama sesi prototipe ini. Hapus lalu tambah lagi untuk mengubah urutan.'}
 function renderShortcutPicker(){const list=$('#shortcutPickerList'),status=$('#shortcutPickerStatus');if(!list||!status)return;const groups=[...new Set(S.dashboardShortcutCatalog.map(item=>item.group))],full=S.dashboardShortcutIds.length>=6;list.innerHTML=groups.map(group=>`<section class="shortcut-picker-group"><h3>${escapeHtml(group.toUpperCase())}</h3><div class="shortcut-picker-grid">${S.dashboardShortcutCatalog.filter(item=>item.group===group).map(item=>{const added=S.dashboardShortcutIds.includes(item.id);return `<button class="shortcut-pick" data-pick-shortcut="${item.id}"${added||full?' disabled':''}>${iconSvg(item.icon)}<span><b>${escapeHtml(item.label)}</b><small>${escapeHtml(item.detail)}</small></span><span class="shortcut-pick-state">${added?'Terpasang':full?'Penuh':'＋'}</span></button>`}).join('')}</div></section>`).join('');status.textContent=full?'6 dari 6 terpasang · hapus satu shortcut untuk menambah tujuan lain.':S.dashboardShortcutIds.length+' dari 6 terpasang · pilihan berlaku selama sesi prototipe.';$$('[data-pick-shortcut]').forEach(button=>button.onclick=()=>{if(S.dashboardShortcutIds.length>=6)return toast('Maksimal 6 shortcut. Hapus satu terlebih dahulu.');if(S.dashboardShortcutIds.includes(button.dataset.pickShortcut))return;S.dashboardShortcutIds.push(button.dataset.pickShortcut);renderDashboardShortcuts();renderShortcutPicker();const item=dashboardShortcutById(button.dataset.pickShortcut);if(S.dashboardShortcutIds.length===6){closeSheets();toast('Shortcut '+item.label+' ditambahkan · batas 6 tercapai')}else toast('Shortcut '+item.label+' ditambahkan')})}
-function closeSheets(){const resumeGateway=$('#adminPinModal')&&$('#adminPinModal').classList.contains('open')&&$('#gateway').classList.contains('active');$$('.modal').forEach(m=>m.classList.remove('open'));if(resumeGateway)setTimeout(startGateway,0)}
-function openSheet(id){closeSheets();if(id==='adminSessionModal')renderSessionInfo();if(id==='transferModal')renderTransfers();if(id==='orderModal')renderActiveOrder();if(id==='historyModal'||id==='notesModal')renderAccountTiles();if(id==='stockShoppingModal'){renderLowStockSuggestions();updateStockProgress()}if(id==='shortcutPickerModal'){if(S.dashboardShortcutIds.length>=6)return toast('Maksimal 6 shortcut. Hapus satu terlebih dahulu.');renderShortcutPicker()}const modal=$('#'+id);if(modal){formatNumericInputs(modal);modal.classList.add('open')}}
+function closeSheets(){stopBarcodeScanner();const resumeGateway=$('#adminPinModal')&&$('#adminPinModal').classList.contains('open')&&$('#gateway').classList.contains('active');$$('.modal').forEach(m=>m.classList.remove('open'));if(resumeGateway)setTimeout(startGateway,0)}
+function openSheet(id){closeSheets();if(id==='adminSessionModal')renderSessionInfo();if(id==='transferModal')renderTransfers();if(id==='orderModal')renderActiveOrder();if(id==='historyModal'||id==='notesModal')renderAccountTiles();if(id==='stockShoppingModal'){renderLowStockSuggestions();updateStockProgress()}if(id==='shortcutPickerModal'){if(S.dashboardShortcutIds.length>=6)return toast('Maksimal 6 shortcut. Hapus satu terlebih dahulu.');renderShortcutPicker()}const modal=$('#'+id);if(modal){formatNumericInputs(modal);modal.classList.add('open')}if(id==='scannerModal')startBarcodeScanner()}
 function showAdminView(name){closeSheets();$$('.subview').forEach(v=>v.classList.toggle('active',v.id===name+'View'));const primary=['dashboard','kasir','pesanan','note','menu'].includes(name)?name:'menu';$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===primary));if(name==='note')renderPurchaseNotes();if(name==='online')renderOnlineOrders();if(name==='data')renderCustomerData();if(name==='chat')renderAdminChatList();if(name==='bookkeeping'||name==='dashboard'||name==='data')renderFinance();window.scrollTo(0,0)}
 function gatewaySlidesCopy(){return [
 {kicker:'PROMO UTAMA',title:cleanInput($('#gatewayTitle1Input').value)||'Hemat belanja, senang di rumah',copy:cleanInput($('#gatewayCopy1Input').value)||'Promo pilihan Warunge Mimi untuk kebutuhan harian keluarga.'},
@@ -435,8 +435,55 @@ function adminAiResponse(query){const q=String(query||'').toLocaleLowerCase('id-
 $$('[data-admin-ai]').forEach(b=>b.onclick=()=>$('#adminAiAnswer').textContent=S.adminAiReplies[b.dataset.adminAi]());
 function askAdminAi(){const input=$('#adminAiInput'),q=input.value.trim();if(!q)return toast('Tulis pertanyaan dulu');$('#adminAiAnswer').textContent=adminAiResponse(q);input.value=''}
 $('#adminAiSend').onclick=askAdminAi;$('#adminAiInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();askAdminAi()}});
-$('#simulateScan').onclick=()=>{const product=S.products.find(item=>item.id==='indomie');if(!product){closeSheets();return toast('Barcode tidak dikenali · produk belum terdaftar')}S.adminCart[product.id]=(S.adminCart[product.id]||0)+1;renderAdminCart();playNotification('order','mimi',false);closeSheets();toast(product.name+' masuk keranjang')};
-$('#simulateUnknownScan').onclick=()=>{closeSheets();toast('Barcode tidak dikenali · produk belum terdaftar')};
+let barcodeScanner=null,barcodeScanBusy=false,barcodeScanSession=0;
+function barcodeLibReady(){return typeof window!=='undefined'&&typeof window.Html5Qrcode==='function';}
+function setScannerHint(text){const hint=$('#scannerHint');if(hint)hint.textContent=text;}
+async function startBarcodeScanner(){
+  stopBarcodeScanner();barcodeScanBusy=false;
+  const mySession=++barcodeScanSession;
+  setScannerHint('Menyiapkan kamera…');
+  if(!barcodeLibReady()){setScannerHint('Pustaka pindai gagal dimuat · pakai ketik manual di bawah');return;}
+  try{
+    setScannerHint('Meminta izin kamera…');
+    const scanner=new window.Html5Qrcode('scannerViewport',false);
+    barcodeScanner=scanner;
+    await scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:150}},onBarcodeScanned,()=>{});
+    if(mySession!==barcodeScanSession)return;
+    setScannerHint('Arahkan barcode ke dalam bingkai');
+  }catch(err){
+    if(mySession!==barcodeScanSession)return;
+    barcodeScanner=null;
+    setScannerHint('Izin kamera dibutuhkan untuk memindai · atau ketik manual di bawah');
+    toast('Izin kamera dibutuhkan untuk memindai');
+  }
+}
+async function stopBarcodeScanner(){
+  barcodeScanSession++;
+  const scanner=barcodeScanner;barcodeScanner=null;barcodeScanBusy=false;
+  if(scanner){try{await scanner.stop();}catch(e){}try{scanner.clear();}catch(e){}}
+  const viewport=$('#scannerViewport');if(viewport)viewport.innerHTML='';
+}
+function onBarcodeScanned(decodedText){
+  const code=String(decodedText||'').trim();
+  if(!code||barcodeScanBusy)return;
+  barcodeScanBusy=true;
+  handleBarcodeCode(code);
+}
+function handleBarcodeCode(rawCode){
+  const code=String(rawCode||'').trim();
+  stopBarcodeScanner();
+  if(!code){closeSheets();return;}
+  const product=(S.products||[]).find(p=>String(p.barcode||'').trim()===code);
+  closeSheets();
+  if(!product){toast('Barcode tidak dikenali · produk belum terdaftar');return;}
+  S.adminCart[product.id]=(S.adminCart[product.id]||0)+1;
+  renderAdminCart();
+  playNotification('order','mimi',false);
+  toast(product.name+' masuk keranjang');
+}
+const scannerManualBtn=$('#scannerManualBtn'),scannerManualInput=$('#scannerManualInput');
+if(scannerManualBtn)scannerManualBtn.onclick=()=>{const value=scannerManualInput?(scannerManualInput.value||'').trim():'';if(!value){toast('Ketik dulu kode barcodenya');return;}if(scannerManualInput)scannerManualInput.value='';handleBarcodeCode(value);};
+if(scannerManualInput)scannerManualInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(scannerManualBtn)scannerManualBtn.click();}});
 $$('[data-ledger-period]').forEach(button=>button.onclick=()=>{S.journalPeriod=button.dataset.ledgerPeriod;$$('[data-ledger-period]').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-selected',active)});renderFinance()});
 function resetLedgerForm(){S.openingBalanceMode=false;$('#manualLedgerType').disabled=false;$('#manualLedgerDesc').disabled=false;$('#manualLedgerType').value='income';$('#manualLedgerDesc').value='';$('#manualLedgerAmount').value='';$('#saveManualLedger').textContent='Simpan';$('#setOpeningBalance').setAttribute('aria-expanded','false')}
 $('#toggleManualLedger').onclick=()=>{const form=$('#manualLedgerForm'),open=form.hidden;resetLedgerForm();form.hidden=!open;$('#toggleManualLedger').setAttribute('aria-expanded',open);if(open)$('#manualLedgerDesc').focus()};

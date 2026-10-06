@@ -245,3 +245,12 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .csv-preview b{font-size:12px}
 .csv-preview ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
 .csv-preview .csv-skip{color:var(--danger)}
+
+/* Pemindai barcode kamera */
+.scanner-viewport{position:absolute;inset:0;background:#100e0f}
+.scanner-viewport video{width:100%;height:100%;object-fit:cover}
+.scanner-manual{margin-top:11px}
+.scanner-manual label{display:block;font-size:10px;color:#c8bcb4;margin-bottom:6px}
+.scanner-manual-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+.scanner-manual-row input{min-width:0;height:42px;border:1px solid #5b4b43;border-radius:12px;background:#191718;color:#f7f1ec;padding:0 11px;font-size:11px}
+.scanner-manual-row button{border:0;border-radius:12px;background:var(--orange);color:#fff;padding:0 16px;font-size:10px;font-weight:900;min-height:42px}
