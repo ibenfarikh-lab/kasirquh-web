@@ -239,3 +239,9 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 /* Jaga hotspot admin tetap terpisah dari dots carousel di ponsel. */
 .admin-hotspot{top:42%;right:0;bottom:auto}
 
+/* Impor CSV produk (admin): tombol di header Data Produk + pratinjau impor */
+.product-admin-head-actions{display:flex;gap:8px}
+.csv-preview{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:10px 12px;font-size:10px;line-height:1.6}
+.csv-preview b{font-size:12px}
+.csv-preview ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
+.csv-preview .csv-skip{color:var(--danger)}

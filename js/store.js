@@ -1182,6 +1182,64 @@ Object.assign(Store, {
     await FB.db.collection('products').doc(id).delete();
   },
 
+  /* Impor produk dari CSV (admin): cocokkan Kode -> barcode.
+   * Kode sudah ada -> UPDATE (timpa data CSV); Kode baru -> tambah.
+   * items: [{barcode, name, cat, unit, stock, cost, price}] (sudah tervalidasi UI).
+   * onProgress(done, total) opsional. Gagal di tengah -> throw dengan
+   * properti importedSoFar = jumlah batch yang sudah ter-commit. */
+  async importProducts(items, onProgress) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const db = FB.db;
+    const ts = FB.serverTimestamp();
+    const byBarcode = {};
+    (S.products || []).forEach(p => {
+      const code = String(p.barcode || '').trim();
+      if (code && !byBarcode[code]) byBarcode[code] = p.id;
+    });
+    const ops = (items || []).map(item => {
+      const code = String(item.barcode || '').trim();
+      const data = {
+        name: String(item.name || '').trim(),
+        category: String(item.cat || 'Lainnya').trim() || 'Lainnya',
+        unit: String(item.unit || 'pcs').trim() || 'pcs',
+        price: Math.max(0, Math.round(Number(item.price) || 0)),
+        costPrice: Math.max(0, Math.round(Number(item.cost) || 0)),
+        stock: Math.max(0, Number(item.stock) || 0),
+        barcode: code,
+        photoUrl: '',
+        isActive: true,
+        updatedAt: ts,
+      };
+      return { existingId: code ? byBarcode[code] || null : null, data };
+    }).filter(op => op.data.name);
+    const BATCH = 400;
+    let done = 0, created = 0, updated = 0;
+    try {
+      for (let i = 0; i < ops.length; i += BATCH) {
+        const batch = db.batch();
+        const slice = ops.slice(i, i + BATCH);
+        slice.forEach(op => {
+          if (op.existingId) {
+            batch.set(db.collection('products').doc(op.existingId), op.data, { merge: true });
+            updated++;
+          } else {
+            const ref = db.collection('products').doc();
+            batch.set(ref, Object.assign({ createdAt: ts, lowStockAt: S.lowStockThreshold }, op.data));
+            created++;
+          }
+        });
+        await batch.commit();
+        done += slice.length;
+        if (onProgress) onProgress(done, ops.length);
+      }
+    } catch (e) {
+      e.importedSoFar = done;
+      throw e;
+    }
+    return { created, updated, total: ops.length };
+  },
+
   /* Jurnal manual / dari alur lain (bentuk UI -> skema) */
   async recordJournal(entry) {
     if (!this.needOnline()) throw __offlineError();

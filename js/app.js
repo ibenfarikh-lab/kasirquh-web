@@ -250,6 +250,148 @@ function renderRestockSummary(){if(!S.pendingRestock)return;const balance=cashBa
 function resetStockShopping(){$$('[data-stock-task]').forEach(row=>row.remove());$('#stockSupplier').value='';$('#stockSpend').value='';$('#stockSpend').dataset.manual='false';S.pendingRestock=null;updateStockProgress();renderLowStockSuggestions()}
 function addKulakanLedger(supplier,total,source){const origin=source==='Catatan manual'?'Catatan manual':'Belanja Stok';recordTransaction({direction:'expense',type:'Kulakan',description:'Kulakan · '+origin,amount:total,source:cleanInput(supplier),method:'Kas'})}
 $('#addProductBtn').onclick=()=>openProductForm();
+/* ===== Impor CSV produk (admin): pilih file -> pratinjau -> impor batch ===== */
+function parseCsvText(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  const pushField = () => { row.push(field); field = ''; };
+  const pushRow = () => { if (row.some(c => String(c).trim() !== '')) rows.push(row); row = []; };
+  const src = String(text || '').replace(/^\uFEFF/, '');
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (src[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += ch;
+    } else if (ch === '"') inQuotes = true;
+    else if (ch === ',') pushField();
+    else if (ch === '\r') { /* ikut \n */ }
+    else if (ch === '\n') { pushField(); pushRow(); }
+    else field += ch;
+  }
+  pushField(); pushRow();
+  return rows;
+}
+function parseCsvNumber(value) {
+  let s = String(value == null ? '' : value).trim().replace(/\s+/g, '');
+  if (!s) return 0;
+  if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+  else s = s.replace(',', '.');
+  const n = Number(s);
+  return isNaN(n) ? 0 : n;
+}
+const CSV_HEADER_ALIASES = {
+  barcode: ['kode', 'barcode', 'kode barang', 'kode produk', 'sku', 'plu'],
+  name: ['nama', 'nama produk', 'nama barang', 'produk'],
+  cat: ['kategori', 'category', 'kat'],
+  unit: ['satuan', 'unit'],
+  stock: ['stok', 'stock', 'jumlah', 'qty'],
+  cost: ['modal', 'harga modal', 'cost', 'harga beli', 'harga kulak'],
+  price: ['harga', 'harga jual', 'price'],
+};
+function mapCsvRows(rows) {
+  const out = { items: [], skipped: [] };
+  if (!rows.length) return out;
+  const header = rows[0].map(h => String(h || '').trim().toLowerCase());
+  const colIndex = {};
+  Object.keys(CSV_HEADER_ALIASES).forEach(key => {
+    colIndex[key] = header.findIndex(h => CSV_HEADER_ALIASES[key].indexOf(h) >= 0);
+  });
+  if (colIndex.name < 0) { out.skipped.push({ row: 1, reason: 'kolom Nama tidak ditemukan di baris judul' }); return out; }
+  const seen = {};
+  rows.slice(1).forEach((cells, i) => {
+    const lineNo = i + 2;
+    const get = key => colIndex[key] >= 0 ? String(cells[colIndex[key]] == null ? '' : cells[colIndex[key]]).trim() : '';
+    const name = get('name');
+    if (!name) { out.skipped.push({ row: lineNo, reason: 'tanpa nama' }); return; }
+    const barcode = get('barcode');
+    const dedupeKey = barcode ? 'kode:' + barcode : 'baris:' + lineNo;
+    seen[dedupeKey] = {
+      barcode: barcode, name: name,
+      cat: get('cat') || 'Lainnya',
+      unit: get('unit') || 'pcs',
+      stock: parseCsvNumber(get('stock')),
+      cost: parseCsvNumber(get('cost')),
+      price: parseCsvNumber(get('price')),
+    };
+  });
+  out.items = Object.values(seen);
+  return out;
+}
+function resetCsvImport() {
+  S.csvImport = null;
+  $('#csvFileInput').value = '';
+  $('#csvPreview').hidden = true;
+  $('#csvPreview').innerHTML = '';
+  const st = $('#csvImportStatus');
+  st.hidden = true; st.textContent = ''; st.classList.remove('error');
+  const btn = $('#doCsvImport');
+  btn.disabled = true; btn.textContent = 'Impor sekarang';
+}
+function previewCsvImport(items, skipped) {
+  const byBarcode = {};
+  (S.products || []).forEach(p => {
+    const code = String(p.barcode || '').trim();
+    if (code && !byBarcode[code]) byBarcode[code] = true;
+  });
+  let willCreate = 0, willUpdate = 0;
+  items.forEach(it => { if (it.barcode && byBarcode[it.barcode]) willUpdate++; else willCreate++; });
+  const sample = items.slice(0, 5).map(it =>
+    '<li>' + escapeHtml(it.name) + ' · ' + money(it.price) +
+    (it.barcode && byBarcode[it.barcode] ? ' (perbarui)' : ' (baru)') + '</li>'
+  ).join('');
+  const skipList = skipped.slice(0, 5).map(s =>
+    '<li class="csv-skip">Baris ' + s.row + ': ' + escapeHtml(s.reason) + '</li>'
+  ).join('');
+  const box = $('#csvPreview');
+  box.innerHTML = '<b>' + items.length + ' produk siap diimpor</b><br>' +
+    willCreate + ' baru · ' + willUpdate + ' akan diperbarui' +
+    (skipped.length ? ' · ' + skipped.length + ' dilewati' : '') +
+    '<ul>' + sample + skipList + '</ul>';
+  box.hidden = false;
+  $('#doCsvImport').disabled = !items.length;
+}
+$('#importCsvBtn').onclick = () => { resetCsvImport(); openSheet('importCsvModal'); };
+$('#csvFileInput').onchange = event => {
+  const file = event.target.files && event.target.files[0];
+  const st = $('#csvImportStatus');
+  st.hidden = true; st.classList.remove('error');
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const mapped = mapCsvRows(parseCsvText(reader.result));
+      if (!mapped.items.length && !mapped.skipped.length) { toast('File kosong atau tidak terbaca'); return; }
+      S.csvImport = mapped;
+      previewCsvImport(mapped.items, mapped.skipped);
+    } catch (e) { toast('File CSV tidak dapat dibaca'); }
+  };
+  reader.onerror = () => toast('File tidak dapat dibaca');
+  reader.readAsText(file);
+};
+$('#doCsvImport').onclick = () => {
+  const data = S.csvImport;
+  if (!data || !data.items.length) return;
+  const btn = $('#doCsvImport'), st = $('#csvImportStatus');
+  btn.disabled = true; btn.textContent = 'Mengimpor…';
+  st.hidden = false; st.classList.remove('error');
+  st.textContent = 'Mengimpor 0/' + data.items.length + '…';
+  Store.importProducts(data.items, (done, total) => { st.textContent = 'Mengimpor ' + done + '/' + total + '…'; })
+    .then(res => {
+      btn.textContent = 'Impor sekarang';
+      st.textContent = 'Selesai: ' + res.created + ' produk baru, ' + res.updated + ' diperbarui dari ' + res.total + ' baris.';
+      S.csvImport = null;
+      toast('Impor selesai · ' + res.created + ' baru, ' + res.updated + ' diperbarui');
+    })
+    .catch(error => {
+      btn.disabled = false; btn.textContent = 'Impor sekarang';
+      const soFar = error && error.importedSoFar ? ' (' + error.importedSoFar + ' baris sudah masuk sebelum gagal)' : '';
+      st.classList.add('error');
+      st.textContent = 'Impor terhenti' + soFar + ' · ' + ((error && error.message) || 'gagal menyimpan');
+      if (!error || error.code !== 'OFFLINE') toast((error && error.message) || 'Impor gagal');
+    });
+};
 function setProductPhoto(src,label){S.pendingProductImage=src;$('#productImagePreview').src=src;$('#productImagePreview').alt='Pratinjau '+(label||'foto produk');$$('.photo-result').forEach(button=>button.classList.toggle('selected',button.dataset.photoSrc===src))}
 function resizeProductPhoto(file){if(!file.type.startsWith('image/'))return toast('Pilih file gambar dari HP');if(file.size>5*1024*1024){$('#productImageInput').value='';return toast('Foto maksimal 5 MB')}const image=new Image(),objectUrl=URL.createObjectURL(file);image.onload=()=>{const maxSide=300,scale=Math.min(1,maxSide/Math.max(image.naturalWidth,image.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(image,0,0,canvas.width,canvas.height);setProductPhoto(canvas.toDataURL('image/png'),file.name);URL.revokeObjectURL(objectUrl);toast('Foto produk PNG siap · '+canvas.width+' × '+canvas.height+' px')};image.onerror=()=>{URL.revokeObjectURL(objectUrl);$('#productImageInput').value='';toast('Foto tidak dapat dibaca')};image.src=objectUrl}
 function showOnlinePhotoResults(){const query=cleanInput($('#productNameInput').value).toLowerCase();if(!query)return toast('Isi nama produk terlebih dahulu');const tokens=query.split(/\s+/).filter(token=>token.length>2),ranked=S.products.map((product,index)=>({product,score:tokens.reduce((score,token)=>score+(product.name.toLowerCase().includes(token)?2:0)+(product.cat.toLowerCase().includes(token)?1:0),0),index})).sort((a,b)=>b.score-a.score||a.index-b.index).slice(0,8).map(entry=>entry.product);$('#onlinePhotoTitle').textContent='Hasil untuk “'+cleanInput($('#productNameInput').value)+'”';$('#onlinePhotoResults').innerHTML=ranked.map(product=>`<button class="photo-result${S.pendingProductImage===product.img?' selected':''}" type="button" data-photo-src="${product.img}" data-photo-name="${escapeHtml(product.name)}" aria-label="Pilih foto ${escapeHtml(product.name)}"><img src="${product.img}" alt="Foto ${escapeHtml(product.name)}"></button>`).join('');$('#onlinePhotoPanel').hidden=false;$$('.photo-result').forEach(button=>button.onclick=()=>{setProductPhoto(button.dataset.photoSrc,button.dataset.photoName);$('#productImageInput').value='';toast('Foto online dipilih')});$('#onlinePhotoPanel').scrollIntoView({block:'nearest',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
