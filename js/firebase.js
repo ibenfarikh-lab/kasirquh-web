@@ -21,6 +21,7 @@
   var initError = null;
   var db = null;
   var auth = null;
+  var authPersistenceReady = Promise.resolve();
   var FieldValue = null;
 
   function configFilled() {
@@ -92,22 +93,22 @@
     }
     db = firebase.firestore();
     auth = firebase.auth();
+
+    /* Persistensi login dikunci di satu tempat: Firebase Auth LOCAL.
+     * Ini bukan penyimpanan password/token di localStorage. Firebase yang
+     * mengelola kredensial sesi melalui storage resminya (IndexedDB).
+     * Hasil promise diekspos agar lapisan Store tidak balapan dengan boot. */
+    authPersistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .catch(function (error) {
+        var message = (error && error.message) || String(error);
+        showBanner('Penyimpanan login gagal diaktifkan — login tidak akan dijaga tetap masuk. ' + message);
+        if (typeof console !== 'undefined' && console.error) {
+          console.error('[KasirQuh] Firebase Auth LOCAL persistence gagal:', error);
+        }
+        throw error;
+      });
+
     FieldValue = firebase.firestore.FieldValue;
-    // Penegasan eksplisit (SOP 2026-10-07): sesi bertahan antar tab
-    // sampai logout manual. LOCAL adalah default SDK — ditulis eksplisit
-    // agar niatnya jelas dan kegagalan tampil jujur, bukan diam-diam.
-    try {
-      var setP = auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-      if (setP && typeof setP.catch === 'function') {
-        setP.catch(function (err) {
-          showBanner('Gagal mengunci penyimpanan sesi: '
-            + (err && err.message ? err.message : err));
-        });
-      }
-    } catch (e) {
-      showBanner('Gagal mengunci penyimpanan sesi: '
-        + (e && e.message ? e.message : e));
-    }
     probeSessionStorage();
   } catch (error) {
     initError = (error && error.message) || String(error);
@@ -126,6 +127,7 @@
   window.FB = {
     db: db,
     auth: auth,
+    authPersistenceReady: authPersistenceReady,
     FieldValue: FieldValue,
     serverTimestamp: function () {
       return FieldValue ? FieldValue.serverTimestamp() : null;

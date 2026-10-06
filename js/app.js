@@ -666,5 +666,5 @@ const logoutCustomerBtn=$('#logoutCustomerBtn')||$('#logoutCustomer');if(logoutC
 renderAdminProductData();renderPurchaseNotes();renderCapital();updateStockProgress();renderDashboardShortcuts();
 function safeInit(label,task){try{task()}catch(error){console.error('Inisialisasi gagal · '+label,error)}}
 [['Beranda',renderHome],['Katalog pelanggan',renderCustomer],['Keranjang',updateCustomerCart],['Katalog admin',renderAdminProducts],['Keranjang admin',renderAdminCart],['Inbox',renderInbox],['Data pelanggan',renderCustomerData],['Kasir Online',()=>{renderOnlineOrders();renderTransfers()}],['Rumpi',renderAllRumpi],['Chat Toko',()=>{renderDirectThread();renderCustomerChatSummary()}],['Kartu aplikasi',renderAppBarcode],['Beranda langsung',initLiveHome],['Koin',updateCoinUI],['Program koin',applyCoinProgram],['Kontrol suara',syncSoundControls],['Format angka',formatNumericInputs],['Tema pelanggan',()=>applyRoleTheme('customer')],['Tema admin',()=>applyRoleTheme('admin')],['Akun pelanggan',renderAccountTiles],['Susunan beranda',syncHomeSectionLayout],['Tanggal berjalan',renderCurrentDate]].forEach(([label,task])=>safeInit(label,task));
-setTimeout(()=>safeInit('Gateway',startGateway),0);
+Store.whenAuthReady().then(()=>safeInit('Gateway',startGateway));
 })();

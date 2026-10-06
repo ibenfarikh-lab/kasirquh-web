@@ -194,6 +194,9 @@ const Store = {
   _sessionSeq: 0,
   _sessionPromise: null,
   _sessionResolve: null,
+  _authBootPromise: Promise.resolve(),
+  _authBootResolve: null,
+  _authBootSettled: false,
 
   /* ---------------- util ---------------- */
 
@@ -509,14 +512,47 @@ const Store = {
 
 Object.assign(Store, {
 
-  init() {
+  async init() {
+    /* Auth boot adalah satu jalur resmi. UI tidak boleh memutuskan
+     * "tamu"/gateway sebelum Firebase selesai memastikan sesi awal. */
+    this._authBootSettled = false;
+    this._authBootPromise = new Promise(resolve => { this._authBootResolve = resolve; });
+
     if (!window.FB || !FB.ready()) {
       console.error('[KasirQuh] Firebase belum siap — adapter data tidak dijalankan.',
         window.FB && FB.initError ? FB.initError() : '');
+      this._authBootSettled = true;
+      this._authBootResolve();
+      return;
+    }
+    try {
+      /* Persistence LOCAL harus selesai sebelum listener awal dipasang.
+       * Ini bagian dari boot auth, bukan patch setelah login gagal. */
+      if (FB.authPersistenceReady) await FB.authPersistenceReady;
+    } catch (error) {
+      console.error('[KasirQuh] Auth persistence tidak tersedia; listener sesi tidak dijalankan.', error);
+      this._authBootSettled = true;
+      this._authBootResolve();
       return;
     }
     this.startPublicSubs();
-    FB.auth.onAuthStateChanged(user => { this.handleAuthState(user); });
+    FB.auth.onAuthStateChanged(async user => {
+      try {
+        await this.handleAuthState(user);
+      } finally {
+        /* Hanya callback pertama yang menutup gerbang boot. Perubahan auth
+         * berikutnya tetap berjalan normal tanpa menahan UI. */
+        if (!this._authBootSettled) {
+          this._authBootSettled = true;
+          if (this._authBootResolve) this._authBootResolve();
+          this._authBootResolve = null;
+        }
+      }
+    });
+  },
+
+  whenAuthReady() {
+    return this._authBootPromise || Promise.resolve();
   },
 
   /* Koleksi publik: berlaku untuk tamu, pelanggan, dan admin */
@@ -2095,8 +2131,6 @@ Object.assign(Store, {
 
 /* Boot lapisan data — sebelum js/app.js (render dipicu ulang setelah
  * app.js mendaftarkan Store.renderers + memanggil Store.refreshAll()). */
-try {
-  Store.init();
-} catch (error) {
+Store.init().catch(function (error) {
   console.error('[KasirQuh] Store.init gagal:', error);
-}
+});
