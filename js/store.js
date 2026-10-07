@@ -757,7 +757,7 @@ Object.assign(Store, {
 
   /* ---------------- langganan pelanggan ---------------- */
 
-  startCustomerSubs(uid) {
+  async startCustomerSubs(uid) {
     const db = FB.db;
 
     /* Dokumen sendiri: koin + nama + status persetujuan (live) */
@@ -833,9 +833,15 @@ Object.assign(Store, {
         this.render('recipes');
       }, err => this.onSubError('my_recipes', err, true)));
 
-    /* Chat toko: thread deterministik `toko_<uid>` */
+    /* Chat toko: thread deterministik `toko_<uid>` — pastikan dokumen
+     * thread ADA sebelum langganan dipasang. Rules `messages` memakai
+     * get() ke dokumen thread untuk cek kepemilikan; tanpa dokumen →
+     * permission-denied untuk pelanggan yang belum pernah chat. */
     const threadId = 'toko_' + uid;
     const threadRef = db.collection('chat_threads').doc(threadId);
+    try {
+      await threadRef.set({ type: 'toko', customerId: uid, createdAt: FB.serverTimestamp() }, { merge: true });
+    } catch (e) { /* langganan tetap dipasang; kegagalan tampil jujur via onSubError */ }
     this.onRole(threadRef.onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
       if (snap.exists) {
