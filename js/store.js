@@ -985,7 +985,8 @@ Object.assign(Store, {
         const dd = d.data() || {};
         return {
           id: d.id,
-          text: String(dd.text || ''),
+          title: String(dd.title || ''),
+          body: String(dd.body || dd.text || ''),
           time: dd.createdAt ? this.dateTimeOf(dd.createdAt) : 'Baru saja',
         };
       });
@@ -2155,14 +2156,17 @@ Object.assign(Store, {
 
   /* ---------------- Catatan Toko, resep, titip, profil (API tulis baru) ---------------- */
 
-  /* Catatan Toko: pengingat internal admin (koleksi `store_memos`) */
-  async addStoreMemo(text) {
+  /* Catatan Toko: pengingat internal admin (koleksi `store_memos`).
+   * Skema disatukan (Domain A Harmonisasi): title, body, createdAt.
+   * Dokumen lama yang hanya punya `text` tetap terbaca sebagai body. */
+  async addStoreMemo({ title, body }) {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
-    const isi = String(text || '').trim();
+    const isi = String(body || '').trim();
     if (!isi) throw new Error('Tulis catatan dulu');
     await FB.db.collection('store_memos').add({
-      text: isi.slice(0, 500),
+      title: String(title || '').trim().slice(0, 80),
+      body: isi.slice(0, 500),
       createdAt: FB.serverTimestamp(),
     });
   },
