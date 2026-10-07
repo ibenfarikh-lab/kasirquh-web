@@ -4,7 +4,7 @@
  * 1) `const S` — satu-satunya wadah state aplikasi (92 variabel state,
  *    tanpa data dummy; koleksi terisi dari Firestore lewat adapter di bawah).
  *    DIHAPUS TOTAL — diganti Firebase Auth.
- *    Kunci baru: promos, storeSettings, storeModal, customerNotesList,
+ *    Kunci baru: promos, storeSettings, customerNotesList,
  *    adminCustomerNotes, myCustomerDoc (semuanya dari Firestore).
  *
  * 2) `const Store` — lapisan data Firebase: adapter onSnapshot per koleksi,
@@ -39,13 +39,15 @@ const S = {
   titipMethod: 'Ambil di warung',
   routineChoice: 'dapur',
   hajatanChoice: 'snack',
-  priceAlerts: [],
+  priceAlerts: [], // {productId,name,priceAtWatch,watchedAt}
+  routines: [], // {name,interval,day,createdAt}
   coinBalance: 0, // dari customers/{uid}.coins (live)
   activeOrder: null,
   promoUnitPrice: {},
   pendingProductDeleteId: null,
   customerTheme: 'light',
   adminTheme: 'dark',
+  navMotion: true, // preferensi admin (persist di store_settings/main.adminNavMotion)
   activeRole: null,
   sessionRole: null,
   sessionName: null,
@@ -64,6 +66,7 @@ const S = {
   coinSpendRule: 100,
   coinSpendReward: 1,
   coinValue: 1, // dari store_settings/main.coinRate (live)
+  coinRule: '', // dari store_settings/main.coinRule (live)
   coinRedeemPercent: 50, // dari store_settings/main.coinRedeemLimit (live)
   coinRedeemEnabled: false,
   coinEvents: {checkin:true,mission:true,guess:true,spend:true},
@@ -95,6 +98,7 @@ const S = {
   titipRequests: [], // koleksi `titip_requests` (admin, live)
   recipes: [], // koleksi `recipes` (live) — menggantikan adminRecipes
   dailyCheckedIn: false,
+  dailyCheckinPending: false,
   calcExpression: '',
   lowStockThreshold: 5, // dari store_settings/main.lowStockDefault (live)
   pendingRestock: null,
@@ -123,7 +127,7 @@ const S = {
 {id:'store-notes',group:'Laci alat',label:'Catatan Toko',detail:'Pengingat internal',icon:'note',action:{kind:'sheet',value:'storeNotesModal'}},
 {id:'stock-shopping',group:'Laci alat',label:'Belanja Stok',detail:'Daftar kulakan',icon:'cart',action:{kind:'sheet',value:'stockShoppingModal'}},
 {id:'admin-ai',group:'Laci alat',label:'AI Admin',detail:'Ringkas dan saran',icon:'spark',action:{kind:'sheet',value:'adminAiModal'}},
-{id:'transfer',group:'Laci alat',label:'Bukti Transfer',detail:'Verifikasi bayar',icon:'bank',action:{kind:'sheet',value:'transferModal'}},
+{id:'transfer',group:'Laci alat',label:'Konfirmasi Transfer',detail:'Verifikasi pembayaran',icon:'bank',action:{kind:'sheet',value:'transferModal'}},
 {id:'receipt',group:'Laci alat',label:'Struk 58mm',detail:'Transaksi terakhir',icon:'receipt',action:{kind:'sheet',value:'receiptModal'}},
 {id:'settings',group:'Pengaturan',label:'Pengaturan Global',detail:'Tampilan dan akun',icon:'gear',action:{kind:'sheet',value:'adminSettingsModal'}}
 ],
@@ -151,8 +155,8 @@ const S = {
   schemeQuery: window.matchMedia('(prefers-color-scheme: dark)'),
   code39: {"0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn","*":"nwnnwnwnn"},
   promos: [], // koleksi `promos` (publik, live) — mentah, untuk pemakaian lanjutan
+  promosAdmin: [], // koleksi `promos` — SEMUA (termasuk nonaktif), khusus kelola admin
   storeSettings: {}, // dokumen `store_settings/main` (live)
-  storeModal: 0, // store_settings/main.modal — sisa modal belanja (live)
   customerNotesList: [], // koleksi `customer_notes` milik pelanggan (live) — tampil di Akun
   adminCustomerNotes: [], // koleksi `customer_notes` — admin (moderasi)
   myCustomerDoc: null, // dokumen customers/{uid} milik sesi pelanggan
@@ -188,7 +192,6 @@ const Store = {
 
   subsPublic: [],
   subsRole: [],
-  readNotifs: {},
   localInboxKinds: ['titip', 'share'],
   _msgUnsub: null,
   _sessionSeq: 0,
@@ -383,6 +386,8 @@ const Store = {
       address: String(d.note || (fulfillment === 'delivery' ? 'Diantar ke rumah' : 'Ambil di warung')),
       method: d.paymentMethod === 'transfer' ? 'Transfer' : (fulfillment === 'delivery' ? 'COD' : 'Bayar di warung'),
       paid: raw === 'selesai',
+      transferStatus: String(d.transferStatus || ''),
+      transferReference: String(d.transferReference || ''),
       items: items,
       total: Math.round(Number(d.total) || 0),
       fullTotal: Math.round(Number(d.fullTotal != null ? d.fullTotal : d.total) || 0),
@@ -567,6 +572,7 @@ Object.assign(Store, {
 
     this.onPublic(db.collection('promos').where('isActive', '==', true).onSnapshot(snap => {
       S.promos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+      this.render('promos');
     }, err => this.onSubError('promos', err)));
 
     this.onPublic(db.collection('store_settings').doc('main').onSnapshot(snap => {
@@ -585,7 +591,6 @@ Object.assign(Store, {
     if (typeof d.coinRate === 'number') S.coinValue = Math.max(1, Math.round(d.coinRate));
     if (typeof d.coinRedeemLimit === 'number') S.coinRedeemPercent = Math.min(100, Math.max(0, Math.round(d.coinRedeemLimit)));
     if (typeof d.lowStockDefault === 'number') S.lowStockThreshold = Math.min(99, Math.max(1, Math.round(d.lowStockDefault)));
-    if (typeof d.modal === 'number') S.storeModal = Math.round(d.modal);
     /* Program koin: nyala/mati + event + hadiah (live) */
     if (typeof d.coinProgramEnabled === 'boolean') S.coinProgramEnabled = d.coinProgramEnabled;
     if (d.coinEvents && typeof d.coinEvents === 'object') {
@@ -600,6 +605,7 @@ Object.assign(Store, {
     }
     if (typeof d.coinSpendReward === 'number') S.coinSpendReward = Math.max(0, Math.round(d.coinSpendReward));
     if (typeof d.coinSpendRule === 'number') S.coinSpendRule = Math.max(1, Math.round(d.coinSpendRule));
+    if (typeof d.coinRule === 'string') S.coinRule = d.coinRule;
     /* Promo kilat: produk + harga → peta harga promo (live) */
     const flashId = (typeof d.flashProductId === 'string' && d.flashProductId.trim()) ? d.flashProductId.trim() : null;
     S.flashProductId = flashId;
@@ -636,6 +642,15 @@ Object.assign(Store, {
     const hhmm = v => (typeof v === 'string' && /^\d{2}:\d{2}$/.test(v.trim())) ? v.trim() : '';
     d.openTime = hhmm(d.openTime);
     d.closeTime = hhmm(d.closeTime);
+    /* Preferensi admin (persist): tema, dering, animasi navigasi.
+     * Hanya ke state di sini; efek tampilan lewat renderer 'settings'. */
+    const adminTheme = String(d.adminTheme || '').trim();
+    if (['light', 'dark', 'system'].indexOf(adminTheme) >= 0) S.adminTheme = adminTheme;
+    if (d.adminSoundSettings && typeof d.adminSoundSettings === 'object') {
+      ['order', 'promo', 'chat'].forEach(k => { if (typeof d.adminSoundSettings[k] === 'string') S.soundSettings[k] = d.adminSoundSettings[k]; });
+      if (typeof d.adminSoundSettings.vibrate === 'boolean') S.vibrateWhenSilent = d.adminSoundSettings.vibrate;
+    }
+    if (typeof d.adminNavMotion === 'boolean') S.navMotion = d.adminNavMotion;
     /* Terapkan yang tampil: nama warung (satu sumber) + running text.
      * Input form TIDAK disentuh di sini — pakai syncSettingsForms() saat sheet dibuka. */
     try {
@@ -657,7 +672,7 @@ Object.assign(Store, {
     if (typeof renderFlashCard === 'function') renderFlashCard();
     if (typeof renderPromoCarousel === 'function') renderPromoCarousel();
     if (typeof syncHomeSectionLayout === 'function') syncHomeSectionLayout();
-    if (typeof syncGatewayPromo === 'function') syncGatewayPromo();
+    if (window.KasirQuhUI&&typeof window.KasirQuhUI.syncGatewayPromo==='function')window.KasirQuhUI.syncGatewayPromo();
   },
 
   /* Isi semua input form admin dari state — dipanggil app.js saat sheet
@@ -700,6 +715,10 @@ Object.assign(Store, {
     setVal('flashRuleInput', S.flashRule || '');
     setVal('kabarStatusInput', S.kabarStatus || '');
     setVal('kabarMoodInput', S.kabarMood || '');
+    /* Tema admin (persist) → tandai pilihan aktif di Pengaturan */
+    try {
+      document.querySelectorAll('[data-admin-theme]').forEach(b => b.classList.toggle('active', b.getAttribute('data-admin-theme') === (S.adminTheme || 'dark')));
+    } catch (e) {}
     /* Toggle tampil/sembunyi + urutan bagian Beranda */
     try {
       document.querySelectorAll('.home-section-toggle[data-section]').forEach(btn => {
@@ -746,6 +765,8 @@ Object.assign(Store, {
       if (!snap.exists) return;
       const data = snap.data();
       S.myCustomerDoc = Object.assign({ id: uid }, data);
+      if (Array.isArray(data.priceAlerts)) S.priceAlerts = data.priceAlerts;
+      if (Array.isArray(data.routines)) S.routines = data.routines;
       if (data.approvalStatus === 'rejected') {
         this.notifyUser('Pendaftaran ditolak warung');
         FB.auth.signOut();
@@ -757,7 +778,7 @@ Object.assign(Store, {
       }
       S.coinBalance = Math.max(0, Math.round(Number(data.coins) || 0));
       if (data.name) S.sessionName = data.name;
-      this.render('coins', 'profile', 'session');
+      this.render('coins', 'profile', 'session', 'checkin');
     }, err => this.onSubError('customers/' + uid, err)));
 
     /* Pesanan milik sendiri */
@@ -843,6 +864,13 @@ Object.assign(Store, {
 
   startAdminSubs() {
     const db = FB.db;
+
+    /* Promo carousel: admin melihat SEMUA (termasuk nonaktif) agar bisa mengaktifkan ulang.
+     * Tanpa ini, promo yang dinonaktifkan hilang dari daftar kelola selamanya. */
+    this.onRole(db.collection('promos').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
+      S.promosAdmin = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+      this.render('promos');
+    }, err => this.onSubError('promos_admin', err)));
 
     this.onRole(db.collection('orders').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
       S.onlineOrders = snap.docs.map(d => this.mapOrder(d)).filter(o => o);
@@ -1002,6 +1030,14 @@ Object.assign(Store, {
           if (line.productId) agg[line.productId] = (agg[line.productId] || 0) + line.qty;
         });
       });
+      /* 8 terlaris → persist ke store_settings agar tamu/pelanggan ikut dapat (rantai C2).
+       * Hanya tulis bila daftar berubah (cegah loop tulis→snapshot→tulis);
+       * lewati bila pesanan belum termuat agar tidak menimpa dengan daftar kosong. */
+      const top8 = Object.entries(agg).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([pid]) => pid);
+      const curTop = ((S.storeSettings || {}).topProductIds || []).join('|');
+      if (top8.length && top8.join('|') !== curTop) {
+        this.saveStoreSettings({ topProductIds: top8 }).catch(() => {});
+      }
     } else {
       /* Tamu/pelanggan: pakai agregat admin bila sudah dihitung (topProductIds) */
       const top = (S.storeSettings && S.storeSettings.topProductIds) || [];
@@ -1034,7 +1070,7 @@ Object.assign(Store, {
     const prevRead = {};
     (S.inboxItems || []).forEach(x => { if (x && x.read) prevRead[x.id] = true; });
     const local = (S.inboxItems || []).filter(x => x && this.localInboxKinds.indexOf(x.kind) >= 0);
-    const read = id => !!(prevRead[id] || this.readNotifs[id]);
+    const read = id => !!prevRead[id];
     const derived = [];
 
     (S.pendingCustomers || []).filter(x => x.status !== 'rejected').forEach(x => {
@@ -1129,6 +1165,7 @@ Object.assign(Store, {
     S.adminCustomerNotes = [];
     S.inboxItems = [];
     S.dailyCheckedIn = false;
+    S.dailyCheckinPending = false;
   },
 
   async handleAuthState(user) {
@@ -1177,10 +1214,11 @@ Object.assign(Store, {
         // (keputusan terkunci) + pastikan timer gateway mati.
         // Juga kembalikan layar bila sesi pulih setelah aplikasi kadung
         // masuk mode tamu (balapan timer di tab baru).
-        if (typeof stopGatewayTimer === 'function') stopGatewayTimer();
-        if (typeof go === 'function') {
+        const gatewayUI=window.KasirQuhUI||{};
+        if (typeof gatewayUI.stopGatewayTimer==='function')gatewayUI.stopGatewayTimer();
+        if (typeof gatewayUI.go==='function') {
           const gw = document.getElementById('gateway');
-          if ((gw && gw.classList.contains('active')) || sessionWasGuest) go('admin');
+          if ((gw && gw.classList.contains('active')) || sessionWasGuest) gatewayUI.go('admin');
         }
         return;
       }
@@ -1205,16 +1243,19 @@ Object.assign(Store, {
       S.sessionName = data.name || 'Pelanggan';
       S.sessionStartedAt = new Date().toISOString();
       S.myCustomerDoc = Object.assign({ id: uid }, data);
+      if (Array.isArray(data.priceAlerts)) S.priceAlerts = data.priceAlerts;
+      if (Array.isArray(data.routines)) S.routines = data.routines;
       S.coinBalance = Math.max(0, Math.round(Number(data.coins) || 0));
       this.startCustomerSubs(uid);
       this.render('session', 'profile');
       // Sesi pulih: yang sudah login langsung lewati gateway (keputusan terkunci).
       // Juga kembalikan layar bila sesi pulih setelah aplikasi kadung
       // masuk mode tamu (balapan timer di tab baru).
-      if (typeof stopGatewayTimer === 'function') stopGatewayTimer();
-      if (typeof go === 'function') {
+      const gatewayUI=window.KasirQuhUI||{};
+      if (typeof gatewayUI.stopGatewayTimer==='function')gatewayUI.stopGatewayTimer();
+      if (typeof gatewayUI.go==='function') {
         const gw = document.getElementById('gateway');
-        if ((gw && gw.classList.contains('active')) || sessionWasGuest) go('customer');
+        if ((gw && gw.classList.contains('active')) || sessionWasGuest) gatewayUI.go('customer');
       }
     } finally {
       this.endSession();
@@ -1339,7 +1380,7 @@ Object.assign(Store, {
   /* CHECKOUT pelanggan — WAJIB transaksi Firestore:
    * nomor urut counters/orders → validasi stok (baca ulang) → decrement
    * atomik → buat dokumen orders. Batal total + pesan jujur bila stok kurang. */
-  async checkoutCustomer({ cart, fulfillment, address, slot, name, payMethod }) {
+  async checkoutCustomer({ cart, fulfillment, address, slot, name, payMethod, transferReference }) {
     if (!this.needOnline()) throw __offlineError();
     const uid = S.activeCustomerId;
     if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
@@ -1375,6 +1416,13 @@ Object.assign(Store, {
         const stock = Math.max(0, Math.round(Number(pd.stock) || 0));
         if (stock < qty) {
           throw new Error('Stok ' + (pd.name || 'produk') + ' tidak cukup · tersedia ' + stock + ', diminta ' + qty);
+        }
+        /* Promo kilat: tegakkan batas per pesanan (rantai C13).
+         * Angka diambil dari teks aturan admin bila ada ("Maksimal 5 bungkus…"), default 5. Label tidak diubah. */
+        if (S.flashProductId && pid === S.flashProductId) {
+          const capMatch = String(S.flashRule || '').match(/\d+/);
+          const cap = capMatch ? Math.max(1, parseInt(capMatch[0], 10)) : 5;
+          if (qty > cap) throw new Error('Promo kilat maksimal ' + cap + ' per pesanan · kurangi jumlah ' + (pd.name || 'produk'));
         }
         const unit = this.customerUnitPrice({
           id: pid,
@@ -1420,6 +1468,7 @@ Object.assign(Store, {
         total: paidTotal,
         fullTotal: fullTotal,
         paymentMethod: payMethod === 'transfer' ? 'transfer' : 'cod',
+        transferReference: payMethod === 'transfer' ? String(transferReference || '').slice(0, 80) : '',
         fulfillment: fulfillment,
         status: 'menunggu',
         note: fulfillment === 'delivery' ? ('Diantar · ' + address) : 'Ambil di warung',
@@ -1796,6 +1845,26 @@ Object.assign(Store, {
     });
   },
 
+  /* Tolak bukti transfer (admin): status penolakan persisten di dokumen
+   * `orders` (transferStatus + rejectedAt + reason). Kartu tidak hilang
+   * dan tidak kembali "PERIKSA" saat snapshot orders rebuild. */
+  async rejectTransfer(orderId, reason) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const db = FB.db;
+    const ref = db.collection('orders').doc(orderId);
+    const snap = await ref.get();
+    if (!snap.exists) throw new Error('Pesanan tidak ditemukan');
+    const d = snap.data() || {};
+    if (d.status === 'selesai') throw new Error('Pesanan sudah lunas, tidak dapat ditolak');
+    await ref.update({
+      transferStatus: 'rejected',
+      transferRejectedAt: FB.serverTimestamp(),
+      transferRejectReason: String(reason || ''),
+      updatedAt: FB.serverTimestamp(),
+    });
+  },
+
   /* Batalkan pesanan (admin): kembalikan stok + koin, status → dibatalkan */
   async cancelOrder(orderId) {
     if (!this.needOnline()) throw __offlineError();
@@ -1869,6 +1938,8 @@ Object.assign(Store, {
     const ts = FB.serverTimestamp();
     const update = { coins: FB.FieldValue.increment(amount) };
     if (meta.reason === 'harian') update.lastCheckin = S.todayKey;
+    if (meta.reason === 'tebak_harga') update.lastGuessDate = S.todayKey;
+    if (meta.reason === 'misi' && meta.claimKey) update['missionClaims.' + String(meta.claimKey).replace(/[./]/g, '_')] = true;
     const batch = db.batch();
     batch.update(db.collection('customers').doc(uid), update);
     batch.set(db.collection('coin_ledger').doc(), {
@@ -2066,6 +2137,40 @@ Object.assign(Store, {
     await FB.db.collection('recipes').doc(id).delete();
   },
 
+  /* Promo carousel: admin kelola koleksi `promos` (rantai C8).
+   * Field: title, copy, badge, isActive. Carousel publik membaca yang isActive==true. */
+  async savePromo(data, id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const title = String((data && data.title) || '').trim();
+    if (!title) throw new Error('Isi judul promo dulu');
+    const payload = {
+      title: title.slice(0, 64),
+      copy: String((data && data.copy) || '').slice(0, 110),
+      badge: (String((data && data.badge) || 'PROMO').slice(0, 12) || 'PROMO'),
+      isActive: !data || data.isActive !== false,
+      updatedAt: FB.serverTimestamp(),
+    };
+    if (id) {
+      await FB.db.collection('promos').doc(id).update(payload);
+    } else {
+      payload.createdAt = FB.serverTimestamp();
+      await FB.db.collection('promos').add(payload);
+    }
+  },
+
+  async setPromoActive(id, isActive) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('promos').doc(id).update({ isActive: isActive !== false, updatedAt: FB.serverTimestamp() });
+  },
+
+  async deletePromo(id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('promos').doc(id).delete();
+  },
+
   /* Resepku: pelanggan tulis ke subkoleksi `customers/{uid}/my_recipes` */
   async saveMyRecipe(data) {
     if (!this.needOnline()) throw __offlineError();
@@ -2109,6 +2214,14 @@ Object.assign(Store, {
       status: 'baru',
       createdAt: FB.serverTimestamp(),
     });
+  },
+
+  /* Simpan field profil pelanggan sendiri (pantauan harga, jadwal rutin).
+   * Tamu: hanya sesi ini (tanpa uid). approvalStatus TIDAK ikut diubah. */
+  async saveCustomerDoc(patch) {
+    if (!S.activeCustomerId || S.isGuest) return; // tamu: sesi-saja
+    if (!this.needOnline()) throw __offlineError();
+    await FB.db.collection('customers').doc(S.activeCustomerId).update(patch);
   },
 
   /* Ganti nama pelanggan sendiri. Izin ditolak → diam (nama tetap sesi-saja), tanpa crash. */
