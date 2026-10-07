@@ -964,7 +964,7 @@ Object.assign(Store, {
       this.render('journal');
     }, err => this.onSubError('journal', err)));
 
-    this.onRole(db.collection('stock_notes').orderBy('date', 'desc').limit(120).onSnapshot(snap => {
+    this.onRole(db.collection('stock_notes').orderBy('date', 'desc').onSnapshot(snap => {
       const grouped = {};
       snap.docs.forEach(d => {
         const note = this.mapStockNote(d);
