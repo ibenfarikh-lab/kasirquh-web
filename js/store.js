@@ -833,15 +833,55 @@ Object.assign(Store, {
         this.render('recipes');
       }, err => this.onSubError('my_recipes', err, true)));
 
-    /* Chat toko: thread deterministik `toko_<uid>` — pastikan dokumen
+    /* Chat toko: thread deterministik `chat_threads/{uid}` (skema
+     * disatukan Tahap 1 Harmonisasi — tanpa prefix). Pastikan dokumen
      * thread ADA sebelum langganan dipasang. Rules `messages` memakai
      * get() ke dokumen thread untuk cek kepemilikan; tanpa dokumen →
      * permission-denied untuk pelanggan yang belum pernah chat. */
-    const threadId = 'toko_' + uid;
+    const threadId = uid;
     const threadRef = db.collection('chat_threads').doc(threadId);
     try {
       await threadRef.set({ type: 'toko', customerId: uid, createdAt: FB.serverTimestamp() }, { merge: true });
     } catch (e) { /* langganan tetap dipasang; kegagalan tampil jujur via onSubError */ }
+    /* MIGRASI SKEMA (Tahap 1 Harmonisasi): salin riwayat thread lama
+     * `toko_<uid>` → `{uid}` (termasuk messages). Idempoten via flag
+     * `migratedTo`; dokumen lama TIDAK dihapus (Tim Utama verifikasi
+     * dulu). Best-effort: kegagalan tidak mengganggu sesi. */
+    try {
+      const legacyRef = db.collection('chat_threads').doc('toko_' + uid);
+      const legacySnap = await legacyRef.get();
+      const legacyData = legacySnap.exists ? (legacySnap.data() || {}) : null;
+      if (legacyData && !legacyData.migratedTo) {
+        const tsMillis = v => (v && typeof v.toMillis === 'function') ? v.toMillis() : String(v == null ? '' : v);
+        const msgKey = m => String(m.senderId || '') + '|' + String(m.text || '') + '|' + tsMillis(m.createdAt);
+        const [legacyMsgs, existingMsgs] = await Promise.all([
+          legacyRef.collection('messages').orderBy('createdAt', 'asc').get(),
+          threadRef.collection('messages').orderBy('createdAt', 'asc').get(),
+        ]);
+        const seen = new Set(existingMsgs.docs.map(d => msgKey(d.data() || {})));
+        const batch = db.batch();
+        legacyMsgs.docs.forEach(md => {
+          const m = md.data() || {};
+          if (seen.has(msgKey(m))) return;
+          batch.set(threadRef.collection('messages').doc(), {
+            senderId: m.senderId || uid,
+            senderRole: m.senderRole || 'customer',
+            text: String(m.text || ''),
+            createdAt: m.createdAt || FB.serverTimestamp(),
+          });
+        });
+        if (legacyData.lastMessage && !((await threadRef.get()).data() || {}).lastMessage) {
+          batch.set(threadRef, {
+            lastMessage: legacyData.lastMessage,
+            updatedAt: legacyData.updatedAt || FB.serverTimestamp(),
+            unreadCustomer: Number(legacyData.unreadCustomer) || 0,
+            unreadAdmin: Number(legacyData.unreadAdmin) || 0,
+          }, { merge: true });
+        }
+        batch.set(legacyRef, { migratedTo: uid, migratedAt: FB.serverTimestamp() }, { merge: true });
+        await batch.commit();
+      }
+    } catch (e) { /* migrasi best-effort */ }
     this.onRole(threadRef.onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
       if (snap.exists) {
@@ -1006,7 +1046,7 @@ Object.assign(Store, {
 
   resolveThreadId(threadId) {
     if (threadId === 'toko' && S.sessionRole !== 'admin' && S.activeCustomerId) {
-      return 'toko_' + S.activeCustomerId;
+      return S.activeCustomerId;
     }
     return threadId;
   },
@@ -2000,7 +2040,7 @@ Object.assign(Store, {
     } else {
       if (!S.activeCustomerId) throw new Error('Masuk dulu sebagai pelanggan');
       customerId = S.activeCustomerId;
-      threadId = 'toko_' + customerId;
+      threadId = customerId;
       side = 'customer';
     }
     const threadRef = db.collection('chat_threads').doc(threadId);
