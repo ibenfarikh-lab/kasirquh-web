@@ -882,6 +882,26 @@ Object.assign(Store, {
         await batch.commit();
       }
     } catch (e) { /* migrasi best-effort */ }
+    /* PEMBERSIHAN OTOMATIS (Tahap 1 Harmonisasi, disetujui user):
+     * hapus dokumen lama `toko_<uid>` beserta messages-nya.
+     * ATURAN KERAS: hanya bila flag `migratedTo` ADA dan milik pelanggan
+     * ini — tanpa flag = riwayat belum pindah = JANGAN disentuh.
+     * Lazy per pelanggan, best-effort, tidak mengganggu sesi. */
+    try {
+      const legacyRef = db.collection('chat_threads').doc('toko_' + uid);
+      const legacySnap = await legacyRef.get();
+      const legacyData = legacySnap.exists ? (legacySnap.data() || {}) : null;
+      if (legacyData && legacyData.migratedTo === uid) {
+        const legacyMsgs = await legacyRef.collection('messages').get();
+        const targets = legacyMsgs.docs.map(d => d.ref);
+        targets.push(legacyRef); // induk dihapus PALING AKHIR
+        for (let i = 0; i < targets.length; i += 400) {
+          const batch = db.batch();
+          targets.slice(i, i + 400).forEach(ref => batch.delete(ref));
+          await batch.commit();
+        }
+      }
+    } catch (e) { /* pembersihan best-effort */ }
     this.onRole(threadRef.onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
       if (snap.exists) {
