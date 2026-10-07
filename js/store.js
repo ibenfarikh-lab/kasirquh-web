@@ -326,7 +326,7 @@ const Store = {
       unit: d.unit || 'pcs',
       price: Math.max(0, Math.round(Number(d.price) || 0)),
       cost: Math.max(0, Math.round(Number(d.costPrice) || 0)),
-      stock: Math.max(0, Math.round(Number(d.stock) || 0)),
+      stock: Math.max(0, Number(d.stock) || 0),
       img: d.photoUrl || 'assets/img/img-021.png',
       barcode: d.barcode || '',
       promo: !!d.promo,
@@ -1480,7 +1480,7 @@ Object.assign(Store, {
         const pSnap = await t.get(pRef);
         if (!pSnap.exists) throw new Error('Ada produk yang sudah tidak tersedia');
         const pd = pSnap.data() || {};
-        const stock = Math.max(0, Math.round(Number(pd.stock) || 0));
+        const stock = Math.max(0, Number(pd.stock) || 0);
         if (stock < qty) {
           throw new Error('Stok ' + (pd.name || 'produk') + ' tidak cukup · tersedia ' + stock + ', diminta ' + qty);
         }
@@ -1740,7 +1740,7 @@ Object.assign(Store, {
           const snap = await t.get(ref);
           if (!snap.exists) throw new Error('Produk "' + item.name + '" tidak ditemukan');
           const pd = snap.data() || {};
-          const oldStock = Math.max(0, Math.round(Number(pd.stock) || 0));
+          const oldStock = Math.max(0, Number(pd.stock) || 0);
           const oldCost = Math.max(0, Math.round(Number(pd.costPrice) || 0));
           const newCost = item.costChoice === 'new'
             ? item.unitCost
