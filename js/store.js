@@ -587,6 +587,7 @@ Object.assign(Store, {
 
     this.refreshProducts();
     this.watchPatungan();
+    this.watchRecipes();
 
     this.onPublic(db.collection('promos').where('isActive', '==', true).onSnapshot(snap => {
       S.promos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
@@ -1691,6 +1692,18 @@ Object.assign(Store, {
       note: 'Penjualan · Kasir', refId: '', method: 'Tunai',
       profit: Math.round(profit || 0), itemCount: itemCount || 0,
       createdAt: ts,
+    });
+    /* Catat juga sebagai order selesai agar masuk Sedang Laris */
+    const orderRef = db.collection('orders').doc();
+    batch.set(orderRef, {
+      customerId: 'kasir',
+      customerName: 'Kasir',
+      status: 'selesai',
+      paymentMethod: 'Tunai',
+      stockLines: lines.map(l => ({ productId: l.productId, qty: l.qty, name: l.name, total: l.total })),
+      total: Math.round(total),
+      createdAt: ts,
+      _dateKey: new Date().toISOString().slice(0, 10),
     });
     await batch.commit();
   },
