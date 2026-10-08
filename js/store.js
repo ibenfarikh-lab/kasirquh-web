@@ -782,8 +782,8 @@ Object.assign(Store, {
         S.patunganList = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
           .sort((a, b) => tsVal(b) - tsVal(a));
         this.render('patungan');
-      } catch (e) { if (typeof toast === 'function') toast('[DBG] patungan render err: ' + (e && e.message)); }
-    }, err => { if (typeof toast === 'function') toast('[DBG] patungan sub err: ' + (err && err.code) + ' ' + (err && err.message)); this.onSubError('patungan', err); }));
+      } catch (e) { console.error('[KasirQuh] patungan render gagal:', e); }
+    }, err => this.onSubError('patungan', err)));
   },
 
   async createPatungan(data) {
