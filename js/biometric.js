@@ -40,35 +40,50 @@
       req.onerror = function () { reject(req.error); };
     });
   }
-  function dbGet() {
+  /* Penyimpanan multi-akun: { enrollments: { email: record } } */
+  function dbGetAll() {
     return openDb().then(function (db) {
       return new Promise(function (resolve, reject) {
         var tx = db.transaction(STORE, 'readonly');
         var req = tx.objectStore(STORE).get(RECORD_ID);
-        req.onsuccess = function () { resolve(req.result || null); };
+        req.onsuccess = function () { resolve(req.result || { enrollments: {} }); };
         req.onerror = function () { reject(req.error); };
       });
     });
   }
-  function dbPut(record) {
-    return openDb().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        var tx = db.transaction(STORE, 'readwrite');
-        tx.objectStore(STORE).put(record, RECORD_ID);
-        tx.oncomplete = function () { resolve(); };
-        tx.onerror = function () { reject(tx.error); };
+  function dbPut(email, record) {
+    return dbGetAll().then(function (all) {
+      all.enrollments = all.enrollments || {};
+      all.enrollments[email] = record;
+      return openDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(STORE, 'readwrite');
+          tx.objectStore(STORE).put(all, RECORD_ID);
+          tx.oncomplete = function () { resolve(); };
+          tx.onerror = function () { reject(tx.error); };
+        });
       });
     });
   }
-  function dbDelete() {
-    return openDb().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        var tx = db.transaction(STORE, 'readwrite');
-        tx.objectStore(STORE).delete(RECORD_ID);
-        tx.oncomplete = function () { resolve(); };
-        tx.onerror = function () { reject(tx.error); };
+  function dbDelete(email) {
+    return dbGetAll().then(function (all) {
+      if (all.enrollments) delete all.enrollments[email];
+      return openDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(STORE, 'readwrite');
+          tx.objectStore(STORE).put(all, RECORD_ID);
+          tx.oncomplete = function () { resolve(); };
+          tx.onerror = function () { reject(tx.error); };
+        });
       });
     });
+  }
+  /* Migrasi: ubah record lama (single) menjadi format multi-akun */
+  function migrateIfNeeded(all) {
+    if (all && all.credentialId && all.email && !(all.enrollments)) {
+      return { enrollments: (function(){ var o={}; o[all.email]=all; return o; })() };
+    }
+    return all;
   }
 
   function prfOutputFrom(res) {
@@ -97,12 +112,23 @@
       }).catch(function () { return false; });
     },
 
-    /* Apakah akun sudah mendaftarkan sidik jari di perangkat ini. */
-    isEnrolled: function () {
-      return dbGet().then(function (r) { return !!(r && r.credentialId); });
+    /* Apakah ada sidik jari terdaftar untuk role ini. */
+    isEnrolled: function (role) {
+      return dbGetAll().then(function (all) {
+        all = migrateIfNeeded(all);
+        var ens = (all && all.enrollments) || {};
+        if (!role) return Object.keys(ens).length > 0;
+        return Object.keys(ens).some(function (em) { return ens[em].role === role; });
+      });
     },
-    enrolledEmail: function () {
-      return dbGet().then(function (r) { return (r && r.email) || null; });
+    enrolledEmail: function (role) {
+      return dbGetAll().then(function (all) {
+        all = migrateIfNeeded(all);
+        var ens = (all && all.enrollments) || {};
+        var keys = Object.keys(ens);
+        if (role) keys = keys.filter(function (em) { return ens[em].role === role; });
+        return keys.length ? keys[0] : null;
+      });
     },
 
     /* Daftarkan sidik jari: buat kredensial WebAuthn + simpan password terenkripsi.
@@ -178,7 +204,7 @@
             var iv = crypto.getRandomValues(new Uint8Array(12));
             return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(password))
               .then(function (enc) {
-                return dbPut({
+                return dbPut(email, {
                   email: email,
                   role: role || 'customer',
                   credentialId: bufToB64(createdCred.rawId),
@@ -193,9 +219,14 @@
     },
 
     /* Login dengan sidik jari: verifikasi → dekripsi → {email, password, role}. */
-    authenticate: function () {
-      return dbGet().then(function (stored) {
-        if (!stored || !stored.credentialId) throw new Error('Belum ada sidik jari terdaftar di perangkat ini.');
+    authenticate: function (role) {
+      return dbGetAll().then(function (all) {
+        all = migrateIfNeeded(all);
+        var ens = (all && all.enrollments) || {};
+        var keys = Object.keys(ens);
+        if (role) keys = keys.filter(function (em) { return ens[em].role === role; });
+        if (!keys.length) throw new Error('Belum ada sidik jari terdaftar di perangkat ini.');
+        var stored = ens[keys[0]];
         return navigator.credentials.get({
           publicKey: {
             challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -220,8 +251,16 @@
       });
     },
 
-    /* Hapus pendaftaran sidik jari di perangkat ini. */
-    remove: function () { return dbDelete(); },
+    /* Hapus pendaftaran sidik jari di perangkat ini (semua jika tanpa argumen). */
+    remove: function (email) {
+      if (email) return dbDelete(email);
+      return dbGetAll().then(function (all) {
+        all = migrateIfNeeded(all);
+        var ens = (all && all.enrollments) || {};
+        var ps = Object.keys(ens).map(function (em) { return dbDelete(em); });
+        return Promise.all(ps);
+      });
+    },
 
     /* Diagnostik: kembalikan detail dukungan per fitur. */
     diagnose: function () {

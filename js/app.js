@@ -77,7 +77,7 @@ function bioOfferEnroll(email,password,role){
   if(!window.KasirquhBio)return;
   window.KasirquhBio.isSupported().then(function(ok){
     if(!ok)return;
-    window.KasirquhBio.isEnrolled().then(function(enrolled){
+    window.KasirquhBio.isEnrolled(role).then(function(enrolled){
       if(enrolled)return;
       if(confirm('Aktifkan login sidik jari di perangkat ini?\n\nSidik jari dipakai untuk masuk cepat tanpa ketik kata sandi.')){
         window.KasirquhBio.register(email,password,role).then(function(){
@@ -94,7 +94,7 @@ function bioLoginFlow(role){
   if(!Bio)return;
   var status=role==='admin'?$('#adminLoginStatus'):$('#loginAuthStatus');
   function fail(msg){if(status){status.className='auth-status error';status.textContent=msg}}
-  Bio.authenticate().then(function(cred){
+  Bio.authenticate(role).then(function(cred){
     if(!cred||!cred.email||!cred.password){fail('Gagal membaca sidik jari');return}
     if(status){status.className='auth-status';status.textContent='Sidik jari cocok, menghubungkan…'}
     var loginP=role==='admin'?Store.loginAdmin(cred.email,cred.password):Store.loginCustomer(cred.email,cred.password);
@@ -108,17 +108,18 @@ function bioLoginFlow(role){
 }
 function bioRefreshButtons(){
   if(!window.KasirquhBio)return;
+  var ab=$('#adminBioLogin'),cb=$('#customerBioLogin'),rb=$('#bioRemoveBtn');
+  window.KasirquhBio.isEnrolled('admin').then(function(e){if(ab)ab.hidden=!e});
+  window.KasirquhBio.isEnrolled('customer').then(function(e){if(cb)cb.hidden=!e});
   window.KasirquhBio.isEnrolled().then(function(enrolled){
-    var ab=$('#adminBioLogin'),cb=$('#customerBioLogin');
-    if(ab)ab.hidden=!enrolled;
-    if(cb)cb.hidden=!enrolled;
-    var rb=$('#bioRemoveBtn');if(rb)rb.hidden=!enrolled;
-    if(enrolled)window.KasirquhBio.enrolledEmail().then(function(email){
-      if(email){
-        var ae=$('#adminLoginEmail'),ce=$('#loginEmail');
-        if(ae&&!ae.value)ae.placeholder=email;
-        if(ce&&!ce.value)ce.placeholder=email;
-      }
+    if(rb)rb.hidden=!enrolled;
+    window.KasirquhBio.enrolledEmail('admin').then(function(email){
+      var ae=$('#adminLoginEmail');
+      if(email&&ae&&!ae.value)ae.placeholder=email;
+    });
+    window.KasirquhBio.enrolledEmail('customer').then(function(email){
+      var ce=$('#loginEmail');
+      if(email&&ce&&!ce.value)ce.placeholder=email;
     });
   });
 }
