@@ -54,6 +54,7 @@ function openProductForm(id){S.editingProductId=id||null;const product=id?S.prod
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__tt);window.__tt=setTimeout(()=>t.classList.remove('show'),1800)}
 /* [DBG SEMENTARA] penanda tahap checkout — dihapus setelah root cause ketemu */
 function dbgMark(label){try{let box=document.getElementById('dbgMarks');if(!box){box=document.createElement('div');box.id='dbgMarks';box.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#1c1410;color:#ffd9a0;font-size:11px;line-height:1.5;padding:10px 12px;border-radius:10px;max-height:38vh;overflow:auto;white-space:pre-wrap;box-shadow:0 4px 18px rgba(0,0,0,.4)';document.body.appendChild(box)}box.textContent+='[DBG] '+label+'\n';box.scrollTop=box.scrollHeight}catch(e){}}
+window.dbgMark=dbgMark; /* [DBG SEMENTARA] agar terlihat dari store.js (app.js dibungkus IIFE) */
 function resolvedTheme(choice){return choice==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):choice}
 function applyRoleTheme(role){const choice=role==='admin'?S.adminTheme:S.customerTheme,actual=resolvedTheme(choice),surface=$('#'+role);surface.dataset.themeMode=choice;surface.dataset.renderTheme=actual;if(S.activeRole===role){document.body.dataset.uiTheme=actual;document.documentElement.style.colorScheme=actual}}
 function activateRoleTheme(role){S.activeRole=role;applyRoleTheme(role)}
