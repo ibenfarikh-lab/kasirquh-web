@@ -1763,7 +1763,7 @@ Object.assign(Store, {
         costPrice: Math.max(0, Math.round(Number(item.cost) || 0)),
         stock: Math.max(0, Number(item.stock) || 0),
         barcode: code,
-        photoUrl: '',
+        photoUrl: String(item.photo || '').trim(),
         isActive: true,
         updatedAt: ts,
       };

@@ -338,6 +338,7 @@ const CSV_HEADER_ALIASES = {
   stock: ['stok', 'stock', 'jumlah', 'qty'],
   cost: ['modal', 'harga modal', 'cost', 'harga beli', 'harga kulak'],
   price: ['harga', 'harga jual', 'price'],
+  photo: ['foto', 'photo', 'gambar', 'image', 'photourl', 'foto url'],
 };
 function mapCsvRows(rows) {
   const out = { items: [], skipped: [] };
@@ -357,7 +358,7 @@ function mapCsvRows(rows) {
     const barcode = get('barcode');
     const dedupeKey = barcode ? 'kode:' + barcode : 'baris:' + lineNo;
     seen[dedupeKey] = {
-      barcode: barcode, name: name,
+      barcode: barcode, name: name, photo: get('photo'),
       cat: get('cat') || 'Lainnya',
       unit: get('unit') || 'pcs',
       stock: parseCsvNumber(get('stock')),
