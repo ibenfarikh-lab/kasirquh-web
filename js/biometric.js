@@ -141,7 +141,11 @@
           }).then(function (assert2) {
             var out2 = prfOutputFrom(assert2);
             if (out2) return out2;
-            throw new Error('Perangkat tidak mengembalikan kunci sidik jari (PRF). Pastikan Chrome diperbarui dan sidik jari terdaftar di perangkat.');
+            return Bio.diagnose().then(function (d) {
+              var info = 'platform=' + d.platformAuth + ', prf=' +
+                ((d.capabilities && d.capabilities.prf !== undefined) ? d.capabilities.prf : '?');
+              throw new Error('Perangkat tidak mengembalikan kunci sidik jari (PRF). [' + info + '] Pastikan Chrome terbaru & sidik jari terdaftar di HP.');
+            });
           });
         });
       }
@@ -218,6 +222,27 @@
 
     /* Hapus pendaftaran sidik jari di perangkat ini. */
     remove: function () { return dbDelete(); },
+
+    /* Diagnostik: kembalikan detail dukungan per fitur. */
+    diagnose: function () {
+      var out = {
+        secureContext: !!window.isSecureContext,
+        webAuthn: !!window.PublicKeyCredential,
+        userAgent: navigator.userAgent || '',
+      };
+      if (!out.webAuthn) return Promise.resolve(out);
+      var p1 = typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
+        ? PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(function(){return 'error'})
+        : Promise.resolve('n/a');
+      var p2 = typeof PublicKeyCredential.getClientCapabilities === 'function'
+        ? PublicKeyCredential.getClientCapabilities().catch(function(){return 'error'})
+        : Promise.resolve('n/a');
+      return Promise.all([p1, p2]).then(function (r) {
+        out.platformAuth = r[0];
+        out.capabilities = r[1];
+        return out;
+      });
+    },
   };
 
   window.KasirquhBio = Bio;
