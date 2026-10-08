@@ -185,6 +185,24 @@ function __offlineError() {
   return error;
 }
 
+/* Batas waktu operasi tulis: janji yang tak kunjung selesai ditolak dengan
+ * pesan jelas (kode TIMEOUT) agar tombol tak mati selamanya tanpa penjelasan. */
+function __withTimeout(promise, ms, label) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error((label || 'Operasi') + ' terlalu lama · periksa koneksi lalu coba lagi');
+      error.code = 'TIMEOUT';
+      reject(error);
+    }, ms);
+  });
+  return Promise.race([
+    Promise.resolve(promise).finally(() => { if (timer) clearTimeout(timer); }),
+    timeout,
+  ]);
+}
+const WRITE_TIMEOUT_MS = 30000;
+
 const Store = {
   /* Diisi js/app.js saat boot: nama -> fungsi render, dan (msg)=>toast(msg) */
   renderers: {},
@@ -330,6 +348,7 @@ const Store = {
       img: d.photoUrl || 'assets/img/img-021.png',
       barcode: d.barcode || '',
       promo: !!d.promo,
+      isActive: d.isActive !== false,
       lowStockAt: Number(d.lowStockAt) || 5,
       wholesaleQty: Math.max(0, Number(d.wholesaleQty) || 0),
       wholesalePrice: Math.max(0, Math.round(Number(d.wholesalePrice) || 0)),
@@ -1349,20 +1368,20 @@ Object.assign(Store, {
     if (!this.needOnline()) throw __offlineError();
     let cred;
     try {
-      cred = await FB.auth.createUserWithEmailAndPassword(email, password);
+      cred = await __withTimeout(FB.auth.createUserWithEmailAndPassword(email, password), WRITE_TIMEOUT_MS, 'Pendaftaran');
     } catch (error) {
       throw new Error(this.authErrorMessage(error));
     }
     const uid = cred.user.uid;
     try {
-      await FB.db.collection('customers').doc(uid).set({
+      await __withTimeout(FB.db.collection('customers').doc(uid).set({
         name: name,
         email: email,
         wa: wa || '',
         approvalStatus: 'pending',
         coins: 0,
         createdAt: FB.serverTimestamp(),
-      });
+      }), WRITE_TIMEOUT_MS, 'Pendaftaran');
     } catch (error) {
       try { await cred.user.delete(); } catch (e) {}
       throw new Error(this.authErrorMessage(error));
@@ -1458,7 +1477,7 @@ Object.assign(Store, {
     const FV = FB.FieldValue;
     const orderRef = db.collection('orders').doc();
 
-    return db.runTransaction(async t => {
+    return __withTimeout(db.runTransaction(async t => {
       /* 1. nomor urut */
       const counterRef = db.collection('counters').doc('orders');
       const counterSnap = await t.get(counterRef);
@@ -1572,7 +1591,7 @@ Object.assign(Store, {
         method: payMethod === 'transfer' ? 'Transfer' : (fulfillment === 'delivery' ? 'COD' : 'Bayar di warung'),
         itemCount: entries.reduce((a, [, q]) => a + q, 0),
       };
-    });
+    }), WRITE_TIMEOUT_MS, 'Checkout');
   },
 
   /* Kasir admin (tunai + kembalian): decrement stok atomik (batch) +
@@ -1967,7 +1986,7 @@ Object.assign(Store, {
       label: meta.label || 'Koin masuk', detail: meta.detail || '',
       createdAt: ts,
     });
-    await batch.commit();
+    await __withTimeout(batch.commit(), WRITE_TIMEOUT_MS, 'Klaim koin');
   },
 
   /* Koreksi koin oleh admin: delta negatif → jurnal beban_promosi
@@ -2021,13 +2040,13 @@ Object.assign(Store, {
     const unreadField = side === 'admin' ? 'unreadCustomer' : 'unreadAdmin';
     const header = { type: 'toko', customerId: customerId, lastMessage: text, updatedAt: ts };
     header[unreadField] = FB.FieldValue.increment(1);
-    await threadRef.set(header, { merge: true });
-    await threadRef.collection('messages').add({
+    await __withTimeout(threadRef.set(header, { merge: true }), WRITE_TIMEOUT_MS, 'Kirim pesan');
+    await __withTimeout(threadRef.collection('messages').add({
       senderId: side === 'admin' ? 'admin' : customerId,
       senderRole: side,
       text: text,
       createdAt: ts,
-    });
+    }), WRITE_TIMEOUT_MS, 'Kirim pesan');
     this.render('chat');
   },
 
@@ -2048,7 +2067,7 @@ Object.assign(Store, {
     if (!text) throw new Error('Tulis dulu');
     if (!this.needOnline()) throw __offlineError();
     const isAdmin = S.sessionRole === 'admin';
-    await FB.db.collection('rumpi_posts').add({
+    await __withTimeout(FB.db.collection('rumpi_posts').add({
       authorId: isAdmin ? 'admin' : (S.activeCustomerId || 'tamu'),
       authorName: isAdmin ? 'Mimi · Warung' : (S.sessionName || 'Warga'),
       authorRole: isAdmin ? 'admin' : 'customer',
@@ -2057,7 +2076,7 @@ Object.assign(Store, {
       likeCount: 0,
       isSeed: false,
       createdAt: FB.serverTimestamp(),
-    });
+    }), WRITE_TIMEOUT_MS, 'Kirim postingan');
   },
 
   async deleteRumpi(postId) {
@@ -2228,7 +2247,7 @@ Object.assign(Store, {
     if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
     const barang = String(item || '').trim();
     if (!barang) throw new Error('Tulis barang yang dititip dulu');
-    await FB.db.collection('titip_requests').add({
+    await __withTimeout(FB.db.collection('titip_requests').add({
       customerId: uid,
       customerName: S.sessionName || 'Pelanggan',
       item: barang.slice(0, 100),
@@ -2236,7 +2255,7 @@ Object.assign(Store, {
       method: String(method || 'Ambil di warung'),
       status: 'baru',
       createdAt: FB.serverTimestamp(),
-    });
+    }), WRITE_TIMEOUT_MS, 'Kirim titipan');
   },
 
   /* Simpan field profil pelanggan sendiri (pantauan harga, jadwal rutin).
