@@ -235,6 +235,8 @@ $('#navAnimationToggle').onclick=()=>{const on=toggleSimpleSetting($('#navAnimat
 
 /* Keputusan user 2026-10-07: setelah "Keluar" dari Mode Admin, sheet "Masuk Admin"
  * langsung dibuka (ganti akun cepat) — bukan kembali ke gateway tanpa pintu masuk. */
+$('#switchToCustomerBtn').onclick=()=>{S.adminPreviewing=true;$('#backToAdminBtn').hidden=false;go('customer');toast('Mode Pelanggan · tap tombol bawah untuk kembali')};
+$('#backToAdminBtn').onclick=()=>{S.adminPreviewing=false;$('#backToAdminBtn').hidden=true;go('admin')};
 $('#logoutAdmin').onclick=()=>{S.sessionRole=null;S.sessionName=null;S.sessionStartedAt=null;S.activeCustomerId=null;S.isGuest=true;Store.logout();go('gateway');openAdminAccess()};
 const refreshSystemTheme=()=>{if(S.customerTheme==='system')applyRoleTheme('customer');if(S.adminTheme==='system')applyRoleTheme('admin')};if(S.schemeQuery.addEventListener)S.schemeQuery.addEventListener('change',refreshSystemTheme);else if(S.schemeQuery.addListener)S.schemeQuery.addListener(refreshSystemTheme);
 
