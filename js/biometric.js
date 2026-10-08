@@ -106,10 +106,45 @@
     },
 
     /* Daftarkan sidik jari: buat kredensial WebAuthn + simpan password terenkripsi.
-     * Dipanggil setelah login manual berhasil + user setuju (opt-in). */
+     * Dipanggil setelah login manual berhasil + user setuju (opt-in).
+     *
+     * Catatan kompatibilitas: Chrome <147 tidak mengevaluasi PRF saat
+     * create(), hanya saat get(). Maka jika create() tidak mengembalikan
+     * PRF, langsung lakukan get() sebagai fallback. */
     register: function (email, password, role) {
       var salt = crypto.getRandomValues(new Uint8Array(32));
       var rpId = location.hostname;
+      var createdCred = null;
+      function getPrfViaGet() {
+        return navigator.credentials.get({
+          publicKey: {
+            challenge: crypto.getRandomValues(new Uint8Array(32)),
+            allowCredentials: [{ id: createdCred.rawId, type: 'public-key' }],
+            userVerification: 'required',
+            timeout: 60000,
+            extensions: { prf: { eval: { first: salt } } },
+          },
+        }).then(function (assert) {
+          var out = prfOutputFrom(assert);
+          if (out) return out;
+          // Coba terakhir: evalByCredential (format: {credIdB64: {first: salt}})
+          var ebc = {};
+          ebc[bufToB64(createdCred.rawId)] = { first: salt };
+          return navigator.credentials.get({
+            publicKey: {
+              challenge: crypto.getRandomValues(new Uint8Array(32)),
+              allowCredentials: [{ id: createdCred.rawId, type: 'public-key' }],
+              userVerification: 'required',
+              timeout: 60000,
+              extensions: { prf: { evalByCredential: ebc } },
+            },
+          }).then(function (assert2) {
+            var out2 = prfOutputFrom(assert2);
+            if (out2) return out2;
+            throw new Error('Perangkat tidak mengembalikan kunci sidik jari (PRF). Pastikan Chrome diperbarui dan sidik jari terdaftar di perangkat.');
+          });
+        });
+      }
       return navigator.credentials.create({
         publicKey: {
           challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -119,7 +154,7 @@
             name: email,
             displayName: email,
           },
-          pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+          pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
           authenticatorSelection: {
             authenticatorAttachment: 'platform',
             userVerification: 'required',
@@ -129,8 +164,11 @@
           extensions: { prf: { eval: { first: salt } } },
         },
       }).then(function (cred) {
+        createdCred = cred;
         var prfOut = prfOutputFrom(cred);
-        if (!prfOut) throw new Error('Perangkat tidak mengembalikan kunci sidik jari (PRF).');
+        if (prfOut) return prfOut;
+        return getPrfViaGet();
+      }).then(function (prfOut) {
         return crypto.subtle.importKey('raw', prfOut, 'AES-GCM', false, ['encrypt'])
           .then(function (key) {
             var iv = crypto.getRandomValues(new Uint8Array(12));
@@ -139,7 +177,7 @@
                 return dbPut({
                   email: email,
                   role: role || 'customer',
-                  credentialId: bufToB64(cred.rawId),
+                  credentialId: bufToB64(createdCred.rawId),
                   salt: bufToB64(salt),
                   iv: bufToB64(iv),
                   data: bufToB64(enc),
