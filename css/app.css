@@ -304,12 +304,10 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .kat-hero .kat-hero-price s{opacity:.7;font-size:13px;margin-right:6px}
 .kat-hero .kat-hero-price b{font-size:24px;font-weight:900}
 .kat-hero .kat-hero-cta{margin-top:10px;display:inline-block;background:rgba(255,255,255,.22);border:0;color:#fff;font-weight:800;font-size:12px;padding:8px 16px;border-radius:12px;cursor:pointer}
-.kat-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.kat-cat{background:#2d231e;color:#fff;border:0;border-radius:16px;padding:13px 8px;text-align:center;cursor:pointer}
-.kat-cat .ic{font-size:24px}
-.kat-cat b{display:block;font-size:12px;margin-top:6px}
-.kat-cat small{color:#c9a87f;font-size:10px}
-.kat-cat.active{outline:2px solid #f49a24}
+.kat-cat-grid{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none}
+.kat-cat-grid::-webkit-scrollbar{display:none}
+.kat-chip{flex-shrink:0;border:1.5px solid #2b2b2b;background:#fff;border-radius:16px;padding:10px 20px;font-size:14px;font-weight:600;color:#1a1a1a;cursor:pointer;white-space:nowrap}
+.kat-chip.active{background:#fdeeda;border-color:#fdeeda}
 .kat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 .kat-grid .product-card{grid-template-columns:1fr;grid-template-rows:auto auto auto;text-align:left;min-height:0;padding:10px}
 .kat-grid .product-card img{width:100%;height:90px}
