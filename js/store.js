@@ -841,11 +841,13 @@ Object.assign(Store, {
     );
   },
 
-  /* Langganan koleksi `recipes` (baca: yang login saja, sesuai aturan).
-   * Dipasang di langganan pelanggan DAN admin. */
+  /* Langganan koleksi `recipes` (baca: publik, sesuai aturan).
+   * Satu langganan publik permanen — tidak ikut terputus saat ganti mode. */
   watchRecipes() {
+    if (this._recipesWatched) return;
+    this._recipesWatched = true;
     const db = FB.db;
-    this.onRole(db.collection('recipes').orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
+    this.onPublic(db.collection('recipes').orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
       S.recipes = snap.docs.map(d => this.mapRecipe(d));
       this.render('recipes');
     }, err => this.onSubError('recipes', err)));
