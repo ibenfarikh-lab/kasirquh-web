@@ -137,6 +137,7 @@ const S = {
   purchaseNotes: {}, // koleksi `stock_notes` (admin, live) — dikelompokkan per tanggal
   editingPurchaseNote: null,
   inboxItems: [], // diturunkan: antrean pelanggan + pesanan aktif + stok menipis + chat
+  inboxReadIds: [], // ID notifikasi yg sudah dibaca (persisten Firestore)
   customerData: [], // koleksi `customers` (approved) — admin saja
   pendingCustomers: [], // koleksi `customers` (pending/rejected) — admin saja
   onlineOrders: [], // koleksi `orders` (admin: semua; pelanggan: milik sendiri)
@@ -608,6 +609,7 @@ Object.assign(Store, {
     S.storeSettings = data || {};
     const d = S.storeSettings;
     if (Array.isArray(d.dashboardShortcutIds) && d.dashboardShortcutIds.length) S.dashboardShortcutIds = d.dashboardShortcutIds.filter(id => typeof id === 'string').slice(0, 6);
+    if (Array.isArray(d.inboxReadIds)) S.inboxReadIds = d.inboxReadIds.filter(id => typeof id === 'string').slice(0, 200);
     if (typeof d.coinRate === 'number') S.coinValue = Math.max(1, Math.round(d.coinRate));
     if (typeof d.coinRedeemLimit === 'number') S.coinRedeemPercent = Math.min(100, Math.max(0, Math.round(d.coinRedeemLimit)));
     if (typeof d.lowStockDefault === 'number') S.lowStockThreshold = Math.min(99, Math.max(1, Math.round(d.lowStockDefault)));
@@ -1157,7 +1159,8 @@ Object.assign(Store, {
     const prevRead = {};
     (S.inboxItems || []).forEach(x => { if (x && x.read) prevRead[x.id] = true; });
     const local = (S.inboxItems || []).filter(x => x && this.localInboxKinds.indexOf(x.kind) >= 0);
-    const read = id => !!prevRead[id];
+    const persisted = new Set(S.inboxReadIds || []);
+    const read = id => !!prevRead[id] || persisted.has(id);
     const derived = [];
 
     (S.pendingCustomers || []).filter(x => x.status !== 'rejected').forEach(x => {
