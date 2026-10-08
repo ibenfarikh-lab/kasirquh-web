@@ -323,3 +323,11 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .back-admin-fab{position:fixed;z-index:25;left:50%;transform:translateX(-50%);bottom:calc(66px + max(16px,env(safe-area-inset-bottom)));display:flex;align-items:center;gap:8px;border:0;border-radius:20px;background:#2d231e;color:#ffc16c;padding:12px 18px;font-size:13px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer}
 .back-admin-fab .icon{width:18px;height:18px}
 .back-admin-fab[hidden]{display:none}
+
+/* Patungan Warga */
+.patungan-bar{height:8px;border-radius:6px;background:#ece5dd;overflow:hidden;margin:8px 0}
+.patungan-bar i{display:block;height:100%;background:linear-gradient(90deg,#ff9b3e,#f49a24);border-radius:6px;transition:width .3s}
+.join-total{font-size:16px;font-weight:900;color:#b9630b;margin:12px 0;text-align:center}
+.card-actions{display:flex;gap:8px;margin-top:10px}
+.card-actions .primary{flex:1;height:42px;border:0;border-radius:12px;background:#f49a24;color:#fff;font-weight:900;cursor:pointer}
+.card-actions .ghost{flex:1;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:800;cursor:pointer}

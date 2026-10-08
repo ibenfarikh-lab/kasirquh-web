@@ -138,6 +138,7 @@ const S = {
   editingPurchaseNote: null,
   inboxItems: [], // diturunkan: antrean pelanggan + pesanan aktif + stok menipis + chat
   inboxReadIds: [], // ID notifikasi yg sudah dibaca (persisten Firestore)
+  patunganList: [], // koleksi `patungan` (limit 20, hemat kuota)
   customerData: [], // koleksi `customers` (approved) — admin saja
   pendingCustomers: [], // koleksi `customers` (pending/rejected) — admin saja
   onlineOrders: [], // koleksi `orders` (admin: semua; pelanggan: milik sendiri)
@@ -585,6 +586,7 @@ Object.assign(Store, {
     const db = FB.db;
 
     this.refreshProducts();
+    this.watchPatungan();
 
     this.onPublic(db.collection('promos').where('isActive', '==', true).onSnapshot(snap => {
       S.promos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
@@ -763,6 +765,59 @@ Object.assign(Store, {
       this.rebuildPopular();
       this.render('products');
     } catch (err) { this.onSubError('products', err); }
+  },
+
+  /* Patungan Warga: list aktif (limit 20 hemat kuota) */
+  watchPatungan() {
+    const db = FB.db;
+    this.onPublic(db.collection('patungan').where('status', 'in', ['aktif', 'penuh']).orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
+      S.patunganList = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+      this.render('patungan');
+    }, err => this.onSubError('patungan', err)));
+  },
+
+  async createPatungan(data) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('patungan').add({
+      title: String(data.title || ''),
+      productName: String(data.productName || ''),
+      pricePerSlot: Math.max(0, Math.round(Number(data.pricePerSlot) || 0)),
+      totalSlots: Math.min(100, Math.max(2, Math.round(Number(data.totalSlots) || 0))),
+      filledSlots: 0,
+      participants: [],
+      deadline: String(data.deadline || ''),
+      note: String(data.note || ''),
+      status: 'aktif',
+      createdAt: FB.serverTimestamp(),
+      updatedAt: FB.serverTimestamp(),
+    });
+  },
+
+  async joinPatungan(patunganId, slots) {
+    if (!this.needOnline()) throw __offlineError();
+    if (!S.activeCustomerId) throw new Error('Login dulu untuk ikut patungan');
+    const db = FB.db, ref = db.collection('patungan').doc(patunganId);
+    await db.runTransaction(async t => {
+      const snap = await t.get(ref);
+      if (!snap.exists) throw new Error('Patungan tidak ditemukan');
+      const d = snap.data() || {};
+      if (d.status !== 'aktif') throw new Error('Patungan sudah ' + (d.status || 'ditutup'));
+      const want = Math.min(10, Math.max(1, Math.round(Number(slots) || 1)));
+      const filled = Number(d.filledSlots) || 0, total = Number(d.totalSlots) || 0;
+      if (filled + want > total) throw new Error('Slot tersisa ' + (total - filled));
+      const parts = Array.isArray(d.participants) ? d.participants.slice() : [];
+      const me = parts.find(p => p.customerId === S.activeCustomerId);
+      if (me) throw new Error('Kamu sudah ikut patungan ini');
+      parts.push({ customerId: S.activeCustomerId, name: S.sessionName || 'Warga', slots: want, joinedAt: new Date().toISOString() });
+      t.update(ref, { participants: parts, filledSlots: filled + want, status: (filled + want >= total) ? 'penuh' : 'aktif', updatedAt: FB.serverTimestamp() });
+    });
+  },
+
+  async setPatunganStatus(id, status) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('patungan').doc(id).update({ status: status, updatedAt: FB.serverTimestamp() });
   },
 
   async saveStoreSettings(patch) {
@@ -1661,6 +1716,7 @@ Object.assign(Store, {
       await db.collection('products').add(base);
     }
     this.refreshProducts();
+    this.watchPatungan();
   },
 
   /* Hapus produk (base fix: tanpa `stockTasks` yang tak pernah dideklarasikan) */
@@ -1669,6 +1725,7 @@ Object.assign(Store, {
     this.assertAdmin();
     await FB.db.collection('products').doc(id).delete();
     this.refreshProducts();
+    this.watchPatungan();
   },
 
   /* Impor produk dari CSV (admin): cocokkan Kode -> barcode.
