@@ -770,8 +770,16 @@ Object.assign(Store, {
   /* Patungan Warga: list aktif (limit 20 hemat kuota) */
   watchPatungan() {
     const db = FB.db;
-    this.onPublic(db.collection('patungan').where('status', 'in', ['aktif', 'penuh']).orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
-      S.patunganList = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    const tsVal = x => {
+      const c = x && x.createdAt;
+      if (!c) return 0;
+      if (typeof c.toMillis === 'function') return c.toMillis();
+      const t = new Date(c).getTime();
+      return isNaN(t) ? 0 : t;
+    };
+    this.onPublic(db.collection('patungan').where('status', 'in', ['aktif', 'penuh']).limit(20).onSnapshot(snap => {
+      S.patunganList = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
+        .sort((a, b) => tsVal(b) - tsVal(a));
       this.render('patungan');
     }, err => this.onSubError('patungan', err)));
   },
