@@ -269,3 +269,50 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .scanner-manual-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
 .scanner-manual-row input{min-width:0;height:42px;border:1px solid #5b4b43;border-radius:12px;background:#191718;color:#f7f1ec;padding:0 11px;font-size:11px}
 .scanner-manual-row button{border:0;border-radius:12px;background:var(--orange);color:#24170f;padding:0 16px;font-size:10px;font-weight:900;min-height:42px}
+
+/* Detail produk ala dashboard (2026-10-08) */
+.det-sheet{padding:0;overflow:hidden}
+.det-hero{background:linear-gradient(135deg,#ff9b3e,#e07f0a);padding:18px 16px 20px;text-align:center;position:relative;color:#fff}
+.det-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:18px;cursor:pointer}
+.det-pbadge{display:inline-block;background:#df624f;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:8px;margin-bottom:8px;letter-spacing:.5px}
+.det-hero img{width:120px;height:120px;object-fit:contain;background:rgba(255,255,255,.15);border-radius:18px;margin:4px auto 10px;display:block}
+.det-hero h2{color:#fff;font-size:20px;margin:0}
+.det-price{margin-top:6px}
+.det-price s{opacity:.7;font-size:14px;margin-right:6px}
+.det-price b{font-size:26px;font-weight:900}
+.det-body{padding:16px}
+.det-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.det-info{background:#2d231e;border-radius:14px;padding:11px 12px}
+.det-info small{font-size:9px;font-weight:800;letter-spacing:.6px;color:#c9a87f}
+.det-info b{display:block;font-size:15px;margin-top:3px;color:#ffc16c}
+.det-info.acc{background:#f49a24}
+.det-info.acc small{color:rgba(255,255,255,.85)}
+.det-info.acc b{color:#fff}
+.det-qty-row{display:flex;gap:10px;align-items:stretch;margin-bottom:10px}
+.det-step{display:flex;align-items:center;gap:8px;background:#f4efe9;border-radius:14px;padding:6px 10px}
+.det-step button{width:30px;height:30px;border:0;border-radius:50%;background:#f49a24;color:#fff;font-size:17px;font-weight:900;cursor:pointer}
+.det-step b{font-size:15px;min-width:22px;text-align:center}
+.det-add{flex:1;border:0;border-radius:14px;background:linear-gradient(135deg,#ff9b3e,#f49a24);color:#fff;font-size:14px;font-weight:900;cursor:pointer;padding:0 14px}
+.det-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.det-actions button{height:42px;border-radius:12px;border:1px solid #e0d0b8;background:#fff;font-size:12px;font-weight:700;color:#8a5a1a;cursor:pointer}
+
+/* Katalog ala dashboard (2026-10-08) */
+.kat-hero{background:linear-gradient(135deg,#ff9b3e,#e07f0a);border-radius:18px;padding:16px;color:#fff;margin-bottom:6px;position:relative;overflow:hidden}
+.kat-hero small{font-size:10px;font-weight:800;letter-spacing:1px;opacity:.85}
+.kat-hero h3{font-size:19px;margin:4px 0;color:#fff}
+.kat-hero .kat-hero-price{margin-top:4px}
+.kat-hero .kat-hero-price s{opacity:.7;font-size:13px;margin-right:6px}
+.kat-hero .kat-hero-price b{font-size:24px;font-weight:900}
+.kat-hero .kat-hero-cta{margin-top:10px;display:inline-block;background:rgba(255,255,255,.22);border:0;color:#fff;font-weight:800;font-size:12px;padding:8px 16px;border-radius:12px;cursor:pointer}
+.kat-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kat-cat{background:#2d231e;color:#fff;border:0;border-radius:16px;padding:13px 8px;text-align:center;cursor:pointer}
+.kat-cat .ic{font-size:24px}
+.kat-cat b{display:block;font-size:12px;margin-top:6px}
+.kat-cat small{color:#c9a87f;font-size:10px}
+.kat-cat.active{outline:2px solid #f49a24}
+.kat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kat-grid .product-card{grid-template-columns:1fr;grid-template-rows:auto auto auto;text-align:left;min-height:0;padding:10px}
+.kat-grid .product-card img{width:100%;height:90px}
+.kat-grid .product-card h3{font-size:13px}
+.kat-grid .product-card .price{font-size:14px}
+.kat-grid .product-card .add{position:absolute;right:8px;bottom:8px}
