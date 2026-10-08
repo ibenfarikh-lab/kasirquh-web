@@ -1467,8 +1467,7 @@ Object.assign(Store, {
    * nomor urut counters/orders → validasi stok (baca ulang) → decrement
    * atomik → buat dokumen orders. Batal total + pesan jujur bila stok kurang. */
   async checkoutCustomer({ cart, fulfillment, address, slot, name, payMethod, transferReference }) {
-    dbgMark('4a checkout mulai');
-    if (!this.needOnline()) throw __offlineError();
+        if (!this.needOnline()) throw __offlineError();
     const uid = S.activeCustomerId;
     if (!uid) throw new Error('Masuk dulu sebagai pelanggan');
     const entries = Object.entries(cart || {}).filter(([, q]) => q > 0);
@@ -1478,14 +1477,11 @@ Object.assign(Store, {
     const FV = FB.FieldValue;
     const orderRef = db.collection('orders').doc();
 
-    dbgMark('4b transaksi mulai');
-    return __withTimeout(db.runTransaction(async t => {
-      dbgMark('5 di transaksi');
-      /* 1. nomor urut */
+        return __withTimeout(db.runTransaction(async t => {
+            /* 1. nomor urut */
       const counterRef = db.collection('counters').doc('orders');
       const counterSnap = await t.get(counterRef);
-      dbgMark('6 counter ok');
-      const seq = ((counterSnap.exists ? counterSnap.data().seq : 0) || 0) + 1;
+            const seq = ((counterSnap.exists ? counterSnap.data().seq : 0) || 0) + 1;
 
       /* 2. pelanggan: wajib approved; ambil saldo koin terkini */
       const custRef = db.collection('customers').doc(uid);
@@ -1493,8 +1489,7 @@ Object.assign(Store, {
       if (!custSnap.exists || custSnap.data().approvalStatus !== 'approved') {
         throw new Error('Akun belum disetujui warung');
       }
-      dbgMark('7 pelanggan ok');
-      const coins = Math.max(0, Math.round(Number(custSnap.data().coins) || 0));
+            const coins = Math.max(0, Math.round(Number(custSnap.data().coins) || 0));
 
       /* 3. validasi stok per item (baca ulang dokumen produk) + harga */
       const items = [];
@@ -1527,8 +1522,7 @@ Object.assign(Store, {
       }
 
       /* 4. koin: penukaran (batas admin) + bonus belanja */
-      dbgMark('8 stok ok');
-      const fee = fulfillment === 'delivery' ? 5000 : 0;
+            const fee = fulfillment === 'delivery' ? 5000 : 0;
       const fullTotal = total + fee;
       let redeemCoins = 0, redeemValue = 0;
       if (S.coinProgramEnabled && S.coinRedeemEnabled && S.coinValue > 0 && S.coinRedeemPercent > 0) {
