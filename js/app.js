@@ -72,6 +72,56 @@ function initKabar(){const carousel=$('#kabarCarousel');$$('[data-kabar-slide]')
 function currentCustomerOrders(){return S.onlineOrders.filter(order=>order.customerId&&order.customerId===S.activeCustomerId)}
 function renderAccountTiles(){const mine=currentCustomerOrders(),active=mine.find(order=>order.status==='active'),done=mine.filter(order=>order.status==='done');$('#accountOrderMeta').textContent=active?'#'+active.id+' · Menunggu diproses':'Belum ada pesanan aktif';$('#accountHistoryMeta').textContent=done.length?done.length+' pesanan selesai':'Belum ada riwayat';$('#historyList').innerHTML=done.length?done.map(order=>`<article class="note-card"><header><h3>#${escapeHtml(order.id)} · ${escapeHtml(order.time)}</h3><span class="stock-pill">Selesai</span></header><p>${order.items.map(item=>escapeHtml(item[0]+' '+item[1])).join(', ')} · ${escapeHtml(order.method)}</p><strong>${money(order.total)}</strong></article>`).join(''):'<div class="empty-note">Belum ada riwayat pesanan.</div>';const notes=$$('#customerNotes .note-card'),badge=$('#accountNoteBadge');badge.hidden=notes.length===0;badge.textContent=notes.length+' catatan';$('#accountNoteMeta').textContent=notes.length?'Pesan khusus dari warung':'Belum ada catatan';renderMissions()}
 function renderActiveOrder(){restoreActiveOrder();const card=$('#activeOrderCard'),body=$('#orderModalBody'),ownedOrder=!S.isGuest&&S.activeCustomerId&&S.activeOrder&&S.activeOrder.customerId===S.activeCustomerId;card.hidden=!ownedOrder;if(!ownedOrder){$('#orderModalId').textContent='Belum ada pesanan';body.innerHTML='<div class="empty-note">Belum ada pesanan aktif.<br><small>Pesanan yang dibuat dari keranjang akan tampil di sini.</small></div>';renderAccountTiles();return}card.querySelector('b').textContent='Pesanan #'+S.activeOrder.id+' '+S.activeOrder.status;card.querySelector('small').textContent=S.activeOrder.detail;$('#orderModalId').textContent='#'+S.activeOrder.id;const step=typeof S.activeOrder.step==='number'?S.activeOrder.step:1,statusLabels=['Menunggu konfirmasi','Sedang dikemas','Sedang dikirim','Pesanan selesai'],headlines=['Menunggu warung mengonfirmasi','Pesanan sedang disiapkan','Kurir warung sedang menuju rumahmu','Pesanan sudah diterima'],order=S.onlineOrders.find(item=>item.id===S.activeOrder.id);body.innerHTML=`<div class="order-hero"><small>${escapeHtml(statusLabels[step]+' · '+(S.activeOrder.method||'COD'))}</small><h3>${escapeHtml(headlines[step])}</h3><div>${escapeHtml(S.activeOrder.detail)}</div></div><div class="timeline">${['Menunggu','Dikemas','Dikirim','Selesai'].map((label,index)=>`<div class="timeline-step${index<=step?' done':''}">${label}</div>`).join('')}</div><div class="order-items">${order?order.items.map(item=>`<div><span>${escapeHtml(item[0]+' '+item[1])}</span><b>${escapeHtml(item[2])}</b></div>`).join('')+`<div><span>Total · ${escapeHtml(order.method)}</span><b>${money(order.total)}</b></div>`:'<div><span>Rincian pesanan</span><b>Belum tersedia</b></div>'}</div>`;renderAccountTiles()}
+/* ---- Login sidik jari (WebAuthn + PRF) ---- */
+function bioOfferEnroll(email,password,role){
+  if(!window.KasirquhBio)return;
+  window.KasirquhBio.isSupported().then(function(ok){
+    if(!ok)return;
+    window.KasirquhBio.isEnrolled().then(function(enrolled){
+      if(enrolled)return;
+      if(confirm('Aktifkan login sidik jari di perangkat ini?\n\nSidik jari dipakai untuk masuk cepat tanpa ketik kata sandi.')){
+        window.KasirquhBio.register(email,password,role).then(function(){
+          toast('Login sidik jari aktif');
+        }).catch(function(err){
+          toast('Gagal: '+(err&&err.message?err.message:'perangkat tidak mendukung'));
+        });
+      }
+    });
+  });
+}
+function bioLoginFlow(role){
+  var Bio=window.KasirquhBio;
+  if(!Bio)return;
+  var status=role==='admin'?$('#adminLoginStatus'):$('#loginAuthStatus');
+  function fail(msg){if(status){status.className='auth-status error';status.textContent=msg}}
+  Bio.authenticate().then(function(cred){
+    if(!cred||!cred.email||!cred.password){fail('Gagal membaca sidik jari');return}
+    if(status){status.className='auth-status';status.textContent='Sidik jari cocok, menghubungkan…'}
+    var loginP=role==='admin'?Store.loginAdmin(cred.email,cred.password):Store.loginCustomer(cred.email,cred.password);
+    loginP.then(function(account){
+      if(status){status.className='auth-status success';status.textContent='Data cocok'}
+      closeSheets();
+      if(role==='admin')enterAdminSession('Mode Admin dibuka');
+      else finishCustomerLogin(account);
+    }).catch(function(err){fail(err&&err.message?err.message:'Masuk gagal')});
+  }).catch(function(err){fail(err&&err.message?err.message:'Sidik jari dibatalkan')});
+}
+function bioRefreshButtons(){
+  if(!window.KasirquhBio)return;
+  window.KasirquhBio.isEnrolled().then(function(enrolled){
+    var ab=$('#adminBioLogin'),cb=$('#customerBioLogin');
+    if(ab)ab.hidden=!enrolled;
+    if(cb)cb.hidden=!enrolled;
+    var rb=$('#bioRemoveBtn');if(rb)rb.hidden=!enrolled;
+    if(enrolled)window.KasirquhBio.enrolledEmail().then(function(email){
+      if(email){
+        var ae=$('#adminLoginEmail'),ce=$('#loginEmail');
+        if(ae&&!ae.value)ae.placeholder=email;
+        if(ce&&!ce.value)ce.placeholder=email;
+      }
+    });
+  });
+}
 function updateInboxBadge(){const unread=S.inboxItems.filter(x=>!x.read).length;$('#inboxBadge').textContent=unread;$('#inboxBadge').hidden=unread===0}
 function iconSvg(name){return `<svg class="icon" aria-hidden="true"><use href="#${name}"/></svg>`}
 function renderInbox(){const iconMap={order:'bag',chat:'chat',stock:'box',titip:'bag',share:'users',signup:'user'},targetMap={order:'online',chat:'chat',stock:'produk',titip:'online',share:'online',signup:'approvals'},groupMeta={stock:{label:'Stok menipis',icon:'box'},order:{label:'Pesanan',icon:'bag'},titip:{label:'Titipan',icon:'bag'},chat:{label:'Chat',icon:'chat'},signup:{label:'Pendaftaran',icon:'user'},share:{label:'Lainnya',icon:'users'}},groupOrder=['stock','order','titip','chat','signup','share'],list=$('#unifiedInbox');const itemHtml=x=>`<button class="notification-item${x.read?' read':''}" data-open-notification="${x.id}"><span class="notification-icon" aria-hidden="true">${iconSvg(x.icon||iconMap[x.kind]||'bell')}</span><span class="notification-copy"><b>${x.title}</b><small>${x.time||'Baru saja'}</small></span>${x.read?'<span class="notification-arrow">›</span>':'<span class="new-badge">baru</span>'}</button>`;const groups={};(S.inboxItems||[]).forEach(x=>{const k=x.kind||'share';(groups[k]=groups[k]||[]).push(x)});const orderedGroups=groupOrder.filter(k=>groups[k]&&groups[k].length);list.innerHTML=S.inboxItems.length?orderedGroups.map(k=>{const meta=groupMeta[k]||groupMeta.share,unread=groups[k].filter(x=>!x.read).length;return `<div class="inbox-group"><button class="inbox-group-head" data-inbox-group="${k}" aria-expanded="true"><span class="notification-icon" aria-hidden="true">${iconSvg(meta.icon)}</span><b>${meta.label}</b><span class="inbox-group-count">${groups[k].length}</span>${unread?`<span class="new-badge">${unread} baru</span>`:''}<span class="inbox-group-chev">▾</span></button><div class="inbox-group-body">${groups[k].map(itemHtml).join('')}</div></div>`}).join(''):`<div class="notification-empty"><span class="empty-state-icon">${iconSvg('bell')}</span><b>Belum ada notifikasi</b><p>Pendaftaran, pesanan, dan kabar baru akan tampil di sini.</p></div>`;function saveInboxRead(){const ids=(S.inboxItems||[]).filter(x=>x&&x.read).map(x=>x.id).slice(0,200);S.inboxReadIds=ids;storePromise('saveStoreSettings',{inboxReadIds:ids}).catch(()=>{})}
@@ -158,7 +208,7 @@ function openAdminAccess(){stopGatewayTimer();const email=$('#adminLoginEmail'),
 function enterAdminSession(message){go('admin');toast(message)}
 $('#adminHotspot').onclick=event=>{event.stopPropagation();openAdminAccess()};
 $('.customer-logo').addEventListener('click',event=>{event.stopPropagation();openAdminAccess()});
-$('#adminLoginForm').addEventListener('submit',event=>{event.preventDefault();const email=normalizedEmail($('#adminLoginEmail').value),password=$('#adminLoginPassword').value,status=$('#adminLoginStatus');status.className='auth-status error';if(!email||!password){status.textContent='Lengkapi email dan kata sandi';return}status.className='auth-status';status.textContent='Menghubungkan…';Store.loginAdmin(email,password).then(()=>{status.className='auth-status success';status.textContent='Data cocok';closeSheets();enterAdminSession('Mode Admin dibuka')}).catch(error=>{status.className='auth-status error';status.textContent=error&&error.message?error.message:'Masuk gagal'})});
+$('#adminLoginForm').addEventListener('submit',event=>{event.preventDefault();const email=normalizedEmail($('#adminLoginEmail').value),password=$('#adminLoginPassword').value,status=$('#adminLoginStatus');status.className='auth-status error';if(!email||!password){status.textContent='Lengkapi email dan kata sandi';return}status.className='auth-status';status.textContent='Menghubungkan…';Store.loginAdmin(email,password).then(()=>{status.className='auth-status success';status.textContent='Data cocok';closeSheets();enterAdminSession('Mode Admin dibuka');bioOfferEnroll(email,password,'admin')}).catch(error=>{status.className='auth-status error';status.textContent=error&&error.message?error.message:'Masuk gagal'})});
 function addCustomerItem(id,amount){S.customerCart[id]=(S.customerCart[id]||0)+(amount||1);updateCustomerCart();toast(amount&&amount>1?'Semua bahan masuk keranjang':'Ditambahkan ke keranjang')}
 function productMini(p,kind,opt){opt=opt||{};const qty=opt.qty||1,label=opt.label||p.short,price=p.price*qty,promo=opt.promo===false?false:p.promo;return `<article class="${kind}-card" data-detail="${p.id}" tabindex="0" role="button" aria-label="Lihat detail ${escapeHtml(label)}">${promo?'<span class="promo-flag">PROMO</span>':''}<img src="${p.img}" alt="${escapeHtml(label)}"><h3>${escapeHtml(label)}</h3><div class="price">${money(price)}</div>${opt.meta?`<small class="home-data-note">${escapeHtml(opt.meta)}</small>`:''}<button class="tiny-add" data-add-home="${p.id}" data-home-qty="${qty}" aria-label="Tambah ${escapeHtml(label)}">+</button></article>`}
 function recipeTotal(recipe){return recipe.items.reduce((sum,item)=>{const product=S.products.find(p=>p.id===item.productId);return sum+(product?product.price*item.qty:0)},0)}
@@ -195,7 +245,19 @@ function finishCustomerLogin(account){const action=S.pendingGuestAction;S.pendin
 function normalizedEmail(value){return String(value||'').trim().toLocaleLowerCase('id-ID')}
 function goCustomer(name){if(S.isGuest&&(name==='chatCustomer'||name==='akunCustomer'))return requestGuestAccess(name);$$('.customer-view').forEach(v=>v.classList.toggle('active',v.id===name+'View'));$$('.customer-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.customerView===name));if(name==='keranjangCustomer')renderCartPage();window.scrollTo(0,0)}
 $$('[data-customer-view]').forEach(b=>b.onclick=()=>goCustomer(b.dataset.customerView));$$('[data-auth-tab]').forEach(button=>button.onclick=()=>setAuthTab(button.dataset.authTab));
-$('#customerLoginForm').addEventListener('submit',event=>{event.preventDefault();const email=normalizedEmail($('#loginEmail').value),password=$('#loginPassword').value,status=$('#loginAuthStatus');status.className='auth-status error';if(!email||!password){status.textContent='Lengkapi email dan kata sandi';return}status.className='auth-status';status.textContent='Menghubungkan…';Store.loginCustomer(email,password).then(account=>{status.className='auth-status success';status.textContent='Data cocok';finishCustomerLogin(account)}).catch(error=>{status.className='auth-status error';status.textContent=error&&error.message?error.message:'Masuk gagal'})});
+(function(){
+var ab=$('#adminBioLogin');if(ab)ab.addEventListener('click',function(){bioLoginFlow('admin')});
+var cb=$('#customerBioLogin');if(cb)cb.addEventListener('click',function(){bioLoginFlow('customer')});
+var rb=$('#bioRemoveBtn');if(rb)rb.addEventListener('click',function(){
+  if(!window.KasirquhBio)return;
+  if(confirm('Matikan login sidik jari di perangkat ini?')){
+    window.KasirquhBio.remove().then(function(){toast('Login sidik jari dimatikan');bioRefreshButtons()});
+  }
+});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bioRefreshButtons);else bioRefreshButtons();
+setInterval(bioRefreshButtons,5000);
+})();
+$('#customerLoginForm').addEventListener('submit',event=>{event.preventDefault();const email=normalizedEmail($('#loginEmail').value),password=$('#loginPassword').value,status=$('#loginAuthStatus');status.className='auth-status error';if(!email||!password){status.textContent='Lengkapi email dan kata sandi';return}status.className='auth-status';status.textContent='Menghubungkan…';Store.loginCustomer(email,password).then(account=>{status.className='auth-status success';status.textContent='Data cocok';finishCustomerLogin(account);bioOfferEnroll(email,password,'customer')}).catch(error=>{status.className='auth-status error';status.textContent=error&&error.message?error.message:'Masuk gagal'})});
 $('#customerRegisterForm').addEventListener('submit',event=>{event.preventDefault();const name=cleanInput($('#registerName').value),email=normalizedEmail($('#registerEmail').value),password=$('#registerPassword').value,wa=cleanInput($('#registerWa').value),status=$('#registerAuthStatus');status.className='auth-status error';if(!name||!email||!password){status.textContent='Lengkapi nama, email, dan kata sandi';return}if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){status.textContent='Format email belum benar';return}if(password.length<6){status.textContent='Kata sandi minimal 6 karakter';return}status.className='auth-status';status.textContent='Mengirim pendaftaran…';Store.registerCustomer({name:name,email:email,password:password,wa:wa}).then(()=>{status.className='auth-status success';status.textContent='Pendaftaran dikirim, menunggu persetujuan warung';$('#customerRegisterForm').reset();toast('Pendaftaran masuk antrean admin')}).catch(error=>{status.className='auth-status error';status.textContent=error&&error.message?error.message:'Pendaftaran gagal'})});
 $('#searchInput').oninput=renderCustomer;
 function cartTotals(){const entries=Object.entries(S.customerCart).filter(x=>x[1]>0);let gross=0,total=0;entries.forEach(([id,q])=>{const p=S.products.find(x=>x.id===id);if(!p)return;gross+=p.price*q;total+=Store.customerUnitPrice(p,q)*q});return {gross,total,discount:gross-total}}
