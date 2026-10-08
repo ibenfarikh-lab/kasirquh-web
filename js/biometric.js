@@ -160,9 +160,8 @@
           },
           pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
           authenticatorSelection: {
-            authenticatorAttachment: 'platform',
             userVerification: 'required',
-            residentKey: 'discouraged',
+            residentKey: 'preferred',
           },
           timeout: 60000,
           extensions: { prf: { eval: { first: salt } } },
@@ -171,7 +170,8 @@
         createdCred = cred;
         var prfOut = prfOutputFrom(cred);
         if (prfOut) return prfOut;
-        return getPrfViaGet();
+        // Jeda 800ms sebelum fallback (beri waktu credential tersimpan)
+        return new Promise(function (res) { setTimeout(res, 800); }).then(getPrfViaGet);
       }).then(function (prfOut) {
         return crypto.subtle.importKey('raw', prfOut, 'AES-GCM', false, ['encrypt'])
           .then(function (key) {
