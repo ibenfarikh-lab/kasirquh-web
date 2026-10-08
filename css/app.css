@@ -331,3 +331,8 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .card-actions{display:flex;gap:8px;margin-top:10px}
 .card-actions .primary{flex:1;height:42px;border:0;border-radius:12px;background:#f49a24;color:#fff;font-weight:900;cursor:pointer}
 .card-actions .ghost{flex:1;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:800;cursor:pointer}
+
+/* Chip koin di header pelanggan */
+.head-coin{margin-left:auto}
+.home-head{display:flex;align-items:center;gap:8px}
+.home-brand{flex:1}
