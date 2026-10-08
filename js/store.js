@@ -353,6 +353,7 @@ const Store = {
       isActive: d.isActive !== false,
       lowStockAt: Number(d.lowStockAt) || 5,
       wholesaleQty: Math.max(0, Number(d.wholesaleQty) || 0),
+      totalTerjual: Math.max(0, Math.round(Number(d.totalTerjual) || 0)),
       wholesalePrice: Math.max(0, Math.round(Number(d.wholesalePrice) || 0)),
       wholesaleLabel: String(d.wholesaleLabel || ''),
       oldPrice: Math.max(0, Math.round(Number(d.oldPrice) || 0)),
@@ -1192,6 +1193,11 @@ Object.assign(Store, {
           if (line.productId) agg[line.productId] = (agg[line.productId] || 0) + line.qty;
         });
       });
+      /* Tambah dari counter penjualan kasir (totalTerjual di produk) */
+      (S.products || []).forEach(prod => {
+        const t = Number(prod.totalTerjual) || 0;
+        if (t > 0 && prod.id) agg[prod.id] = (agg[prod.id] || 0) + t;
+      });
       /* 8 terlaris → persist ke store_settings agar tamu/pelanggan ikut dapat (rantai C2).
        * Hanya tulis bila daftar berubah (cegah loop tulis→snapshot→tulis);
        * lewati bila pesanan belum termuat agar tidak menimpa dengan daftar kosong. */
@@ -1693,17 +1699,11 @@ Object.assign(Store, {
       profit: Math.round(profit || 0), itemCount: itemCount || 0,
       createdAt: ts,
     });
-    /* Catat juga sebagai order selesai agar masuk Sedang Laris */
-    const orderRef = db.collection('orders').doc();
-    batch.set(orderRef, {
-      customerId: 'kasir',
-      customerName: 'Kasir',
-      status: 'selesai',
-      paymentMethod: 'Tunai',
-      stockLines: lines.map(l => ({ productId: l.productId, qty: l.qty, name: l.name, total: l.total })),
-      total: Math.round(total),
-      createdAt: ts,
-      _dateKey: new Date().toISOString().slice(0, 10),
+    /* Naikkan counter penjualan per produk agar masuk Sedang Laris */
+    lines.forEach(l => {
+      batch.update(db.collection('products').doc(l.productId), {
+        totalTerjual: FV.increment(l.qty),
+      });
     });
     await batch.commit();
   },
