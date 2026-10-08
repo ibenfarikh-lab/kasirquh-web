@@ -584,11 +584,7 @@ Object.assign(Store, {
   startPublicSubs() {
     const db = FB.db;
 
-    this.onPublic(db.collection('products').onSnapshot(snap => {
-      S.products = snap.docs.map(d => this.mapProduct(d)).filter(p => p);
-      this.rebuildPopular();
-      this.render('products');
-    }, err => this.onSubError('products', err)));
+    this.refreshProducts();
 
     this.onPublic(db.collection('promos').where('isActive', '==', true).onSnapshot(snap => {
       S.promos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
@@ -758,6 +754,17 @@ Object.assign(Store, {
 
   /* Simpan pengaturan toko (admin). Snapshot store_settings/main otomatis
    * menerapkan balik lewat applyStoreSettings. */
+  /* Produk: tarik manual (hemat kuota) — bukan real-time.
+   * Dipanggil saat boot, saat admin simpan produk, dan via tombol refresh. */
+  async refreshProducts() {
+    try {
+      const snap = await FB.db.collection('products').get();
+      S.products = snap.docs.map(d => this.mapProduct(d)).filter(p => p);
+      this.rebuildPopular();
+      this.render('products');
+    } catch (err) { this.onSubError('products', err); }
+  },
+
   async saveStoreSettings(patch) {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
@@ -1653,6 +1660,7 @@ Object.assign(Store, {
       base.createdAt = ts;
       await db.collection('products').add(base);
     }
+    this.refreshProducts();
   },
 
   /* Hapus produk (base fix: tanpa `stockTasks` yang tak pernah dideklarasikan) */
@@ -1660,6 +1668,7 @@ Object.assign(Store, {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
     await FB.db.collection('products').doc(id).delete();
+    this.refreshProducts();
   },
 
   /* Impor produk dari CSV (admin): cocokkan Kode -> barcode.
