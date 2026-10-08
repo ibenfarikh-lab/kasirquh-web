@@ -778,10 +778,12 @@ Object.assign(Store, {
       return isNaN(t) ? 0 : t;
     };
     this.onPublic(db.collection('patungan').where('status', 'in', ['aktif', 'penuh']).limit(20).onSnapshot(snap => {
-      S.patunganList = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
-        .sort((a, b) => tsVal(b) - tsVal(a));
-      this.render('patungan');
-    }, err => this.onSubError('patungan', err)));
+      try {
+        S.patunganList = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
+          .sort((a, b) => tsVal(b) - tsVal(a));
+        this.render('patungan');
+      } catch (e) { if (typeof toast === 'function') toast('[DBG] patungan render err: ' + (e && e.message)); }
+    }, err => { if (typeof toast === 'function') toast('[DBG] patungan sub err: ' + (err && err.code) + ' ' + (err && err.message)); this.onSubError('patungan', err); }));
   },
 
   async createPatungan(data) {
