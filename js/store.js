@@ -607,6 +607,7 @@ Object.assign(Store, {
   applyStoreSettings(data) {
     S.storeSettings = data || {};
     const d = S.storeSettings;
+    if (Array.isArray(d.dashboardShortcutIds) && d.dashboardShortcutIds.length) S.dashboardShortcutIds = d.dashboardShortcutIds.filter(id => typeof id === 'string').slice(0, 6);
     if (typeof d.coinRate === 'number') S.coinValue = Math.max(1, Math.round(d.coinRate));
     if (typeof d.coinRedeemLimit === 'number') S.coinRedeemPercent = Math.min(100, Math.max(0, Math.round(d.coinRedeemLimit)));
     if (typeof d.lowStockDefault === 'number') S.lowStockThreshold = Math.min(99, Math.max(1, Math.round(d.lowStockDefault)));
