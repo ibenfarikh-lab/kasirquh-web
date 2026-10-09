@@ -109,6 +109,24 @@ function playNotification(kind,mode,announce){
     try{ctx.resume().then(doPlay).catch(doPlay)}catch(e){doPlay()}
   }else{doPlay()}
 }
+function bioOfferEnroll(email,password,role){
+  var Bio=window.KasirquhBio;
+  if(!Bio||!email||!password)return;
+  Bio.isSupported().then(function(supported){
+    if(!supported)return;
+    return Bio.isEnrolled(role).then(function(enrolled){
+      if(enrolled)return;
+      if(confirm('Aktifkan masuk dengan sidik jari untuk '+email+'?')){
+        Bio.register(email,password,role).then(function(){
+          toast('Sidik jari diaktifkan');
+          if(typeof bioRefreshButtons==='function')bioRefreshButtons();
+        }).catch(function(err){
+          toast(err&&err.message?err.message:'Gagal mengaktifkan sidik jari');
+        });
+      }
+    });
+  }).catch(function(){});
+}
 function bioLoginFlow(role){
   var Bio=window.KasirquhBio;
   if(!Bio)return;
