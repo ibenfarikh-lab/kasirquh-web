@@ -1031,7 +1031,7 @@ Object.assign(Store, {
 
     /* Promo carousel: admin melihat SEMUA (termasuk nonaktif) agar bisa mengaktifkan ulang.
      * Tanpa ini, promo yang dinonaktifkan hilang dari daftar kelola selamanya. */
-    this.onRole(db.collection('promos').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
+    this.onRole(db.collection('promos').limit(30).onSnapshot(snap => {
       S.promosAdmin = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
       this.render('promos');
     }, err => this.onSubError('promos_admin', err)));
