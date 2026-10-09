@@ -589,7 +589,7 @@ S.adminAiReplies={stock:adminAiStock,sales:adminAiSales,transactions:adminAiTran
  * (glue satu blok: menghubungkan adapter Store -> fungsi render* di atas) */
 function renderCustomerNotes(){const box=$('#customerNotes');if(!box)return;const notes=S.customerNotesList||[],typeLabel={tagihan:'Tagihan',pembayaran:'Pembayaran',catatan:'Catatan'};box.innerHTML=notes.length?notes.map(n=>`<article class="note-card"><header><h3>${escapeHtml(typeLabel[n.type]||'Catatan')}${n.amount?' · '+money(n.amount):''}</h3><span class="stock-pill">Baru</span></header><p>${escapeHtml(n.note)}</p><small>${escapeHtml(n.time||'')}</small></article>`).join(''):'<div class="empty-note">Belum ada catatan dari warung.</div>'}
 Store.notify=msg=>toast(msg);
-Store.renderers.products=()=>{renderHome();renderCustomer();renderAdminProducts();renderAdminProductData();renderAdminCart();updateCustomerCart();renderFinance();if($('#stockShoppingModal')&&$('#stockShoppingModal').classList.contains('open'))renderLowStockSuggestions()};
+Store.renderers.products=()=>{renderHome();renderFlashCard();renderCustomer();renderAdminProducts();renderAdminProductData();renderAdminCart();updateCustomerCart();renderFinance();if($('#stockShoppingModal')&&$('#stockShoppingModal').classList.contains('open'))renderLowStockSuggestions()};
 Store.renderers.settings=()=>{renderHome();renderFinance();updateCoinUI();applyCoinProgram();renderFlashCard();renderPromoCarousel();syncHomeSectionLayout();renderKabar();applyRoleTheme('admin');syncSoundControls();syncNavMotionToggle();renderDashboardShortcuts()};
 Store.renderers.orders=()=>{renderOnlineOrders();renderTransfers();renderActiveOrder();renderAccountTiles();renderFinance()};
 Store.renderers.customers=()=>{renderCustomerData()};
