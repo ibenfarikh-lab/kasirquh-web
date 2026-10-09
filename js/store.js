@@ -947,7 +947,7 @@ Object.assign(Store, {
 
     /* Resepku pelanggan (subkoleksi sendiri) — diam bila aturan belum dipublish */
     this.onRole(db.collection('customers').doc(uid).collection('my_recipes')
-      .orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
+      .limit(20).onSnapshot(snap => {
         S.myRecipes = snap.docs.map(d => this.mapRecipe(d));
         this.render('recipes');
       }, err => this.onSubError('my_recipes', err, true)));
