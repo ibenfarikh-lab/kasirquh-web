@@ -56,6 +56,23 @@ function resolvedTheme(choice){return choice==='system'?(window.matchMedia('(pre
 function applyRoleTheme(role){const choice=role==='admin'?S.adminTheme:S.customerTheme,actual=resolvedTheme(choice),surface=$('#'+role);surface.dataset.themeMode=choice;surface.dataset.renderTheme=actual;if(S.activeRole===role){document.body.dataset.uiTheme=actual;document.documentElement.style.colorScheme=actual}}
 function activateRoleTheme(role){S.activeRole=role;applyRoleTheme(role)}
 function tone(ctx,frequency,start,duration,type,gain){const osc=ctx.createOscillator(),amp=ctx.createGain();osc.type=type||'sine';osc.frequency.setValueAtTime(frequency,start);amp.gain.setValueAtTime(0.0001,start);amp.gain.exponentialRampToValueAtTime(gain||0.055,start+.015);amp.gain.exponentialRampToValueAtTime(0.0001,start+duration);osc.connect(amp);amp.connect(ctx.destination);osc.start(start);osc.stop(start+duration+.02)}
+function syncSoundControls(){
+  $$('[data-sound-select]').forEach(function(s){s.value=S.soundSettings[s.dataset.soundSelect]||'system'});
+  $$('[data-vibrate-toggle]').forEach(function(b){
+    b.setAttribute('aria-pressed',String(!!S.vibrateWhenSilent));
+    b.textContent='Getar saat mode hening \u00b7 '+(S.vibrateWhenSilent?'Aktif':'Nonaktif');
+  });
+  $$('.feature-sheet').forEach(updateSoundPresetState);
+}
+function updateSoundPresetState(sheet){
+  if(!sheet||typeof sheet.querySelectorAll!=='function')return;
+  var selects=sheet.querySelectorAll('[data-sound-select]');
+  var presets=sheet.querySelectorAll('[data-sound-preset]');
+  if(!selects.length||!presets.length)return;
+  var first=selects[0].value,uniform=true;
+  selects.forEach(function(s){if(s.value!==first)uniform=false});
+  presets.forEach(function(b){b.classList.toggle('active',uniform&&b.dataset.soundPreset===first)});
+}
 function ensureAudio(){var AudioCtor=window.AudioContext||window.webkitAudioContext;if(!AudioCtor)return null;if(!S.audioContext){try{S.audioContext=new AudioCtor()}catch(e){return null}}if(S.audioContext.state==='suspended'){try{S.audioContext.resume()}catch(e){}}return S.audioContext}
 if(typeof document!=='undefined'){['pointerdown','touchstart','keydown'].forEach(function(ev){document.addEventListener(ev,function(){ensureAudio()},{once:true,passive:true})})}
 function playNotification(kind,mode,announce){
