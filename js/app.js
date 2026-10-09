@@ -19,6 +19,8 @@ function storeVoid(name){const args=[].slice.call(arguments,1);if(typeof Store[n
 if(S.recipes===undefined)S.recipes=[];
 if(S.storeMemos===undefined)S.storeMemos=[];
 if(S.flashRule===undefined)S.flashRule='';
+if(S.promoUnitPrice===undefined)S.promoUnitPrice={};
+if(S.flashProductId===undefined)S.flashProductId=null;
 if(S.flashEndsAt===undefined)S.flashEndsAt=null;
 if(S.promoTitle===undefined)S.promoTitle='';
 if(S.promoCopy===undefined)S.promoCopy='';
