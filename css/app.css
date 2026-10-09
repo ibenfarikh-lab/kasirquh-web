@@ -346,7 +346,3 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .recipe-card .recipe-photo img{width:100%!important;height:100%!important;object-fit:cover}
 .recipe-card .recipe-copy{padding:11px}
 .recipe-card.no-photo .recipe-copy{padding-top:11px}
-
-.promo-slide.paket-slide{background:linear-gradient(100deg,#2e7d4f,#3da56a);cursor:pointer}.promo-slide.paket-slide .promo-flag{background:#fff;color:#2e7d4f}
-.control-subhead{font-size:13px;font-weight:900;color:var(--ink);margin:14px 0 8px}.promo-list-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px;margin-bottom:7px}.promo-list-item .promo-flag{flex-shrink:0}.promo-list-item b{display:block;font-size:12px}.promo-list-item small{display:block;font-size:10px;color:var(--muted)}.promo-list-item .mini-del{margin-left:auto;flex-shrink:0;width:28px;height:28px;border:0;border-radius:8px;background:#fbe3e3;color:#c0392b;font-size:16px;font-weight:900}.promo-kind-note{margin-left:auto;font-size:9px;color:var(--muted);text-transform:uppercase}
-.metric-source{display:block;font-size:9px;color:var(--muted);font-weight:600;margin:2px 0}

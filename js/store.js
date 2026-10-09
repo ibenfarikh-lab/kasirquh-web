@@ -61,8 +61,6 @@ const S = {
   gatewayJustSwiped: false,
   vibrateWhenSilent: true,
   soundSettings: {order:'system',promo:'system',chat:'system'},
-  adminSound: {order:'system',promo:'system',chat:'system'},
-  customerSound: {order:'system',promo:'system',chat:'system'},
   audioContext: null,
   coinProgramEnabled: true,
   coinSpendRule: 100,
@@ -78,10 +76,6 @@ const S = {
   flashRule: '', // dari store_settings/main.flashRule (live)
   flashEndsAt: null, // dari store_settings/main.flashEndsAt (live, Timestamp)
   promoTitle: '', // dari store_settings/main.promoTitle (live)
-  paketEnabled: false, // dari store_settings/main.paketEnabled (live)
-  flashEnabled: true, // dari store_settings/main.flashEnabled (live)
-  paketTitle: 'Paket Tanggal Muda', // dari store_settings/main.paketTitle (live)
-  paketSubtitle: 'Stok dapur awal bulan, harga bersahabat', // dari store_settings/main.paketSubtitle (live)
   promoProductId: null, // dari store_settings/main.promoProductId (live)
   promoCopy: '', // dari store_settings/main.promoCopy (live)
   gatewaySlides: { // dari store_settings/main.gatewayTitle1..Copy3 (live)
@@ -605,7 +599,7 @@ Object.assign(Store, {
       this.applyStoreSettings(snap.exists ? snap.data() : null);
     }, err => this.onSubError('store_settings', err)));
 
-    this.onPublic(db.collection('rumpi_posts').limit(60).onSnapshot(snap => {
+    this.onPublic(db.collection('rumpi_posts').orderBy('createdAt', 'desc').limit(60).onSnapshot(snap => {
       S.rumpiMessages = snap.docs.map(d => this.mapRumpi(d));
       this.render('rumpi');
     }, err => this.onSubError('rumpi_posts', err)));
@@ -643,11 +637,6 @@ Object.assign(Store, {
     S.flashEndsAt = (d.flashEndsAt && typeof d.flashEndsAt.toDate === 'function') ? d.flashEndsAt : null;
     /* Promo utama + slide gateway + kabar (live) */
     if (typeof d.promoTitle === 'string') S.promoTitle = d.promoTitle;
-    /* Paket Tanggal Muda (live) */
-    if (typeof d.paketEnabled === 'boolean') S.paketEnabled = d.paketEnabled;
-    if (typeof d.flashEnabled === 'boolean') S.flashEnabled = d.flashEnabled;
-    if (typeof d.paketTitle === 'string' && d.paketTitle.trim()) S.paketTitle = d.paketTitle.trim();
-    if (typeof d.paketSubtitle === 'string') S.paketSubtitle = d.paketSubtitle;
     if (typeof d.promoProductId === 'string') S.promoProductId = d.promoProductId || null;
     if (typeof d.promoCopy === 'string') S.promoCopy = d.promoCopy;
     const gs = S.gatewaySlides || {};
@@ -680,7 +669,7 @@ Object.assign(Store, {
     const adminTheme = String(d.adminTheme || '').trim();
     if (['light', 'dark', 'system'].indexOf(adminTheme) >= 0) S.adminTheme = adminTheme;
     if (d.adminSoundSettings && typeof d.adminSoundSettings === 'object') {
-      ['order', 'promo', 'chat'].forEach(k => { if (typeof d.adminSoundSettings[k] === 'string') S.adminSound[k] = d.adminSoundSettings[k]; });
+      ['order', 'promo', 'chat'].forEach(k => { if (typeof d.adminSoundSettings[k] === 'string') S.soundSettings[k] = d.adminSoundSettings[k]; });
       if (typeof d.adminSoundSettings.vibrate === 'boolean') S.vibrateWhenSilent = d.adminSoundSettings.vibrate;
     }
     if (typeof d.adminNavMotion === 'boolean') S.navMotion = d.adminNavMotion;
@@ -744,20 +733,10 @@ Object.assign(Store, {
     setVal('gatewayTitle3Input', slides.title3 || '');
     setVal('gatewayCopy3Input', slides.copy3 || '');
     setVal('promoTitleInput', S.promoTitle || '');
-    setVal('paketTitleInput', S.paketTitle || '');
-    setVal('paketSubtitleInput', S.paketSubtitle || '');
-    try {
-      var pt = document.getElementById('paketEnabledToggle');
-      if (pt) { pt.setAttribute('aria-pressed', String(!!S.paketEnabled)); pt.textContent = S.paketEnabled ? 'TAMPIL' : 'SEMBUNYI'; }
-      var ft = document.getElementById('flashEnabledToggle');
-      if (ft) { ft.setAttribute('aria-pressed', String(!!S.flashEnabled)); ft.textContent = S.flashEnabled ? 'TAMPIL' : 'SEMBUNYI'; }
-    } catch (e) {}
     setVal('flashPriceInput', (S.flashProductId && S.promoUnitPrice[S.flashProductId]) || '');
     setVal('flashRuleInput', S.flashRule || '');
     setVal('kabarStatusInput', S.kabarStatus || '');
     setVal('kabarMoodInput', S.kabarMood || '');
-    setVal('homeOpenTimeInput', d.openTime || '06:00');
-    setVal('homeCloseTimeInput', d.closeTime || '21:00');
     /* Tema admin (persist) → tandai pilihan aktif di Pengaturan */
     try {
       document.querySelectorAll('[data-admin-theme]').forEach(b => b.classList.toggle('active', b.getAttribute('data-admin-theme') === (S.adminTheme || 'dark')));
@@ -868,8 +847,8 @@ Object.assign(Store, {
     if (this._recipesWatched) return;
     this._recipesWatched = true;
     const db = FB.db;
-    this.onPublic(db.collection('recipes').limit(20).onSnapshot(snap => {
-      S.recipes = snap.docs.map(d => this.mapRecipe(d)).sort((a,b)=>String(b.id).localeCompare(String(a.id)));
+    this.onPublic(db.collection('recipes').orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
+      S.recipes = snap.docs.map(d => this.mapRecipe(d));
       this.render('recipes');
     }, err => this.onSubError('recipes', err)));
   },
@@ -947,7 +926,7 @@ Object.assign(Store, {
 
     /* Resepku pelanggan (subkoleksi sendiri) — diam bila aturan belum dipublish */
     this.onRole(db.collection('customers').doc(uid).collection('my_recipes')
-      .limit(20).onSnapshot(snap => {
+      .orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
         S.myRecipes = snap.docs.map(d => this.mapRecipe(d));
         this.render('recipes');
       }, err => this.onSubError('my_recipes', err, true)));
