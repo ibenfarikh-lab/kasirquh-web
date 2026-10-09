@@ -76,6 +76,9 @@ const S = {
   flashRule: '', // dari store_settings/main.flashRule (live)
   flashEndsAt: null, // dari store_settings/main.flashEndsAt (live, Timestamp)
   promoTitle: '', // dari store_settings/main.promoTitle (live)
+  paketEnabled: false, // dari store_settings/main.paketEnabled (live)
+  paketTitle: 'Paket Tanggal Muda', // dari store_settings/main.paketTitle (live)
+  paketSubtitle: 'Stok dapur awal bulan, harga bersahabat', // dari store_settings/main.paketSubtitle (live)
   promoProductId: null, // dari store_settings/main.promoProductId (live)
   promoCopy: '', // dari store_settings/main.promoCopy (live)
   gatewaySlides: { // dari store_settings/main.gatewayTitle1..Copy3 (live)
@@ -637,6 +640,10 @@ Object.assign(Store, {
     S.flashEndsAt = (d.flashEndsAt && typeof d.flashEndsAt.toDate === 'function') ? d.flashEndsAt : null;
     /* Promo utama + slide gateway + kabar (live) */
     if (typeof d.promoTitle === 'string') S.promoTitle = d.promoTitle;
+    /* Paket Tanggal Muda (live) */
+    if (typeof d.paketEnabled === 'boolean') S.paketEnabled = d.paketEnabled;
+    if (typeof d.paketTitle === 'string' && d.paketTitle.trim()) S.paketTitle = d.paketTitle.trim();
+    if (typeof d.paketSubtitle === 'string') S.paketSubtitle = d.paketSubtitle;
     if (typeof d.promoProductId === 'string') S.promoProductId = d.promoProductId || null;
     if (typeof d.promoCopy === 'string') S.promoCopy = d.promoCopy;
     const gs = S.gatewaySlides || {};
@@ -733,6 +740,12 @@ Object.assign(Store, {
     setVal('gatewayTitle3Input', slides.title3 || '');
     setVal('gatewayCopy3Input', slides.copy3 || '');
     setVal('promoTitleInput', S.promoTitle || '');
+    setVal('paketTitleInput', S.paketTitle || '');
+    setVal('paketSubtitleInput', S.paketSubtitle || '');
+    try {
+      var pt = document.getElementById('paketEnabledToggle');
+      if (pt) { pt.setAttribute('aria-pressed', String(!!S.paketEnabled)); pt.textContent = S.paketEnabled ? 'TAMPIL' : 'SEMBUNYI'; }
+    } catch (e) {}
     setVal('flashPriceInput', (S.flashProductId && S.promoUnitPrice[S.flashProductId]) || '');
     setVal('flashRuleInput', S.flashRule || '');
     setVal('kabarStatusInput', S.kabarStatus || '');
