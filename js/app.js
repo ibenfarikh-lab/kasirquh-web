@@ -58,38 +58,32 @@ function activateRoleTheme(role){S.activeRole=role;applyRoleTheme(role)}
 function tone(ctx,frequency,start,duration,type,gain){const osc=ctx.createOscillator(),amp=ctx.createGain();osc.type=type||'sine';osc.frequency.setValueAtTime(frequency,start);amp.gain.setValueAtTime(0.0001,start);amp.gain.exponentialRampToValueAtTime(gain||0.055,start+.015);amp.gain.exponentialRampToValueAtTime(0.0001,start+duration);osc.connect(amp);amp.connect(ctx.destination);osc.start(start);osc.stop(start+duration+.02)}
 function ensureAudio(){var AudioCtor=window.AudioContext||window.webkitAudioContext;if(!AudioCtor)return null;if(!S.audioContext){try{S.audioContext=new AudioCtor()}catch(e){return null}}if(S.audioContext.state==='suspended'){try{S.audioContext.resume()}catch(e){}}return S.audioContext}
 if(typeof document!=='undefined'){['pointerdown','touchstart','keydown'].forEach(function(ev){document.addEventListener(ev,function(){ensureAudio()},{once:true,passive:true})})}
-function playNotification(kind,mode,announce){if(mode==='silent'){if(S.vibrateWhenSilent&&navigator.vibrate){const pattern=kind==='order'?[70,45,70]:kind==='promo'?[45,35,45,35,45]:[55];navigator.vibrate(pattern)}if(announce!==false)toast(S.vibrateWhenSilent?'Mode hening · getar dicoba':'Mode hening · tanpa suara');return}const ctx=ensureAudio();if(!ctx){if(announce!==false)toast('Audio tidak tersedia di perangkat ini');return}if(ctx.state==='suspended'){if(announce!==false)toast('Ketuk layar sekali lalu coba lagi');return}const now=ctx.currentTime+.025;if(mode==='system'){tone(ctx,720,now,.13,'sine',.045);tone(ctx,940,now+.14,.16,'sine',.04)}else if(kind==='order'){tone(ctx,523,now,.13,'sine',.055);tone(ctx,659,now+.12,.13,'sine',.055);tone(ctx,784,now+.24,.22,'sine',.05)}else if(kind==='promo'){tone(ctx,660,now,.09,'triangle',.045);tone(ctx,990,now+.1,.16,'triangle',.04)}else{tone(ctx,880,now,.07,'sine',.045);tone(ctx,880,now+.13,.07,'sine',.04)}if(announce!==false)toast(mode==='mimi'?'Bunyi Khas Mimi diputar':'Pratinjau bunyi bawaan diputar')}
-function updateSoundPresetState(sheet){const values=[...sheet.querySelectorAll('[data-sound-select]')].map(x=>x.value);sheet.querySelectorAll('[data-sound-preset]').forEach(b=>b.classList.toggle('active',values.length&&values.every(v=>v===b.dataset.soundPreset)))}
-function syncSoundControls(){$$('[data-sound-select]').forEach(s=>s.value=S.soundSettings[s.dataset.soundSelect]);$$('[data-vibrate-toggle]').forEach(b=>{b.setAttribute('aria-pressed',String(S.vibrateWhenSilent));b.textContent='Getar saat mode hening · '+(S.vibrateWhenSilent?'Aktif':'Nonaktif')});$$('.feature-sheet').forEach(updateSoundPresetState)}
-function updateCoinUI(){const formatted=S.coinBalance.toLocaleString('id-ID'),rupiah=S.coinBalance*S.coinValue;if($('#missionCoinBalance'))$('#missionCoinBalance').textContent=S.coinBalance?formatted+' Koin Warga':'Belum ada koin';if($('#coinBalance'))$('#coinBalance').textContent=S.coinBalance?formatted+' koin':'Belum ada koin';if($('#coinRupiahValue'))$('#coinRupiahValue').textContent=S.coinBalance?money(rupiah):'Belum ada koin';const chip=document.querySelector('.coin-chip span');if(chip)chip.textContent=S.coinBalance?formatted+' Koin Warga':'Belum ada koin';const headCoin=$('#headCoinText');if(headCoin)headCoin.textContent=S.coinBalance?formatted:'0';if($('#promoCoinRule'))$('#promoCoinRule').textContent='1 koin = '+money(S.coinValue);if($('#coinHistory'))$('#coinHistory').innerHTML=S.coinHistory.length?S.coinHistory.map(x=>`<div class="coin-history-row"><span><b>${escapeHtml(x.label)}</b><small>${escapeHtml(x.detail||'')}</small></span><strong>${x.kind==='expense'?'−':'+'}${Number(x.amount).toLocaleString('id-ID')} koin</strong></div>`).join(''):'<div class="coin-history-empty">Belum ada pergerakan koin.</div>';updateCheckoutSummary()}
-function celebrate(kind){if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;const layer=$('#fxLayer');layer.innerHTML='';const colors=['#f49a24','#df624f','#4d8a62','#ffcf68','#5b7bd5'];const total=kind==='coin'?9:24;for(let i=0;i<total;i++){const piece=document.createElement('i');piece.className=kind==='coin'?'fx-coin':'fx-piece';if(kind==='coin')piece.textContent='K';else piece.style.background=colors[i%colors.length];const angle=(Math.PI*2*i/total)+(Math.random()*.35);const distance=kind==='coin'?70+Math.random()*80:110+Math.random()*180;piece.style.setProperty('--x',Math.cos(angle)*distance+'px');piece.style.setProperty('--y',Math.sin(angle)*distance+'px');piece.style.setProperty('--r',(Math.random()*620-310)+'deg');layer.appendChild(piece)}setTimeout(()=>layer.innerHTML='',1100)}
-
-function showPromo(index){const count=$$('#promoTrack .promo-slide').length;S.promoIndex=(index+count)%count;$('#promoTrack').style.transform=`translateX(-${S.promoIndex*100}%)`;$$('[data-promo-slide]').forEach((b,i)=>b.classList.toggle('active',i===S.promoIndex))}
-function startPromo(){if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;clearInterval(S.promoTimer);S.promoTimer=setInterval(()=>showPromo(S.promoIndex+1),5200)}
-
-function showKabar(index){S.kabarIndex=(index+2)%2;$('#kabarTrack').style.transform=`translateX(-${S.kabarIndex*100}%)`;$$('[data-kabar-slide]').forEach((b,i)=>{b.classList.toggle('active',i===S.kabarIndex);b.setAttribute('aria-current',i===S.kabarIndex?'true':'false')})}
-function startKabar(){clearInterval(S.kabarTimer);clearTimeout(S.kabarResumeTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;S.kabarTimer=setInterval(()=>showKabar(S.kabarIndex+1),5600)}
-function pauseKabar(){clearInterval(S.kabarTimer);clearTimeout(S.kabarResumeTimer);S.kabarResumeTimer=setTimeout(startKabar,8500)}
-function initKabar(){const carousel=$('#kabarCarousel');$$('[data-kabar-slide]').forEach(b=>b.onclick=()=>{showKabar(Number(b.dataset.kabarSlide));pauseKabar()});carousel.addEventListener('touchstart',e=>{S.kabarTouchX=e.changedTouches[0].clientX;pauseKabar()},{passive:true});carousel.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-S.kabarTouchX;if(Math.abs(dx)>35)showKabar(S.kabarIndex+(dx<0?1:-1));pauseKabar()},{passive:true});carousel.addEventListener('mouseenter',()=>clearInterval(S.kabarTimer));carousel.addEventListener('mouseleave',pauseKabar);carousel.addEventListener('focusin',pauseKabar);startKabar()}
-function currentCustomerOrders(){return S.onlineOrders.filter(order=>order.customerId&&order.customerId===S.activeCustomerId)}
-function renderAccountTiles(){const mine=currentCustomerOrders(),active=mine.find(order=>order.status==='active'),done=mine.filter(order=>order.status==='done');$('#accountOrderMeta').textContent=active?'#'+active.id+' · Menunggu diproses':'Belum ada pesanan aktif';$('#accountHistoryMeta').textContent=done.length?done.length+' pesanan selesai':'Belum ada riwayat';$('#historyList').innerHTML=done.length?done.map(order=>`<article class="note-card"><header><h3>#${escapeHtml(order.id)} · ${escapeHtml(order.time)}</h3><span class="stock-pill">Selesai</span></header><p>${order.items.map(item=>escapeHtml(item[0]+' '+item[1])).join(', ')} · ${escapeHtml(order.method)}</p><strong>${money(order.total)}</strong></article>`).join(''):'<div class="empty-note">Belum ada riwayat pesanan.</div>';const notes=$$('#customerNotes .note-card'),badge=$('#accountNoteBadge');badge.hidden=notes.length===0;badge.textContent=notes.length+' catatan';$('#accountNoteMeta').textContent=notes.length?'Pesan khusus dari warung':'Belum ada catatan';renderMissions()}
-function renderActiveOrder(){restoreActiveOrder();const card=$('#activeOrderCard'),body=$('#orderModalBody'),ownedOrder=!S.isGuest&&S.activeCustomerId&&S.activeOrder&&S.activeOrder.customerId===S.activeCustomerId;card.hidden=!ownedOrder;if(!ownedOrder){$('#orderModalId').textContent='Belum ada pesanan';body.innerHTML='<div class="empty-note">Belum ada pesanan aktif.<br><small>Pesanan yang dibuat dari keranjang akan tampil di sini.</small></div>';renderAccountTiles();return}card.querySelector('b').textContent='Pesanan #'+S.activeOrder.id+' '+S.activeOrder.status;card.querySelector('small').textContent=S.activeOrder.detail;$('#orderModalId').textContent='#'+S.activeOrder.id;const step=typeof S.activeOrder.step==='number'?S.activeOrder.step:1,statusLabels=['Menunggu konfirmasi','Sedang dikemas','Sedang dikirim','Pesanan selesai'],headlines=['Menunggu warung mengonfirmasi','Pesanan sedang disiapkan','Kurir warung sedang menuju rumahmu','Pesanan sudah diterima'],order=S.onlineOrders.find(item=>item.id===S.activeOrder.id);body.innerHTML=`<div class="order-hero"><small>${escapeHtml(statusLabels[step]+' · '+(S.activeOrder.method||'COD'))}</small><h3>${escapeHtml(headlines[step])}</h3><div>${escapeHtml(S.activeOrder.detail)}</div></div><div class="timeline">${['Menunggu','Dikemas','Dikirim','Selesai'].map((label,index)=>`<div class="timeline-step${index<=step?' done':''}">${label}</div>`).join('')}</div><div class="order-items">${order?order.items.map(item=>`<div><span>${escapeHtml(item[0]+' '+item[1])}</span><b>${escapeHtml(item[2])}</b></div>`).join('')+`<div><span>Total · ${escapeHtml(order.method)}</span><b>${money(order.total)}</b></div>`:'<div><span>Rincian pesanan</span><b>Belum tersedia</b></div>'}</div>`;renderAccountTiles()}
-/* ---- Login sidik jari (WebAuthn + PRF) ---- */
-function bioOfferEnroll(email,password,role){
-  if(!window.KasirquhBio)return;
-  window.KasirquhBio.isSupported().then(function(ok){
-    if(!ok)return;
-    window.KasirquhBio.isEnrolled(role).then(function(enrolled){
-      if(enrolled)return;
-      if(confirm('Aktifkan login sidik jari di perangkat ini?\n\nSidik jari dipakai untuk masuk cepat tanpa ketik kata sandi.')){
-        window.KasirquhBio.register(email,password,role).then(function(){
-          toast('Login sidik jari aktif');
-        }).catch(function(err){
-          toast('Gagal: '+(err&&err.message?err.message:'perangkat tidak mendukung'));
-        });
-      }
-    });
-  });
+function playNotification(kind,mode,announce){
+  if(mode==='silent'){
+    if(S.vibrateWhenSilent&&navigator.vibrate){
+      var pattern=kind==='order'?[70,45,70]:kind==='promo'?[45,35,45,35,45]:[55];
+      try{navigator.vibrate(pattern)}catch(e){}
+    }
+    if(announce!==false)toast(S.vibrateWhenSilent?'Mode hening · getar':'Mode hening · tanpa suara');
+    return;
+  }
+  var ctx=ensureAudio();
+  if(!ctx){if(announce!==false)toast('Audio tidak tersedia di perangkat ini');return}
+  var doPlay=function(){
+    if(ctx.state==='suspended'){
+      if(announce!==false)toast('Ketuk layar sekali lalu coba lagi');
+      return;
+    }
+    var now=ctx.currentTime+.06;
+    if(mode==='system'){tone(ctx,720,now,.13,'sine',.05);tone(ctx,940,now+.15,.18,'sine',.045)}
+    else if(kind==='order'){tone(ctx,523,now,.14,'sine',.06);tone(ctx,659,now+.13,.14,'sine',.06);tone(ctx,784,now+.26,.24,'sine',.055)}
+    else if(kind==='promo'){tone(ctx,660,now,.1,'triangle',.05);tone(ctx,990,now+.11,.18,'triangle',.045)}
+    else{tone(ctx,880,now,.08,'sine',.05);tone(ctx,880,now+.14,.08,'sine',.05)}
+    if(announce!==false)toast(mode==='mimi'?'Bunyi Khas Mimi diputar':'Bunyi pratinjau diputar');
+  };
+  if(ctx.state==='suspended'){
+    try{ctx.resume().then(doPlay).catch(doPlay)}catch(e){doPlay()}
+  }else{doPlay()}
 }
 function bioLoginFlow(role){
   var Bio=window.KasirquhBio;
