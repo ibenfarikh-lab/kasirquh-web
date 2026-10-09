@@ -195,6 +195,23 @@ function sendCustomerRumpi(){const input=$('#customerRumpiPost'),text=input.valu
 function updatePremiumHeader(){const h=new Date().getHours(),greet=h<11?'Selamat pagi':h<15?'Selamat siang':h<19?'Selamat sore':'Selamat malam',g=$('#timeGreeting');if(g&&!S.isGuest)g.textContent=greet;const openT=(S.storeSettings&&S.storeSettings.openTime)||'06:00',closeT=(S.storeSettings&&S.storeSettings.closeTime)||'21:00',toMin=t=>{const m=String(t).match(/(\d{1,2}):(\d{2})/);return m?(Number(m[1])*60+Number(m[2])):null},now=new Date(),cur=now.getHours()*60+now.getMinutes(),oMin=toMin(openT),cMin=toMin(closeT),open=oMin!==null&&cMin!==null?(oMin<=cMin?(cur>=oMin&&cur<cMin):(cur>=oMin||cur<cMin)):true,badge=$('#storeStatusBadge');if(badge){badge.hidden=false;badge.textContent=open?'● BUKA':'● TUTUP';badge.classList.toggle('closed',!open)}}
 function updateLiveOrderSummary(){updatePremiumHeader();const openT=(S.storeSettings&&S.storeSettings.openTime)||'06:00',closeT=(S.storeSettings&&S.storeSettings.closeTime)||'21:00',toMin=t=>{const m=String(t).match(/(\d{1,2}):(\d{2})/);return m?(Number(m[1])*60+Number(m[2])):null},now=new Date(),cur=now.getHours()*60+now.getMinutes(),oMin=toMin(openT),cMin=toMin(closeT),open=oMin!==null&&cMin!==null?(oMin<=cMin?(cur>=oMin&&cur<cMin):(cur>=oMin||cur<cMin)):true,preparingCount=S.onlineOrders.filter(order=>order.status==='active').length,el=$('#liveStatus'),detail=$('#liveDetail'),dot=$('#liveDot'),statusOverride=S.kabarStatus&&S.kabarStatus.trim();if(el)el.textContent=statusOverride?S.kabarStatus.trim():(open?'Buka sekarang':'Warung sedang tutup');if(detail)detail.textContent=open?(preparingCount?('Tutup '+closeT+' · '+preparingCount+' pesanan sedang disiapkan'):('Tutup '+closeT+' · Belum ada pesanan disiapkan')):('Buka lagi pukul '+openT+' · pesanan bisa disiapkan nanti');if(dot)dot.style.background=open?'#4d9b65':'#9b8f89'}
 function renderKabar(){const hour=new Date().getHours();let title='Saran untuk soremu',copy='Teh dingin dan camilan cocok untuk waktu santai.';if(hour<10){title='Saran untuk pagimu';copy='Kopi dan mi praktis buat mulai hari.'}else if(hour<15){title='Saran waktu siang';copy='Air dingin dan snack siap menemani aktivitas.'}else if(hour>=19){title='Saran untuk malammu';copy='Mi hangat dan kopi cocok untuk stok malam.'}const moodOverride=S.kabarMood&&S.kabarMood.trim();if($('#moodTitle'))$('#moodTitle').textContent=title;if($('#moodCopy'))$('#moodCopy').textContent=moodOverride?S.kabarMood.trim():copy+' Kalau hujan, pilih diantar.';updateLiveOrderSummary()}
+function renderActiveOrder(){
+  var o=S.activeOrder,card=$('#activeOrderCard'),mid=$('#orderModalId'),body=$('#orderModalBody'),meta=$('#accountOrderMeta');
+  if(card){
+    if(o&&o.id){
+      card.hidden=false;
+      card.querySelector('b').textContent='Pesanan '+o.id;
+      card.querySelector('small').textContent=o.status||'Diproses';
+    }else{
+      card.hidden=true;
+    }
+  }
+  if(mid)mid.textContent=o&&o.id?('Pesanan '+o.id):'Belum ada pesanan';
+  if(body){
+    body.innerHTML=o&&o.id?('<div class="order-detail"><p><b>Status:</b> '+escapeHtml(o.status||'-')+'</p><p><b>Detail:</b> '+escapeHtml(o.detail||'-')+'</p><p><b>Bayar:</b> '+escapeHtml(o.method||'-')+'</p></div>'):'<div class="empty-note">Belum ada pesanan aktif.<br><small>Pesanan yang dibuat dari keranjang akan tampil di sini.</small></div>';
+  }
+  if(meta)meta.textContent=o&&o.id?('Pesanan '+o.id+' · '+(o.status||'')):'Belum ada pesanan aktif';
+}
 function initLiveHome(){renderKabar();const flashEnd=S.flashEndsAt&&typeof S.flashEndsAt.toMillis==='function'?S.flashEndsAt.toMillis():(new Date().setHours(24,0,0,0));function tick(){const left=Math.max(0,Math.floor((flashEnd-Date.now())/1000)),h=String(Math.floor(left/3600)).padStart(2,'0'),m=String(Math.floor(left%3600/60)).padStart(2,'0'),s2=String(left%60).padStart(2,'0'),el=$('#flashCountdown');if(el)el.textContent=`${h}:${m}:${s2}`}tick();setInterval(tick,1000);renderPromoCarousel();renderFlashCard();renderGuessGame();renderWholesaleList();renderActiveOrder();initKabar();startPromo()}
 function cleanInput(value){return String(value||'').replace(/[<>]/g,'').trim()}
 function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
