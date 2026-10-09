@@ -28,7 +28,7 @@ if(S.promoProductId===undefined)S.promoProductId=null;
 if(S.gatewaySlides===undefined)S.gatewaySlides=null;
 if(S.kabarStatus===undefined)S.kabarStatus='';
 if(S.kabarMood===undefined)S.kabarMood='';
-if(S.homeSections===undefined)S.homeSections={restock:{show:true,order:1},popular:{show:true,order:3},recipe:{show:true,order:2}};
+if(S.homeSections===undefined)S.homeSections={restock:{show:true,order:3},popular:{show:true,order:2},recipe:{show:true,order:1}};
 if(S.kasbonCustomerId===undefined)S.kasbonCustomerId=null;
 if(S.payMethod===undefined)S.payMethod='cod';
 function cashBalance(){return S.journalEntries.reduce((sum,entry)=>sum+(entry.direction==='income'?entry.amount:-entry.amount),0)}
