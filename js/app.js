@@ -674,6 +674,61 @@ $('#downloadReceipt').onclick=()=>{if(!S.lastReceipt)return toast('Belum ada tra
 const logoutCustomerBtn=$('#logoutCustomerBtn')||$('#logoutCustomer');if(logoutCustomerBtn)logoutCustomerBtn.onclick=()=>{S.sessionRole=null;S.sessionName=null;S.sessionStartedAt=null;S.activeCustomerId=null;S.activeOrder=null;S.isGuest=true;S.pendingGuestAction=null;Store.logout();closeSheets();go('gateway');toast('Sesi pelanggan ditutup')};
 
 
+
+// Dibuat ulang 2026-10-10 (Fase 2 Stabilisasi)
+// Fungsi ini hilang di versi c033c3c, menyebabkan checkout gagal
+function renderActiveOrder(){
+  try{
+    const card=$('#activeOrderCard');
+    if(!card) return;
+    const order=S.activeOrder;
+    if(!order){
+      card.hidden=true;
+      return;
+    }
+    card.hidden=false;
+    const titleEl=card.querySelector('b');
+    const descEl=card.querySelector('small');
+    if(titleEl) titleEl.textContent='Pesanan '+order.id;
+    if(descEl) descEl.textContent=order.status+' · '+order.detail;
+    // Update modal detail
+    const modalId=$('#orderModalId');
+    const modalBody=$('#orderModalBody');
+    if(modalId) modalId.textContent=order.id;
+    if(modalBody){
+      modalBody.innerHTML='<div class="service-row"><div><h3>'+escapeHtml(order.id)+'</h3><p>'+escapeHtml(order.status)+'</p><p>'+escapeHtml(order.detail)+'</p></div></div>';
+    }
+  }catch(e){ console.error('renderActiveOrder gagal', e); }
+}
+function renderAccountTiles(){
+  try{
+    // Update meta pesanan di halaman akun
+    const orderMeta=$('#accountOrderMeta');
+    if(orderMeta){
+      const order=S.activeOrder;
+      orderMeta.textContent=order?('Aktif: '+order.id+' · '+order.status):'Tidak ada pesanan aktif';
+    }
+    // Update meta riwayat
+    const historyMeta=$('#accountHistoryMeta');
+    if(historyMeta){
+      const count=(S.onlineOrders||[]).filter(o=>o.customerId===S.activeCustomerId).length;
+      historyMeta.textContent=count?count+' pesanan':'Belum ada riwayat';
+    }
+    // Update badge catatan
+    const noteBadge=$('#accountNoteBadge');
+    if(noteBadge){
+      const notes=S.customerNotes||[];
+      noteBadge.textContent=notes.length||'';
+      noteBadge.hidden=!notes.length;
+    }
+    const noteMeta=$('#accountNoteMeta');
+    if(noteMeta){
+      const notes=S.customerNotes||[];
+      noteMeta.textContent=notes.length?notes.length+' catatan':'Belum ada catatan';
+    }
+  }catch(e){ console.error('renderAccountTiles gagal', e); }
+}
+
 renderAdminProductData();renderPurchaseNotes();renderCapital();updateStockProgress();renderDashboardShortcuts();
 function safeInit(label,task){try{task()}catch(error){console.error('Inisialisasi gagal · '+label,error)}}
 try{var at=localStorage.getItem('kasirquh-admin-theme');if(at&&['light','dark','system'].indexOf(at)>=0){S.adminTheme=at;$$('[data-admin-theme]').forEach(function(b){b.classList.toggle('active',b.dataset.adminTheme===at)});applyRoleTheme('admin')}}catch(e){}
