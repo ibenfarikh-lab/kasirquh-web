@@ -605,7 +605,7 @@ Object.assign(Store, {
       this.applyStoreSettings(snap.exists ? snap.data() : null);
     }, err => this.onSubError('store_settings', err)));
 
-    this.onPublic(db.collection('rumpi_posts').orderBy('createdAt', 'desc').limit(60).onSnapshot(snap => {
+    this.onPublic(db.collection('rumpi_posts').limit(60).onSnapshot(snap => {
       S.rumpiMessages = snap.docs.map(d => this.mapRumpi(d));
       this.render('rumpi');
     }, err => this.onSubError('rumpi_posts', err)));
@@ -868,8 +868,8 @@ Object.assign(Store, {
     if (this._recipesWatched) return;
     this._recipesWatched = true;
     const db = FB.db;
-    this.onPublic(db.collection('recipes').orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
-      S.recipes = snap.docs.map(d => this.mapRecipe(d));
+    this.onPublic(db.collection('recipes').limit(20).onSnapshot(snap => {
+      S.recipes = snap.docs.map(d => this.mapRecipe(d)).sort((a,b)=>String(b.id).localeCompare(String(a.id)));
       this.render('recipes');
     }, err => this.onSubError('recipes', err)));
   },
