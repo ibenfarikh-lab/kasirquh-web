@@ -348,3 +348,4 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .recipe-card.no-photo .recipe-copy{padding-top:11px}
 
 .promo-slide.paket-slide{background:linear-gradient(100deg,#2e7d4f,#3da56a);cursor:pointer}.promo-slide.paket-slide .promo-flag{background:#fff;color:#2e7d4f}
+.head-cart{position:relative;width:40px;height:40px;border:0;border-radius:14px;background:rgba(255,255,255,.22);color:#fff;display:grid;place-items:center;flex-shrink:0}.head-cart .icon{width:20px;height:20px}.head-cart b{position:absolute;right:-6px;top:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#d32f2f;color:#fff;font-size:10px;line-height:18px;border:2px solid #f49a24}
