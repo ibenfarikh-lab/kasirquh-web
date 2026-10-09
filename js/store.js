@@ -342,7 +342,7 @@ const Store = {
     return {
       id: doc.id,
       name: name,
-      short: name.length > 17 ? name.slice(0, 17) : name,
+      short: name.length > 17 ? name.slice(0, 16) + '…' : name,
       cat: d.category || 'Lainnya',
       unit: d.unit || 'pcs',
       price: Math.max(0, Math.round(Number(d.price) || 0)),
