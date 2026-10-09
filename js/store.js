@@ -61,6 +61,8 @@ const S = {
   gatewayJustSwiped: false,
   vibrateWhenSilent: true,
   soundSettings: {order:'system',promo:'system',chat:'system'},
+  adminSound: {order:'system',promo:'system',chat:'system'},
+  customerSound: {order:'system',promo:'system',chat:'system'},
   audioContext: null,
   coinProgramEnabled: true,
   coinSpendRule: 100,
@@ -77,6 +79,7 @@ const S = {
   flashEndsAt: null, // dari store_settings/main.flashEndsAt (live, Timestamp)
   promoTitle: '', // dari store_settings/main.promoTitle (live)
   paketEnabled: false, // dari store_settings/main.paketEnabled (live)
+  flashEnabled: true, // dari store_settings/main.flashEnabled (live)
   paketTitle: 'Paket Tanggal Muda', // dari store_settings/main.paketTitle (live)
   paketSubtitle: 'Stok dapur awal bulan, harga bersahabat', // dari store_settings/main.paketSubtitle (live)
   promoProductId: null, // dari store_settings/main.promoProductId (live)
@@ -642,6 +645,7 @@ Object.assign(Store, {
     if (typeof d.promoTitle === 'string') S.promoTitle = d.promoTitle;
     /* Paket Tanggal Muda (live) */
     if (typeof d.paketEnabled === 'boolean') S.paketEnabled = d.paketEnabled;
+    if (typeof d.flashEnabled === 'boolean') S.flashEnabled = d.flashEnabled;
     if (typeof d.paketTitle === 'string' && d.paketTitle.trim()) S.paketTitle = d.paketTitle.trim();
     if (typeof d.paketSubtitle === 'string') S.paketSubtitle = d.paketSubtitle;
     if (typeof d.promoProductId === 'string') S.promoProductId = d.promoProductId || null;
@@ -676,7 +680,7 @@ Object.assign(Store, {
     const adminTheme = String(d.adminTheme || '').trim();
     if (['light', 'dark', 'system'].indexOf(adminTheme) >= 0) S.adminTheme = adminTheme;
     if (d.adminSoundSettings && typeof d.adminSoundSettings === 'object') {
-      ['order', 'promo', 'chat'].forEach(k => { if (typeof d.adminSoundSettings[k] === 'string') S.soundSettings[k] = d.adminSoundSettings[k]; });
+      ['order', 'promo', 'chat'].forEach(k => { if (typeof d.adminSoundSettings[k] === 'string') S.adminSound[k] = d.adminSoundSettings[k]; });
       if (typeof d.adminSoundSettings.vibrate === 'boolean') S.vibrateWhenSilent = d.adminSoundSettings.vibrate;
     }
     if (typeof d.adminNavMotion === 'boolean') S.navMotion = d.adminNavMotion;
@@ -745,11 +749,15 @@ Object.assign(Store, {
     try {
       var pt = document.getElementById('paketEnabledToggle');
       if (pt) { pt.setAttribute('aria-pressed', String(!!S.paketEnabled)); pt.textContent = S.paketEnabled ? 'TAMPIL' : 'SEMBUNYI'; }
+      var ft = document.getElementById('flashEnabledToggle');
+      if (ft) { ft.setAttribute('aria-pressed', String(!!S.flashEnabled)); ft.textContent = S.flashEnabled ? 'TAMPIL' : 'SEMBUNYI'; }
     } catch (e) {}
     setVal('flashPriceInput', (S.flashProductId && S.promoUnitPrice[S.flashProductId]) || '');
     setVal('flashRuleInput', S.flashRule || '');
     setVal('kabarStatusInput', S.kabarStatus || '');
     setVal('kabarMoodInput', S.kabarMood || '');
+    setVal('homeOpenTimeInput', d.openTime || '06:00');
+    setVal('homeCloseTimeInput', d.closeTime || '21:00');
     /* Tema admin (persist) → tandai pilihan aktif di Pengaturan */
     try {
       document.querySelectorAll('[data-admin-theme]').forEach(b => b.classList.toggle('active', b.getAttribute('data-admin-theme') === (S.adminTheme || 'dark')));
