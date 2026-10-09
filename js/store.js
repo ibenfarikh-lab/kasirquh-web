@@ -44,6 +44,7 @@ const S = {
   coinBalance: 0, // dari customers/{uid}.coins (live)
   activeOrder: null,
   promoUnitPrice: {},
+  flashProductName: '',
   pendingProductDeleteId: null,
   customerTheme: 'light',
   adminTheme: 'dark',
@@ -634,6 +635,7 @@ Object.assign(Store, {
     const flashPrice = Number(d.flashPrice) > 0 ? Math.round(Number(d.flashPrice)) : 0;
     S.promoUnitPrice = (flashId && flashPrice > 0) ? { [flashId]: flashPrice } : {};
     if (typeof d.flashRule === 'string') S.flashRule = d.flashRule;
+    if (typeof d.flashProductName === 'string') S.flashProductName = d.flashProductName;
     S.flashEndsAt = (d.flashEndsAt && typeof d.flashEndsAt.toDate === 'function') ? d.flashEndsAt : null;
     /* Promo utama + slide gateway + kabar (live) */
     if (typeof d.promoTitle === 'string') S.promoTitle = d.promoTitle;
