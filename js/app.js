@@ -74,12 +74,16 @@ function playNotification(kind,mode,announce){
       if(announce!==false)toast('Ketuk layar sekali lalu coba lagi');
       return;
     }
-    var now=ctx.currentTime+.06;
-    if(mode==='system'){tone(ctx,720,now,.13,'sine',.05);tone(ctx,940,now+.15,.18,'sine',.045)}
-    else if(kind==='order'){tone(ctx,523,now,.14,'sine',.06);tone(ctx,659,now+.13,.14,'sine',.06);tone(ctx,784,now+.26,.24,'sine',.055)}
-    else if(kind==='promo'){tone(ctx,660,now,.1,'triangle',.05);tone(ctx,990,now+.11,.18,'triangle',.045)}
-    else{tone(ctx,880,now,.08,'sine',.05);tone(ctx,880,now+.14,.08,'sine',.05)}
-    if(announce!==false)toast(mode==='mimi'?'Bunyi Khas Mimi diputar':'Bunyi pratinjau diputar');
+    try{
+      var now=ctx.currentTime+.06;
+      if(mode==='system'){tone(ctx,720,now,.15,'sine',.22);tone(ctx,940,now+.17,.2,'sine',.2)}
+      else if(kind==='order'){tone(ctx,523,now,.16,'sine',.25);tone(ctx,659,now+.15,.16,'sine',.25);tone(ctx,784,now+.3,.28,'sine',.22)}
+      else if(kind==='promo'){tone(ctx,660,now,.12,'triangle',.22);tone(ctx,990,now+.13,.2,'triangle',.2)}
+      else{tone(ctx,880,now,.1,'sine',.22);tone(ctx,880,now+.16,.1,'sine',.22)}
+      if(announce!==false)toast(mode==='mimi'?'Bunyi Khas Mimi diputar':'Bunyi pratinjau diputar');
+    }catch(err){
+      if(announce!==false)toast('Gagal bunyi: '+(err&&err.message?err.message:'error'));
+    }
   };
   if(ctx.state==='suspended'){
     try{ctx.resume().then(doPlay).catch(doPlay)}catch(e){doPlay()}
