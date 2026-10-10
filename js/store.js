@@ -1014,7 +1014,15 @@ Object.assign(Store, {
     }, err => this.onSubError('chat_threads', err)));
     this.onRole(threadRef.collection('messages').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
-      thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
+      const prevCount = (thread.messages || []).length;
+      const newMessages = snap.docs.map(d => this.mapThreadMessage(d));
+      thread.messages = newMessages;
+      if (newMessages.length > prevCount && prevCount > 0 && typeof playNotification === 'function') {
+        const lastMsg = newMessages[newMessages.length - 1];
+        if (lastMsg && lastMsg.sender !== 'customer') {
+          try { playNotification('chat', (window.S && S.soundSettings && S.soundSettings.chat) || 'system', false); } catch(e) {}
+        }
+      }
       this.render('chat');
     }, err => this.onSubError('chat messages', err)));
   },
@@ -1137,8 +1145,12 @@ Object.assign(Store, {
     }
     thread.name = name;
     thread.initial = (name.charAt(0) || '?').toUpperCase();
+    const prevUnread = thread.unread || 0;
     thread.unread = Number(d.unreadAdmin) || 0;
     thread.lastMessage = String(d.lastMessage || '');
+    if (thread.unread > prevUnread && typeof playNotification === 'function') {
+      try { playNotification('chat', (window.S && S.soundSettings && S.soundSettings.chat) || 'system', false); } catch(e) {}
+    }
     return thread;
   },
 
