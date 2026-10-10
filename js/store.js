@@ -592,10 +592,15 @@ Object.assign(Store, {
     this.watchPatungan();
     this.watchRecipes();
 
-    this.onPublic(db.collection('promos').where('isActive', '==', true).onSnapshot(snap => {
-      S.promos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-      this.render('promos');
-    }, err => this.onSubError('promos', err)));
+    /* Promo: tarik manual (hemat kuota) — bukan real-time. */
+    this.refreshPromos = async () => {
+      try {
+        const snap = await db.collection('promos').where('isActive', '==', true).get();
+        S.promos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+        this.render('promos');
+      } catch (err) { this.onSubError('promos', err); }
+    };
+    this.refreshPromos();
 
     this.onPublic(db.collection('store_settings').doc('main').onSnapshot(snap => {
       this.applyStoreSettings(snap.exists ? snap.data() : null);
