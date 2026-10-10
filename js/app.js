@@ -703,45 +703,16 @@ async function startBarcodeScanner(){
   stopBarcodeScanner();barcodeScanBusy=false;
   const mySession=++barcodeScanSession;
   setScannerHint('Menyiapkan kamera…');
-  // Explicit permission check untuk Android
-  try{
-    if(navigator.permissions&&navigator.permissions.query){
-      const perm=await navigator.permissions.query({name:'camera'});
-      if(perm.state==='denied'){
-        setScannerHint('Izin kamera ditolak · aktifkan di Pengaturan HP > Aplikasi > KasirQuh > Izin');
-        toast('Izin kamera ditolak · cek Pengaturan HP');
-        return;
-      }
-    }
-  }catch(e){}
   if(!barcodeLibReady()){setScannerHint('Pustaka pindai gagal dimuat · pakai ketik manual di bawah');return;}
   try{
     setScannerHint('Meminta izin kamera…');
     const scanner=new window.Html5Qrcode('scannerViewport',false);
     barcodeScanner=scanner;
-    // Cari kamera belakang secara eksplisit
-    let cameraId={facingMode:'environment'};
-    try{
-      const cameras=await window.Html5Qrcode.getCameras();
-      if(cameras&&cameras.length){
-        const rear=cameras.find(c=>/back|rear|belakang|environment/i.test(c.label||''))||cameras[cameras.length-1];
-        if(rear)cameraId=rear.id;
-      }
-    }catch(e){}
-    await scanner.start(cameraId,{fps:10,qrbox:{width:250,height:150}},onBarcodeScanned,()=>{});
+    await scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:150}},onBarcodeScanned,()=>{});
     if(mySession!==barcodeScanSession)return;
     setScannerHint('Arahkan barcode ke dalam bingkai');
   }catch(err){
     if(mySession!==barcodeScanSession)return;
-    // Fallback: coba tanpa facingMode
-    try{
-      const scanner2=new window.Html5Qrcode('scannerViewport',false);
-      barcodeScanner=scanner2;
-      await scanner2.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:150}},onBarcodeScanned,()=>{});
-      if(mySession!==barcodeScanSession)return;
-      setScannerHint('Arahkan barcode ke dalam bingkai');
-      return;
-    }catch(e2){}
     barcodeScanner=null;
     setScannerHint('Izin kamera dibutuhkan untuk memindai · atau ketik manual di bawah');
     toast('Izin kamera dibutuhkan untuk memindai');
