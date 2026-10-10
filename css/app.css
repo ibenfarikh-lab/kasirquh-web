@@ -376,3 +376,14 @@ body[data-ui-theme="light"] .checkin-card{background:#fff7ed;border-color:#f0d9b
 .cart-head{display:flex;align-items:center;justify-content:space-between}
 .clear-cart-btn{border:1px solid #6b4a3a;border-radius:999px;background:transparent;color:#ff9d6b;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0}
 .clear-cart-btn:active{opacity:.6}
+
+@media(max-width:480px){
+.promo-slide{min-height:86px;max-height:86px;padding:6px 44px 6px 10px}
+.promo-slide h3{font-size:12px}
+.promo-slide p{font-size:8px;line-height:1.25}
+.promo-flag{font-size:7px;padding:2px 6px;margin-bottom:2px}
+.promo-cta{font-size:9px;padding:5px 9px}
+.promo-dots{right:8px;bottom:8px}
+.kabar-slide{min-height:80px;max-height:80px;padding:8px 36px 8px 10px}
+.flash-card{min-height:76px;max-height:76px;padding:6px 10px}
+}
