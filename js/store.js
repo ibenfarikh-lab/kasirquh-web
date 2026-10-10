@@ -1012,19 +1012,21 @@ Object.assign(Store, {
       }
       this.render('chat');
     }, err => this.onSubError('chat_threads', err)));
+    let isFirstChatLoad = true;
     this.onRole(threadRef.collection('messages').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
-      const prevCount = (thread.messages || []).length;
-      const isFirstLoad = !thread._chatInit;
-      const newMessages = snap.docs.map(d => this.mapThreadMessage(d));
-      thread.messages = newMessages;
-      thread._chatInit = true;
-      if (!isFirstLoad && newMessages.length > prevCount && typeof playNotification === 'function') {
-        const lastMsg = newMessages[newMessages.length - 1];
-        if (lastMsg && lastMsg.side !== 'customer') {
-          try { playNotification('chat', (window.S && S.soundSettings && S.soundSettings.chat) || 'system', false); } catch(e) {}
-        }
+      thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
+      if (!isFirstChatLoad && typeof playNotification === 'function') {
+        snap.docChanges().forEach(function(change){
+          if (change.type !== 'added') return;
+          var md = change.doc.data() || {};
+          var senderRole = md.senderRole || '';
+          if (senderRole === 'admin') {
+            try { playNotification('chat', (window.S && S.soundSettings && S.soundSettings.chat) || 'system', false); } catch(e) {}
+          }
+        });
       }
+      isFirstChatLoad = false;
       this.render('chat');
     }, err => this.onSubError('chat messages', err)));
   },
@@ -1127,8 +1129,23 @@ Object.assign(Store, {
       this.render('inbox');
     }, err => this.onSubError('titip_requests', err)));
 
+    var isFirstAdminChatLoad = true;
+    var adminChatPrevUnread = {};
     this.onRole(db.collection('chat_threads').where('type', '==', 'toko')
       .limit(50).onSnapshot(snap => {
+        if (!isFirstAdminChatLoad && typeof playNotification === 'function') {
+          snap.docChanges().forEach(function(change){
+            var d = change.doc.data() || {};
+            var unread = Number(d.unreadAdmin) || 0;
+            var prevUnread = adminChatPrevUnread[change.doc.id] || 0;
+            if ((change.type === 'added' && unread > 0) || (change.type === 'modified' && unread > prevUnread)) {
+              try { playNotification('chat', (window.S && S.soundSettings && S.soundSettings.chat) || 'system', false); } catch(e) {}
+            }
+            adminChatPrevUnread[change.doc.id] = unread;
+          });
+        }
+        isFirstAdminChatLoad = false;
+        snap.docChanges().forEach(function(change){ var dd = change.doc.data() || {}; adminChatPrevUnread[change.doc.id] = Number(dd.unreadAdmin) || 0; });
         this.sortDocs(snap.docs, 'updatedAt').forEach(d => this.upsertAdminThread(d));
         this.rebuildInbox();
         this.render('chat', 'inbox');
@@ -1147,14 +1164,8 @@ Object.assign(Store, {
     }
     thread.name = name;
     thread.initial = (name.charAt(0) || '?').toUpperCase();
-    const isNewThread = !thread._chatInit;
-    const prevUnread = thread.unread || 0;
     thread.unread = Number(d.unreadAdmin) || 0;
     thread.lastMessage = String(d.lastMessage || '');
-    thread._chatInit = true;
-    if (!isNewThread && thread.unread > prevUnread && typeof playNotification === 'function') {
-      try { playNotification('chat', (window.S && S.soundSettings && S.soundSettings.chat) || 'system', false); } catch(e) {}
-    }
     return thread;
   },
 
