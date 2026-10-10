@@ -103,7 +103,7 @@ function playNotification(kind,mode,announce){
       if(mode==='system'){tone(ctx,720,now,.15,'sine',.22);tone(ctx,940,now+.17,.2,'sine',.2)}
       else if(kind==='order'){tone(ctx,523,now,.16,'sine',.25);tone(ctx,659,now+.15,.16,'sine',.25);tone(ctx,784,now+.3,.28,'sine',.22)}
       else if(kind==='promo'){tone(ctx,660,now,.12,'triangle',.22);tone(ctx,990,now+.13,.2,'triangle',.2)}
-      else if(kind==='chat'){var i;for(i=0;i<12;i++){(function(n){setTimeout(function(){try{if(ctx.state==='suspended'){ctx.resume()}var t=ctx.currentTime+.02;tone(ctx,n%4===3?1200:900,t,.09,'square',.35)}catch(e){}},n*130)})(i)}}
+      else if(kind==='chat'){tone(ctx,800,now,.12,'sine',.3);tone(ctx,1000,now+.15,.12,'sine',.3)}
       else{tone(ctx,880,now,.1,'sine',.22);tone(ctx,880,now+.16,.1,'sine',.22)}
       if(announce!==false)toast(mode==='mimi'?'Bunyi Khas Mimi diputar':'Bunyi pratinjau diputar');
     }catch(err){
