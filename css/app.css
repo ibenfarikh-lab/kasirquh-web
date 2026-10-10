@@ -368,3 +368,7 @@ body[data-ui-theme="light"] .mood-card{background:var(--card);border:1px solid v
 body[data-ui-theme="light"] .mood-card small{color:var(--muted)}
 body[data-ui-theme="light"] .mood-card .icon{color:#c97814}
 body[data-ui-theme="light"] .checkin-card{background:#fff7ed;border-color:#f0d9b5}
+.inbox-group-head-row{display:flex;align-items:center;background:#2e2a28}
+.inbox-group-head-row .inbox-group-head{flex:1}
+.inbox-group-mark{border:0;background:transparent;color:#ffc27a;font-size:16px;font-weight:900;padding:12px 14px;cursor:pointer;flex-shrink:0}
+.inbox-group-mark:active{opacity:.6}
