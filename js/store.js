@@ -133,6 +133,7 @@ const S = {
 {id:'settings',group:'Pengaturan',label:'Pengaturan Global',detail:'Tampilan dan akun',icon:'gear',action:{kind:'sheet',value:'adminSettingsModal'}}
 ],
   dashboardShortcutIds: ['kasir','inbox','bookkeeping'],
+  carouselSlots: {},
   dashboardShortcutEdit: false,
   activePurchaseDate: __todayKey, // dulu: todayKey
   purchaseNotes: {}, // koleksi `stock_notes` (admin, live) — dikelompokkan per tanggal
@@ -610,6 +611,7 @@ Object.assign(Store, {
     S.storeSettings = data || {};
     const d = S.storeSettings;
     if (Array.isArray(d.dashboardShortcutIds) && d.dashboardShortcutIds.length) S.dashboardShortcutIds = d.dashboardShortcutIds.filter(id => typeof id === 'string').slice(0, 6);
+    if (d.carouselSlots && typeof d.carouselSlots === 'object') S.carouselSlots = d.carouselSlots;
     if (Array.isArray(d.inboxReadIds)) S.inboxReadIds = d.inboxReadIds.filter(id => typeof id === 'string').slice(0, 200);
     if (typeof d.coinRate === 'number') S.coinValue = Math.max(1, Math.round(d.coinRate));
     if (typeof d.coinRedeemLimit === 'number') S.coinRedeemPercent = Math.min(100, Math.max(0, Math.round(d.coinRedeemLimit)));
