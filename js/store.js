@@ -1015,11 +1015,13 @@ Object.assign(Store, {
     this.onRole(threadRef.collection('messages').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
       const prevCount = (thread.messages || []).length;
+      const isFirstLoad = !thread._chatInit;
       const newMessages = snap.docs.map(d => this.mapThreadMessage(d));
       thread.messages = newMessages;
-      if (newMessages.length > prevCount && prevCount > 0 && typeof playNotification === 'function') {
+      thread._chatInit = true;
+      if (!isFirstLoad && newMessages.length > prevCount && typeof playNotification === 'function') {
         const lastMsg = newMessages[newMessages.length - 1];
-        if (lastMsg && lastMsg.sender !== 'customer') {
+        if (lastMsg && lastMsg.side !== 'customer') {
           try { playNotification('chat', (window.S && S.soundSettings && S.soundSettings.chat) || 'system', false); } catch(e) {}
         }
       }
@@ -1145,10 +1147,12 @@ Object.assign(Store, {
     }
     thread.name = name;
     thread.initial = (name.charAt(0) || '?').toUpperCase();
+    const isNewThread = !thread._chatInit;
     const prevUnread = thread.unread || 0;
     thread.unread = Number(d.unreadAdmin) || 0;
     thread.lastMessage = String(d.lastMessage || '');
-    if (thread.unread > prevUnread && typeof playNotification === 'function') {
+    thread._chatInit = true;
+    if (!isNewThread && thread.unread > prevUnread && typeof playNotification === 'function') {
       try { playNotification('chat', (window.S && S.soundSettings && S.soundSettings.chat) || 'system', false); } catch(e) {}
     }
     return thread;
