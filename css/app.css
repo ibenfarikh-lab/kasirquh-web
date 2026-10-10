@@ -285,9 +285,9 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .det-price b{font-size:26px;font-weight:900}
 .det-body{padding:16px}
 .det-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.det-info{background:#2d231e;border-radius:14px;padding:11px 12px}
-.det-info small{font-size:9px;font-weight:800;letter-spacing:.6px;color:#c9a87f}
-.det-info b{display:block;font-size:15px;margin-top:3px;color:#ffc16c}
+.det-info{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px}
+.det-info small{font-size:9px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+.det-info b{display:block;font-size:15px;margin-top:3px;color:var(--ink)}
 .det-info.acc{background:#f49a24}
 .det-info.acc small{color:rgba(255,255,255,.85)}
 .det-info.acc b{color:#fff}
