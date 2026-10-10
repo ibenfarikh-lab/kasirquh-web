@@ -241,7 +241,17 @@ if($('#moodTitle'))$('#moodTitle').textContent=title;
 if($('#moodCopy'))$('#moodCopy').textContent=moodOverride?S.kabarMood.trim():copy+' Kalau hujan, pilih diantar.';
 const kabarEl=$('#kabarStatus');if(kabarEl&&statusOverride)kabarEl.textContent=statusOverride;
 updateLiveOrderSummary()}
-function initLiveHome(){renderKabar();const flashEnd=S.flashEndsAt&&typeof S.flashEndsAt.toMillis==='function'?S.flashEndsAt.toMillis():(new Date().setHours(24,0,0,0));function tick(){const left=Math.max(0,Math.floor((flashEnd-Date.now())/1000)),h=String(Math.floor(left/3600)).padStart(2,'0'),m=String(Math.floor(left%3600/60)).padStart(2,'0'),s2=String(left%60).padStart(2,'0'),el=$('#flashCountdown');if(el)el.textContent=`${h}:${m}:${s2}`}tick();setInterval(tick,1000);renderPromoCarousel();renderFlashCard();renderGuessGame();renderWholesaleList();renderActiveOrder();initKabar();startPromo()}
+function initKabarCarousel(){
+const track=document.getElementById('kabarTrack');if(!track||track.dataset.kabarInit)return;track.dataset.kabarInit='1';
+const dots=document.querySelectorAll('.kabar-dot');let idx=0,timer=null;
+function go(i){idx=i;track.style.transform='translateX(-'+(i*100)+'%)';dots.forEach((d,j)=>d.classList.toggle('active',j===i));}
+dots.forEach((d,j)=>{d.onclick=()=>{go(j);restart();};});
+function restart(){if(timer)clearInterval(timer);timer=setInterval(()=>{go((idx+1)%dots.length);},5000);}
+restart();
+let sx=0;track.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
+track.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>30){go((idx+(dx<0?1:dots.length-1))%dots.length);restart();}},{passive:true});
+}
+function initLiveHome(){renderKabar();initKabarCarousel();const flashEnd=S.flashEndsAt&&typeof S.flashEndsAt.toMillis==='function'?S.flashEndsAt.toMillis():(new Date().setHours(24,0,0,0));function tick(){const left=Math.max(0,Math.floor((flashEnd-Date.now())/1000)),h=String(Math.floor(left/3600)).padStart(2,'0'),m=String(Math.floor(left%3600/60)).padStart(2,'0'),s2=String(left%60).padStart(2,'0'),el=$('#flashCountdown');if(el)el.textContent=`${h}:${m}:${s2}`}tick();setInterval(tick,1000);renderPromoCarousel();renderFlashCard();renderGuessGame();renderWholesaleList();renderActiveOrder();initKabar();startPromo()}
 function cleanInput(value){return String(value||'').replace(/[<>]/g,'').trim()}
 function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 function formatPurchaseDate(key){const date=new Date(key+'T12:00:00');return new Intl.DateTimeFormat('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date)}
