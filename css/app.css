@@ -51,7 +51,7 @@ body[data-ui-theme="light"] .product-card,body[data-ui-theme="light"] .head-acti
 body[data-ui-theme="light"] .sheet .ghost{background:#e8e4e0}
 body[data-ui-theme="light"] .search input{color:#242329}
 body[data-ui-theme="light"] .status-strip{color:#7e3d0d}
-body[data-ui-theme="light"] .promo-banner,body[data-ui-theme="light"] .promo-carousel{background:#34231c}
+body[data-ui-theme="light"] .promo-carousel{background:#fff7ed;border:1px solid #f0d9b5}body[data-ui-theme="light"] .promo-carousel .promo-slide h3{color:#7c4a12}body[data-ui-theme="light"] .promo-carousel .promo-slide p{color:#a0805a}body[data-ui-theme="light"] .promo-banner{background:#34231c}
 body[data-ui-theme="light"] .service-card.featured,body[data-ui-theme="light"] .segmented button.active,body[data-ui-theme="light"] .checkout-summary{background:#2f241f}
 body[data-ui-theme="light"] .service-row button,body[data-ui-theme="light"] .choice-btn{background:#f4e6d6;color:#9b590c}
 body[data-ui-theme="light"] .progress-track{background:#ded8d2}
@@ -352,3 +352,18 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .control-card-head .control-num{width:32px;height:32px;border-radius:10px;background:var(--line);color:var(--muted);display:grid;place-items:center;font-weight:900;font-size:13px;flex:none}
 .control-card-head h3{margin:0;font-size:16px;display:flex;align-items:center;gap:8px;color:var(--ink)}
 .control-card-head h3 .icon{width:20px;height:20px;color:var(--muted)}
+
+body[data-ui-theme="light"] .recipe-section{background:#fef6ec;border:1px solid #f0d9b5;color:var(--ink)}
+body[data-ui-theme="light"] .recipe-section .section-heading p{color:#b08040}
+body[data-ui-theme="light"] .recipe-section h2{color:var(--ink)}
+body[data-ui-theme="light"] .recipe-card{background:#fff;border:1px solid var(--line)}
+body[data-ui-theme="light"] .recipe-card h3{color:var(--ink)}
+body[data-ui-theme="light"] .recipe-card p{color:var(--muted)}
+body[data-ui-theme="light"] .recipe-card span{color:#c97814}
+body[data-ui-theme="light"] .daily-game{background:#fff7ed;border:1px solid #f0d9b5;color:var(--ink)}
+body[data-ui-theme="light"] .daily-game small{color:var(--muted)}
+body[data-ui-theme="light"] .daily-game .icon{color:#c97814}
+body[data-ui-theme="light"] .daily-game>span:last-child{color:#c97814}
+body[data-ui-theme="light"] .mood-card{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+body[data-ui-theme="light"] .mood-card small{color:var(--muted)}
+body[data-ui-theme="light"] .mood-card .icon{color:#c97814}
