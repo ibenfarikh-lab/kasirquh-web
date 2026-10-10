@@ -723,6 +723,9 @@ async function startBarcodeScanner(){
     }
     if(preflight)preflight.getTracks().forEach(t=>t.stop());
     if(mySession!==barcodeScanSession)return;
+    // Jeda agar kamera terlepas sempurna sebelum html5-qrcode ambil alih
+    await new Promise(r=>setTimeout(r,300));
+    if(mySession!==barcodeScanSession)return;
   }catch(err){
     if(mySession!==barcodeScanSession)return;
     const nm=err&&(err.name||'');
