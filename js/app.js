@@ -87,8 +87,12 @@ function playNotification(kind,mode,announce){
     if(announce!==false)toast(S.vibrateWhenSilent?'Mode hening · getar':'Mode hening · tanpa suara');
     return;
   }
-  var ctx=ensureAudio();
+  var AudioCtor=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtor){if(announce!==false)toast('Audio tidak tersedia di perangkat ini');return}
+  var ctx;
+  try{ctx=new AudioCtor()}catch(e){ctx=ensureAudio()}
   if(!ctx){if(announce!==false)toast('Audio tidak tersedia di perangkat ini');return}
+  try{S.audioContext=ctx}catch(e){}
   var doPlay=function(){
     if(ctx.state==='suspended'){
       if(announce!==false)toast('Ketuk layar sekali lalu coba lagi');
