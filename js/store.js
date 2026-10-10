@@ -1186,7 +1186,7 @@ Object.assign(Store, {
     if (this._msgUnsub) { try { this._msgUnsub(); } catch (e) {} this._msgUnsub = null; }
     if (!threadId || !FB.ready()) return;
     const ref = FB.db.collection('chat_threads').doc(threadId)
-      .collection('messages').orderBy('createdAt', 'asc').limit(100);
+      .collection('messages').orderBy('createdAt', 'asc').limit(30);
     this._msgUnsub = ref.onSnapshot(snap => {
       const thread = S.directThreads[threadId] || this.upsertAdminThread({ id: threadId, data: () => ({}) });
       thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
@@ -1194,6 +1194,9 @@ Object.assign(Store, {
     }, err => this.onSubError('chat messages', err, true));
   },
 
+  stopWatchingThread() {
+    if (this._msgUnsub) { try { this._msgUnsub(); } catch (e) {} this._msgUnsub = null; }
+  },
   resolveThreadId(threadId) {
     if (threadId === 'toko' && S.sessionRole !== 'admin' && S.activeCustomerId) {
       return S.activeCustomerId;
