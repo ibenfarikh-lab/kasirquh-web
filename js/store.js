@@ -601,7 +601,7 @@ Object.assign(Store, {
       this.applyStoreSettings(snap.exists ? snap.data() : null);
     }, err => this.onSubError('store_settings', err)));
 
-    this.onPublic(db.collection('rumpi_posts').orderBy('createdAt', 'desc').limit(60).onSnapshot(snap => {
+    this.onPublic(db.collection('rumpi_posts').orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
       S.rumpiMessages = snap.docs.map(d => this.mapRumpi(d));
       this.render('rumpi');
     }, err => this.onSubError('rumpi_posts', err)));
@@ -1013,7 +1013,7 @@ Object.assign(Store, {
       this.render('chat');
     }, err => this.onSubError('chat_threads', err)));
     let isFirstChatLoad = true;
-    this.onRole(threadRef.collection('messages').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
+    this.onRole(threadRef.collection('messages').orderBy('createdAt', 'asc').limit(30).onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
       thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
       if (!isFirstChatLoad && typeof playNotification === 'function') {
@@ -1052,24 +1052,24 @@ Object.assign(Store, {
       this.render('promos');
     }, err => this.onSubError('promos_admin', err)));
 
-    this.onRole(db.collection('orders').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
+    this.onRole(db.collection('orders').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
       S.onlineOrders = snap.docs.map(d => this.mapOrder(d)).filter(o => o);
       this.rebuildPopular();
       this.refreshCustomerSpend();
-      this.rebuildInbox();
+      this.rebuildInboxDebounced();
       this.render('orders', 'inbox');
     }, err => this.onSubError('orders', err)));
 
     this.onRole(db.collection('customers').where('approvalStatus', '==', 'approved').onSnapshot(snap => {
       S.customerData = snap.docs.map(d => this.mapCustomer(d));
       this.refreshCustomerSpend();
-      this.rebuildInbox();
+      this.rebuildInboxDebounced();
       this.render('customers');
     }, err => this.onSubError('customers', err)));
 
     this.onRole(db.collection('customers').where('approvalStatus', 'in', ['pending', 'rejected']).onSnapshot(snap => {
       S.pendingCustomers = snap.docs.map(d => this.mapPending(d));
-      this.rebuildInbox();
+      this.rebuildInboxDebounced();
       this.render('customers', 'inbox');
     }, err => this.onSubError('customers pending', err)));
 
@@ -1088,13 +1088,13 @@ Object.assign(Store, {
       this.render('stockNotes');
     }, err => this.onSubError('stock_notes', err)));
 
-    this.onRole(db.collection('customer_notes').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
+    this.onRole(db.collection('customer_notes').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
       S.adminCustomerNotes = snap.docs.map(d => this.mapCustomerNote(d));
       this.render('kasbon');
     }, err => this.onSubError('customer_notes', err)));
 
     /* Catatan Toko (pengingat internal admin) */
-    this.onRole(db.collection('store_memos').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
+    this.onRole(db.collection('store_memos').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
       S.storeMemos = snap.docs.map(d => {
         const dd = d.data() || {};
         return {
@@ -1125,7 +1125,7 @@ Object.assign(Store, {
           time: dd.createdAt ? this.dateTimeOf(dd.createdAt) : 'Baru saja',
         };
       });
-      this.rebuildInbox();
+      this.rebuildInboxDebounced();
       this.render('inbox');
     }, err => this.onSubError('titip_requests', err)));
 
@@ -1147,7 +1147,7 @@ Object.assign(Store, {
         isFirstAdminChatLoad = false;
         snap.docChanges().forEach(function(change){ var dd = change.doc.data() || {}; adminChatPrevUnread[change.doc.id] = Number(dd.unreadAdmin) || 0; });
         this.sortDocs(snap.docs, 'updatedAt').forEach(d => this.upsertAdminThread(d));
-        this.rebuildInbox();
+        this.rebuildInboxDebounced();
         this.render('chat', 'inbox');
       }, err => this.onSubError('chat_threads', err)));
   },
@@ -1267,6 +1267,14 @@ Object.assign(Store, {
   /* Inbox admin: diturunkan dari koleksi live (bukan notifikasi siluman).
    * Item lokal sesi (titip/share) dipertahankan; status "dibaca" sesi ini
    * ikut dipertahankan antar rebuild. */
+  _rebuildInboxTimer: null,
+  rebuildInboxDebounced() {
+    if (this._rebuildInboxTimer) clearTimeout(this._rebuildInboxTimer);
+    this._rebuildInboxTimer = setTimeout(() => {
+      this._rebuildInboxTimer = null;
+      this.rebuildInboxDebounced();
+    }, 500);
+  },
   rebuildInbox() {
     const prevRead = {};
     (S.inboxItems || []).forEach(x => { if (x && x.read) prevRead[x.id] = true; });
