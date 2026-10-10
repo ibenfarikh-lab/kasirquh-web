@@ -703,6 +703,7 @@ Object.assign(Store, {
     if (typeof renderFlashCard === 'function') renderFlashCard();
     if (typeof renderPromoCarousel === 'function') renderPromoCarousel();
     if (typeof syncHomeSectionLayout === 'function') syncHomeSectionLayout();
+    if (typeof renderKabar === 'function') renderKabar();
     if (window.KasirQuhUI&&typeof window.KasirQuhUI.syncGatewayPromo==='function')window.KasirQuhUI.syncGatewayPromo();
   },
 
