@@ -77,7 +77,7 @@ function updateSoundPresetState(sheet){
   presets.forEach(function(b){b.classList.toggle('active',uniform&&b.dataset.soundPreset===first)});
 }
 function ensureAudio(){var AudioCtor=window.AudioContext||window.webkitAudioContext;if(!AudioCtor)return null;if(!S.audioContext){try{S.audioContext=new AudioCtor()}catch(e){return null}}if(S.audioContext.state==='suspended'){try{S.audioContext.resume()}catch(e){}}return S.audioContext}
-if(typeof document!=='undefined'){['pointerdown','touchstart','keydown'].forEach(function(ev){document.addEventListener(ev,function(){ensureAudio()},{once:true,passive:true})})}
+if(typeof document!=='undefined'){['pointerdown','touchstart','keydown'].forEach(function(ev){document.addEventListener(ev,function(){ensureAudio()},{passive:true})})}
 function playNotification(kind,mode,announce){
   if(mode==='silent'){
     if(S.vibrateWhenSilent&&navigator.vibrate){
