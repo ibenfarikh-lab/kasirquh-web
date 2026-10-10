@@ -52,7 +52,7 @@ body[data-ui-theme="light"] .sheet .ghost{background:#e8e4e0}
 body[data-ui-theme="light"] .search input{color:#242329}
 body[data-ui-theme="light"] .status-strip{color:#7e3d0d}
 body[data-ui-theme="light"] .promo-carousel{background:#fff7ed;border:1px solid #f0d9b5}body[data-ui-theme="light"] .promo-carousel .promo-slide h3{color:#7c4a12}body[data-ui-theme="light"] .promo-carousel .promo-slide p{color:#a0805a}body[data-ui-theme="light"] .promo-banner{background:#34231c}
-body[data-ui-theme="light"] .service-card.featured{background:#fff7ed;border-color:#f0d9b5;color:var(--ink)}body[data-ui-theme="light"] .service-card.featured small{color:var(--muted)}body[data-ui-theme="light"] .service-card.featured .icon{color:#c97814}body[data-ui-theme="light"] .segmented button.active,body[data-ui-theme="light"] .checkout-summary{background:#2f241f}
+body[data-ui-theme="light"] .service-card.featured{background:#fff7ed;border-color:#f0d9b5;color:var(--ink)}body[data-ui-theme="light"] .service-card.featured small{color:var(--muted)}body[data-ui-theme="light"] .service-card.featured .icon{color:#c97814}
 body[data-ui-theme="light"] .service-row button,body[data-ui-theme="light"] .choice-btn{background:#f4e6d6;color:#9b590c}
 body[data-ui-theme="light"] .progress-track{background:#ded8d2}
 body[data-ui-theme="light"] .kabar-label{color:#b5670b}
