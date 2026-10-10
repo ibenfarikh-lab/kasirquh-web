@@ -700,46 +700,57 @@ let barcodeScanner=null,barcodeScanBusy=false,barcodeScanSession=0;
 function barcodeLibReady(){return typeof window!=='undefined'&&typeof window.Html5Qrcode==='function';}
 function setScannerHint(text){const hint=$('#scannerHint');if(hint)hint.textContent=text;}
 async function startBarcodeScanner(){
-  stopBarcodeScanner();barcodeScanBusy=false;
+  await stopBarcodeScanner();barcodeScanBusy=false;
   const mySession=++barcodeScanSession;
   setScannerHint('Menyiapkan kamera…');
   if(!barcodeLibReady()){setScannerHint('Pustaka pindai gagal dimuat · pakai ketik manual di bawah');return;}
-  // Pre-flight: paksa dialog izin Android muncul eksplisit sebelum html5-qrcode
+  let needPreflight=true;
   try{
-    setScannerHint('Meminta izin kamera…');
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-      setScannerHint('Browser tidak mendukung kamera · pakai ketik manual di bawah');
+    if(navigator.permissions&&navigator.permissions.query){
+      const ps=await navigator.permissions.query({name:'camera'});
+      if(ps.state==='granted')needPreflight=false;
+      else if(ps.state==='denied'){
+        setScannerHint('Izin kamera ditolak · aktifkan di Pengaturan HP > Aplikasi > Izin');
+        toast('Izin kamera ditolak · cek Pengaturan HP');
+        return;
+      }
+    }
+  }catch(e){}
+  if(needPreflight){
+    try{
+      setScannerHint('Meminta izin kamera…');
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+        setScannerHint('Browser tidak mendukung kamera · pakai ketik manual di bawah');
+        return;
+      }
+      let preflight=null;
+      try{
+        preflight=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+      }catch(e1){
+        const nm=e1&&(e1.name||'');
+        if(nm==='OverconstrainedError'||nm==='NotFoundError'){
+          preflight=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+        }else{throw e1;}
+      }
+      if(preflight)preflight.getTracks().forEach(t=>t.stop());
+      if(mySession!==barcodeScanSession)return;
+      await new Promise(r=>setTimeout(r,1000));
+      if(mySession!==barcodeScanSession)return;
+    }catch(err){
+      if(mySession!==barcodeScanSession)return;
+      const nm=err&&(err.name||'');
+      if(nm==='NotAllowedError'){
+        setScannerHint('Izin kamera ditolak · aktifkan di Pengaturan HP > Aplikasi > Izin');
+      }else if(nm==='NotFoundError'){
+        setScannerHint('Kamera tidak ditemukan di HP ini');
+      }else if(nm==='NotReadableError'){
+        setScannerHint('Kamera dipakai aplikasi lain · tutup dulu');
+      }else{
+        setScannerHint('Izin kamera dibutuhkan untuk memindai · atau ketik manual di bawah');
+      }
+      toast('Izin kamera dibutuhkan untuk memindai');
       return;
     }
-    let preflight=null;
-    try{
-      preflight=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
-    }catch(e1){
-      // Fallback tanpa facingMode jika overconstrained
-      const nm=e1&&(e1.name||'');
-      if(nm==='OverconstrainedError'||nm==='NotFoundError'){
-        preflight=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
-      }else{throw e1;}
-    }
-    if(preflight)preflight.getTracks().forEach(t=>t.stop());
-    if(mySession!==barcodeScanSession)return;
-    // Jeda agar kamera terlepas sempurna sebelum html5-qrcode ambil alih
-    await new Promise(r=>setTimeout(r,300));
-    if(mySession!==barcodeScanSession)return;
-  }catch(err){
-    if(mySession!==barcodeScanSession)return;
-    const nm=err&&(err.name||'');
-    if(nm==='NotAllowedError'){
-      setScannerHint('Izin kamera ditolak · aktifkan di Pengaturan HP > Aplikasi > Izin');
-    }else if(nm==='NotFoundError'){
-      setScannerHint('Kamera tidak ditemukan di HP ini');
-    }else if(nm==='NotReadableError'){
-      setScannerHint('Kamera dipakai aplikasi lain · tutup dulu');
-    }else{
-      setScannerHint('Izin kamera dibutuhkan untuk memindai · atau ketik manual di bawah');
-    }
-    toast('Izin kamera dibutuhkan untuk memindai');
-    return;
   }
   try{
     const scanner=new window.Html5Qrcode('scannerViewport',false);
