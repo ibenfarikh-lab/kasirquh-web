@@ -292,12 +292,12 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .det-info.acc small{color:rgba(255,255,255,.85)}
 .det-info.acc b{color:#fff}
 .det-qty-row{display:flex;gap:10px;align-items:stretch;margin-bottom:10px}
-.det-step{display:flex;align-items:center;gap:8px;background:#f4efe9;border-radius:14px;padding:6px 10px}
+.det-step{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 10px}
 .det-step button{width:30px;height:30px;border:0;border-radius:50%;background:#f49a24;color:#fff;font-size:17px;font-weight:900;cursor:pointer}
 .det-step b{font-size:15px;min-width:22px;text-align:center}
 .det-add{flex:1;border:0;border-radius:14px;background:linear-gradient(135deg,#ff9b3e,#f49a24);color:#fff;font-size:14px;font-weight:900;cursor:pointer;padding:0 14px}
 .det-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.det-actions button{height:42px;border-radius:12px;border:1px solid #e0d0b8;background:#fff;font-size:12px;font-weight:700;color:#8a5a1a;cursor:pointer}
+.det-actions button{height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:12px;font-weight:700;color:var(--ink);cursor:pointer}
 
 /* Katalog ala dashboard (2026-10-08) */
 .kat-hero{background:linear-gradient(135deg,#ff9b3e,#e07f0a);border-radius:18px;padding:16px;color:#fff;margin-bottom:6px;position:relative;overflow:hidden}
