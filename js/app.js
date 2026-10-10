@@ -703,6 +703,17 @@ async function startBarcodeScanner(){
   stopBarcodeScanner();barcodeScanBusy=false;
   const mySession=++barcodeScanSession;
   setScannerHint('Menyiapkan kamera…');
+  // Explicit permission check untuk Android
+  try{
+    if(navigator.permissions&&navigator.permissions.query){
+      const perm=await navigator.permissions.query({name:'camera'});
+      if(perm.state==='denied'){
+        setScannerHint('Izin kamera ditolak · aktifkan di Pengaturan HP > Aplikasi > KasirQuh > Izin');
+        toast('Izin kamera ditolak · cek Pengaturan HP');
+        return;
+      }
+    }
+  }catch(e){}
   if(!barcodeLibReady()){setScannerHint('Pustaka pindai gagal dimuat · pakai ketik manual di bawah');return;}
   try{
     setScannerHint('Meminta izin kamera…');
