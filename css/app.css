@@ -78,7 +78,7 @@ body[data-ui-theme="dark"] .activity-strip{border-color:#5e4630}
 body[data-ui-theme="dark"] .kabar-carousel{border-color:#3d383a}
 body[data-ui-theme="dark"] .kabar-label{color:#f0a64d}
 body[data-ui-theme="dark"] .kabar-dot{background:#625b57}
-body[data-ui-theme="dark"] .service-card.featured,body[data-ui-theme="dark"] .segmented button.active,body[data-ui-theme="dark"] .checkout-summary{background:#3b2c24}
+body[data-ui-theme="dark"] .service-card.featured,body[data-ui-theme="dark"] .segmented button.active{background:var(--card);color:var(--ink);border:2px solid var(--orange);box-shadow:0 0 0 1px var(--orange)}body[data-ui-theme="dark"] .checkout-summary{background:var(--card);color:var(--ink)}
 body[data-ui-theme="dark"] .service-row button,body[data-ui-theme="dark"] .choice-btn{background:#3f342e;color:#ffc276}
 body[data-ui-theme="dark"] .progress-track{background:#4b4441}
 body[data-ui-theme="light"] .profile-card button{background:#f0e5da;color:#99590e}
