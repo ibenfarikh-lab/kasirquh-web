@@ -259,6 +259,9 @@ for(var k=0;k<dots.length;k++){
 setInterval(function(){go((idx+1)%dots.length);},5000);
 }catch(e){}
 }
+// Delayed init untuk pastikan DOM siap
+setTimeout(function(){try{initKabarCarousel()}catch(e){}},1000);
+setTimeout(function(){try{initKabarCarousel()}catch(e){}},3000);
 function initLiveHome(){renderKabar();initKabarCarousel();const flashEnd=S.flashEndsAt&&typeof S.flashEndsAt.toMillis==='function'?S.flashEndsAt.toMillis():(new Date().setHours(24,0,0,0));function tick(){const left=Math.max(0,Math.floor((flashEnd-Date.now())/1000)),h=String(Math.floor(left/3600)).padStart(2,'0'),m=String(Math.floor(left%3600/60)).padStart(2,'0'),s2=String(left%60).padStart(2,'0'),el=$('#flashCountdown');if(el)el.textContent=`${h}:${m}:${s2}`}tick();setInterval(tick,1000);renderPromoCarousel();renderFlashCard();renderGuessGame();renderWholesaleList();renderActiveOrder();initKabar();startPromo()}
 function cleanInput(value){return String(value||'').replace(/[<>]/g,'').trim()}
 function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
