@@ -342,6 +342,7 @@ const Store = {
     if (!name) return null;
     return {
       id: doc.id,
+      active: d.active !== false,
       name: name,
       short: name.length > 17 ? name.slice(0, 16) + '…' : name,
       cat: d.category || 'Lainnya',
