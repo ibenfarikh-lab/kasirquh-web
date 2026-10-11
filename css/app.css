@@ -391,7 +391,7 @@ body[data-ui-theme="light"] .checkin-card{background:#fff7ed;border-color:#f0d9b
 /* Overlay loading saat login */
 .login-loading-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(250,247,242,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);pointer-events:all;touch-action:none;user-select:none;-webkit-user-select:none;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s}
 .login-loading-overlay.show{opacity:1;visibility:visible}
-.loader-logo{width:76px;height:76px;border-radius:22px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;font-weight:800;box-shadow:0 8px 28px rgba(59,130,246,.35);animation:pulse-logo 1.4s ease-in-out infinite}
+.loader-logo-img{width:76px;height:76px;border-radius:22px;box-shadow:0 8px 28px rgba(59,130,246,.35);animation:pulse-logo 1.4s ease-in-out infinite}
 @keyframes pulse-logo{0%,100%{transform:scale(1);box-shadow:0 8px 28px rgba(59,130,246,.35)}50%{transform:scale(1.08);box-shadow:0 12px 36px rgba(59,130,246,.55)}}
 .loader-spinner{width:44px;height:44px;border-radius:50%;border:4px solid rgba(59,130,246,.2);border-top-color:#3b82f6;animation:spin .9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
