@@ -875,9 +875,3 @@ window.KasirQuhUI={go:go,stopGatewayTimer:stopGatewayTimer,syncGatewayPromo:sync
 })();
 document.addEventListener('DOMContentLoaded',()=>{const o=document.getElementById('loginLoadingOverlay');if(o){o.addEventListener('click',e=>e.stopPropagation());o.addEventListener('touchstart',e=>e.preventDefault(),{passive:false})}});
 
-document.addEventListener('click',e=>{
-  const m=e.target.closest('[data-go-missions]');
-  if(m){e.stopPropagation();closeSheets();setTimeout(()=>openSheet('missionsModal'),80);return}
-  const g=e.target.closest('[data-go-guess]');
-  if(g){e.stopPropagation();closeSheets();setTimeout(()=>openSheet('priceGuessModal'),80);return}
-});
