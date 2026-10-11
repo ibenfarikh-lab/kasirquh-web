@@ -413,3 +413,9 @@ body[data-ui-theme="light"] .checkin-card{background:#fff7ed;border-color:#f0d9b
 .guess-mark{font-size:18px;font-weight:900;width:24px;text-align:center}
 .guess-option.correct .guess-mark{color:#2e7d32}
 .guess-option.wrong .guess-mark{color:#c62828}
+
+/* Shortcut di Dompet loyalti */
+.coin-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.coin-shortcut-btn{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:12px;color:var(--ink);font-size:13px;font-weight:700;cursor:pointer;text-align:left}
+.coin-shortcut-btn .icon{width:22px;height:22px;color:#c8750e;flex-shrink:0}
+.coin-shortcut-btn:active{transform:scale(.97)}
