@@ -447,7 +447,7 @@ $('#titipSubmit').onclick=()=>{if(requireCustomer('titip'))return;const item=$('
 
 // Mode Anggaran V2: pelanggan pilih produk, sistem hitungkan qty
 let budgetSelectedIds=new Set();
-function getBudgetEligible(){return S.products.filter(p=>p.isActive!==false&&p.stock>0&&p.price>0&&(p.budgetEligible||!('budgetEligible' in p)))}
+function getBudgetEligible(){return S.products.filter(p=>p.isActive!==false&&p.stock>0&&p.price>0&&p.budgetEligible!==false)}
 function renderBudgetProductList(){
   const box=$('#budgetProductList');if(!box)return;
   const list=getBudgetEligible().sort((a,b)=>a.name.localeCompare(b.name,'id'));
