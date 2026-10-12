@@ -494,3 +494,7 @@ body[data-ui-theme="dark"] .checkin-card span:last-child{color:#ff9b3e!important
 body[data-ui-theme="dark"] .recipe-section{background:#000000!important}
 body[data-ui-theme="dark"] .home-section{background:#000000!important}
 body[data-ui-theme="dark"] .det-hero{background:#000000!important}
+
+/* Chip: pakai #customer[data-render-theme] yang reliable */
+#customer[data-render-theme="dark"] .chip{background:#000000;border-color:#2a2a2a;color:#fff}
+#customer[data-render-theme="dark"] .chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
