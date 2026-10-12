@@ -1774,6 +1774,8 @@ Object.assign(Store, {
       photoUrl: data.img || '',
       barcode: data.barcode || '',
       isActive: true,
+      budgetEligible: !!data.budgetEligible,
+      budgetMaxQty: Math.min(20, Math.max(1, Math.round(Number(data.budgetMaxQty) || 4))),
       updatedAt: ts,
     };
     if (id) {
