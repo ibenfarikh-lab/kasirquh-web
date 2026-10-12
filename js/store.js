@@ -360,6 +360,8 @@ const Store = {
       wholesalePrice: Math.max(0, Math.round(Number(d.wholesalePrice) || 0)),
       wholesaleLabel: String(d.wholesaleLabel || ''),
       oldPrice: Math.max(0, Math.round(Number(d.oldPrice) || 0)),
+      budgetEligible: !!d.budgetEligible,
+      budgetMaxQty: Math.min(20, Math.max(1, Math.round(Number(d.budgetMaxQty) || 4))),
     };
   },
 
