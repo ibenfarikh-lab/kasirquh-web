@@ -476,7 +476,6 @@ body[data-ui-theme="oled"] .patungan-bar{background:#1a1a1a}
 body[data-ui-theme="dark"] .detail-visual{background:#000000}
 body[data-ui-theme="dark"] .chip{background:#000000;border-color:#2a2a2a;color:#fff}
 body[data-ui-theme="dark"] .chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
-body[data-ui-theme="dark"] .daily-checkin-card{background:#000000;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .promo-carousel{background:#000000;border:1px solid #2a2a2a}
 body[data-ui-theme="dark"] .promo-slide{background:#000000}
 body[data-ui-theme="dark"] .kabar-carousel{background:#000000;border-color:#2a2a2a}
@@ -489,3 +488,11 @@ body[data-ui-theme="dark"] .mission-card{background:#000000;border-color:#2a2a2a
 body[data-ui-theme="dark"] .service-card{background:#000000;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .quick-card{background:#000000;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .popular-card{background:#000000;border-color:#2a2a2a}
+
+/* FIX: class name yang benar */
+body[data-ui-theme="dark"] .checkin-card{background:#000000!important;border-color:#2a2a2a!important}
+body[data-ui-theme="dark"] .checkin-card small{color:#999!important}
+body[data-ui-theme="dark"] .checkin-card span:last-child{color:#ff9b3e!important}
+body[data-ui-theme="dark"] .recipe-section{background:#000000!important}
+body[data-ui-theme="dark"] .home-section{background:#000000!important}
+body[data-ui-theme="dark"] .det-hero{background:#000000!important}
