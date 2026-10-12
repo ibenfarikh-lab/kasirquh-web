@@ -498,3 +498,9 @@ body[data-ui-theme="dark"] .det-hero{background:#000000!important}
 /* Chip: pakai #customer[data-render-theme] yang reliable */
 #customer[data-render-theme="dark"] .chip{background:#000000;border-color:#2a2a2a;color:#fff}
 #customer[data-render-theme="dark"] .chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
+
+/* kat-chip: kategori produk (class yang benar!) */
+#customer[data-render-theme="dark"] .kat-chip{background:#000000;border-color:#2a2a2a;color:#fff}
+#customer[data-render-theme="dark"] .kat-chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
+body[data-ui-theme="dark"] .kat-chip{background:#000000;border-color:#2a2a2a;color:#fff}
+body[data-ui-theme="dark"] .kat-chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
