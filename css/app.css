@@ -474,8 +474,8 @@ body[data-ui-theme="oled"] .patungan-bar{background:#1a1a1a}
 
 /* FULL BLACK: area yang dilingkari user */
 body[data-ui-theme="dark"] .detail-visual{background:#000000}
-body[data-ui-theme="dark"] .chip{background:#000000!important;border-color:#2a2a2a!important;color:#fff!important}
-body[data-ui-theme="dark"] .chip.active{background:#000000!important;border:2px solid #ff9b3e!important;color:#ff9b3e!important}
+body[data-ui-theme="dark"] .chip{background:#000000;border-color:#2a2a2a;color:#fff}
+body[data-ui-theme="dark"] .chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
 body[data-ui-theme="dark"] .promo-carousel{background:#000000;border:1px solid #2a2a2a}
 body[data-ui-theme="dark"] .promo-slide{background:#000000}
 body[data-ui-theme="dark"] .kabar-carousel{background:#000000;border-color:#2a2a2a}
