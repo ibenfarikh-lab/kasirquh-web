@@ -430,3 +430,6 @@ body[data-ui-theme="oled"] .promo-carousel,body[data-ui-theme="oled"] .promo-ban
 body[data-ui-theme="oled"] .accent,body[data-ui-theme="oled"] .coin-chip{color:#ffb84d}
 body[data-ui-theme="oled"] .sheet{background:#0a0a0a;border-color:#2a2a2a}
 body[data-ui-theme="oled"] .modal{background:rgba(0,0,0,.7)}
+
+body[data-ui-theme="dark"] .patungan-bar{background:#3a3434}
+body[data-ui-theme="oled"] .patungan-bar{background:#1a1a1a}
