@@ -179,7 +179,7 @@ function loadCustomerPrefs(){
     var raw=localStorage.getItem(CUSTOMER_PREFS_KEY);
     if(!raw)return;
     var p=JSON.parse(raw);
-    if(p.theme&&['light','dark','system'].indexOf(p.theme)>=0)S.customerTheme=p.theme;
+    if(p.theme&&['light','dark','oled','system'].indexOf(p.theme)>=0)S.customerTheme=p.theme;
     if(p.density)$('#customer').dataset.density=p.density;
     if(p.sound){['order','promo','chat'].forEach(function(k){if(typeof p.sound[k]==='string')S.soundSettings[k]=p.sound[k]})}
     if(typeof p.vibrate==='boolean')S.vibrateWhenSilent=p.vibrate;
@@ -865,7 +865,7 @@ function renderAccountTiles(){
 
 renderAdminProductData();renderPurchaseNotes();renderCapital();updateStockProgress();renderDashboardShortcuts();
 function safeInit(label,task){try{task()}catch(error){console.error('Inisialisasi gagal · '+label,error)}}
-try{var at=localStorage.getItem('kasirquh-admin-theme');if(at&&['light','dark','system'].indexOf(at)>=0){S.adminTheme=at;$$('[data-admin-theme]').forEach(function(b){b.classList.toggle('active',b.dataset.adminTheme===at)});applyRoleTheme('admin')}}catch(e){}
+try{var at=localStorage.getItem('kasirquh-admin-theme');if(at&&['light','dark','oled','system'].indexOf(at)>=0){S.adminTheme=at;$$('[data-admin-theme]').forEach(function(b){b.classList.toggle('active',b.dataset.adminTheme===at)});applyRoleTheme('admin')}}catch(e){}
 loadCustomerPrefs();[['Beranda',renderHome],['Katalog pelanggan',renderCustomer],['Keranjang',updateCustomerCart],['Katalog admin',renderAdminProducts],['Keranjang admin',renderAdminCart],['Inbox',renderInbox],['Data pelanggan',renderCustomerData],['Kasir Online',()=>{renderOnlineOrders();renderTransfers()}],['Rumpi',renderAllRumpi],['Chat Toko',()=>{renderDirectThread();renderCustomerChatSummary()}],['Kartu aplikasi',renderAppBarcode],['Beranda langsung',initLiveHome],['Koin',updateCoinUI],['Program koin',applyCoinProgram],['Kontrol suara',syncSoundControls],['Format angka',formatNumericInputs],['Tema pelanggan',()=>applyRoleTheme('customer')],['Tema admin',()=>applyRoleTheme('admin')],['Akun pelanggan',renderAccountTiles],['Susunan beranda',syncHomeSectionLayout],['Tanggal berjalan',renderCurrentDate]].forEach(([label,task])=>safeInit(label,task));
 Store.whenAuthReady().then(()=>safeInit('Gateway',startGateway));
 /* Kontrak lintas-script resmi: fungsi gateway yang dibutuhkan store.js

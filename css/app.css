@@ -419,3 +419,14 @@ body[data-ui-theme="light"] .checkin-card{background:#fff7ed;border-color:#f0d9b
 .coin-shortcut-btn{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:12px;color:var(--ink);font-size:13px;font-weight:700;cursor:pointer;text-align:left}
 .coin-shortcut-btn .icon{width:22px;height:22px;color:#c8750e;flex-shrink:0}
 .coin-shortcut-btn:active{transform:scale(.97)}
+
+/* Tema OLED Hitam Pekat */
+body[data-ui-theme="oled"]{--ink:#ffffff;--muted:#8a8a8a;--paper:#000000;--card:#0a0a0a;--line:#2a2a2a;--shadow:0 8px 22px rgba(0,0,0,.6);background:#000000;color-scheme:dark}
+body[data-ui-theme="oled"] .customer-head{background:rgba(0,0,0,.94)}
+body[data-ui-theme="oled"] .chip{background:#1a1a1a;color:#ccc}
+body[data-ui-theme="oled"] .chip.outline{background:#0a0a0a}
+body[data-ui-theme="oled"] .product-card,body[data-ui-theme="oled"] .head-action,body[data-ui-theme="oled"] .quick-card,body[data-ui-theme="oled"] .popular-card,body[data-ui-theme="oled"] .profile-card,body[data-ui-theme="oled"] .settings-list,body[data-ui-theme="oled"] .checkout-card,body[data-ui-theme="oled"] .chat-choice article{border-color:#2a2a2a}
+body[data-ui-theme="oled"] .promo-carousel,body[data-ui-theme="oled"] .promo-banner{background:#0a0a0a;border:1px solid #2a2a2a}
+body[data-ui-theme="oled"] .accent,body[data-ui-theme="oled"] .coin-chip{color:#ffb84d}
+body[data-ui-theme="oled"] .sheet{background:#0a0a0a;border-color:#2a2a2a}
+body[data-ui-theme="oled"] .modal{background:rgba(0,0,0,.7)}
