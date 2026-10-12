@@ -504,3 +504,11 @@ body[data-ui-theme="dark"] .det-hero{background:#000000!important}
 #customer[data-render-theme="dark"] .kat-chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
 body[data-ui-theme="dark"] .kat-chip{background:#000000;border-color:#2a2a2a;color:#fff}
 body[data-ui-theme="dark"] .kat-chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
+
+/* STOK box: oranye → hitam di tema gelap */
+#customer[data-render-theme="dark"] .det-info.acc{background:#000000;border:1px solid #ff9b3e}
+#customer[data-render-theme="dark"] .det-info.acc small{color:#999}
+#customer[data-render-theme="dark"] .det-info.acc b{color:#ff9b3e}
+body[data-ui-theme="dark"] .det-info.acc{background:#000000;border:1px solid #ff9b3e}
+body[data-ui-theme="dark"] .det-info.acc small{color:#999}
+body[data-ui-theme="dark"] .det-info.acc b{color:#ff9b3e}
