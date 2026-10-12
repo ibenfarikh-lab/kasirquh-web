@@ -1778,6 +1778,9 @@ Object.assign(Store, {
       isActive: true,
       budgetEligible: !!data.budgetEligible,
       budgetMaxQty: Math.min(20, Math.max(1, Math.round(Number(data.budgetMaxQty) || 4))),
+      wholesaleQty: Math.max(0, Math.round(Number(data.wholesaleQty) || 0)),
+      wholesalePrice: Math.max(0, Math.round(Number(data.wholesalePrice) || 0)),
+      wholesaleLabel: String(data.wholesaleLabel || ''),
       updatedAt: ts,
     };
     if (id) {
