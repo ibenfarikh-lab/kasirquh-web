@@ -141,7 +141,6 @@ const S = {
   inboxItems: [], // diturunkan: antrean pelanggan + pesanan aktif + stok menipis + chat
   inboxReadIds: [], // ID notifikasi yg sudah dibaca (persisten Firestore)
   patunganList: [], // koleksi `patungan` (limit 20, hemat kuota)
-  hajatanPackages: [], // koleksi `hajatanPackages`
   customerData: [], // koleksi `customers` (approved) — admin saja
   pendingCustomers: [], // koleksi `customers` (pending/rejected) — admin saja
   onlineOrders: [], // koleksi `orders` (admin: semua; pelanggan: milik sendiri)
@@ -594,7 +593,6 @@ Object.assign(Store, {
 
     this.refreshProducts();
     this.watchPatungan();
-    this.watchHajatanPackages();
     this.watchRecipes();
 
     /* Promo: tarik manual (hemat kuota) — bukan real-time. */
@@ -841,45 +839,6 @@ Object.assign(Store, {
     });
   },
 
-  /* Paket Hajatan: watch */
-  watchHajatanPackages() {
-    if (!this.needOnline()) return;
-    const db = FB.db;
-    this.unsub('hajatanPackages');
-    this.subs.hajatanPackages = db.collection('hajatanPackages').where('isActive', '==', true).onSnapshot(snap => {
-      try {
-        S.hajatanPackages = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-        this.render('hajatanPackages');
-        if (typeof renderHajatanAdminList === 'function') { try { renderHajatanAdminList(); } catch(e){} }
-      } catch (e) { console.error('[KasirQuh] hajatan render gagal:', e); }
-    }, err => this.onSubError('hajatanPackages', err));
-  },
-
-  async saveHajatanPackage(data, id) {
-    if (!this.needOnline()) throw __offlineError();
-    this.assertAdmin();
-    const db = FB.db, ts = FB.serverTimestamp();
-    const base = {
-      name: String(data.name || ''),
-      description: String(data.description || ''),
-      items: Array.isArray(data.items) ? data.items : [],
-      isActive: true,
-      updatedAt: ts,
-    };
-    if (id) {
-      await db.collection('hajatanPackages').doc(id).update(base);
-    } else {
-      base.createdAt = ts;
-      await db.collection('hajatanPackages').add(base);
-    }
-  },
-
-  async deleteHajatanPackage(id) {
-    if (!this.needOnline()) throw __offlineError();
-    this.assertAdmin();
-    await FB.db.collection('hajatanPackages').doc(id).update({ isActive: false, updatedAt: FB.serverTimestamp() });
-  },
-
   async setPatunganStatus(id, status) {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
@@ -1110,14 +1069,14 @@ Object.assign(Store, {
       this.render('orders', 'inbox');
     }, err => this.onSubError('orders', err)));
 
-    this.onRole(db.collection('customers').where('approvalStatus', '==', 'approved').limit(100).onSnapshot(snap => {
+    this.onRole(db.collection('customers').where('approvalStatus', '==', 'approved').onSnapshot(snap => {
       S.customerData = snap.docs.map(d => this.mapCustomer(d));
       this.refreshCustomerSpend();
       this.rebuildInboxDebounced();
       this.render('customers');
     }, err => this.onSubError('customers', err)));
 
-    this.onRole(db.collection('customers').where('approvalStatus', 'in', ['pending', 'rejected']).limit(50).onSnapshot(snap => {
+    this.onRole(db.collection('customers').where('approvalStatus', 'in', ['pending', 'rejected']).onSnapshot(snap => {
       S.pendingCustomers = snap.docs.map(d => this.mapPending(d));
       this.rebuildInboxDebounced();
       this.render('customers', 'inbox');
@@ -1128,7 +1087,7 @@ Object.assign(Store, {
       this.render('journal');
     }, err => this.onSubError('journal', err)));
 
-    this.onRole(db.collection('stock_notes').orderBy('date', 'desc').limit(50).onSnapshot(snap => {
+    this.onRole(db.collection('stock_notes').orderBy('date', 'desc').onSnapshot(snap => {
       const grouped = {};
       snap.docs.forEach(d => {
         const note = this.mapStockNote(d);
@@ -1452,20 +1411,16 @@ Object.assign(Store, {
       /* Admin: custom claim admin:true (TIDAK ADA pendaftaran admin mandiri) */
       let isAdmin = false;
       try {
-        // Force refresh untuk pastikan claims terbaru (bukan cache basi)
-        const token = await user.getIdTokenResult(true);
+        const token = await user.getIdTokenResult();
         isAdmin = !!(token && token.claims && token.claims.admin === true);
       } catch (e) {
         // Gagal transient (jaringan belum siap saat tab baru dibuka):
-        // coba dengan cache dulu, lalu force refresh sekali lagi.
+        // coba sekali lagi sebelum menyerah. Kegagalan di sini tidak
+        // boleh menghancurkan sesi (lihat bawah: tanpa signOut).
         try {
-          const cachedToken = await user.getIdTokenResult(false);
-          isAdmin = !!(cachedToken && cachedToken.claims && cachedToken.claims.admin === true);
-          if (!isAdmin) {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            const retryToken = await user.getIdTokenResult(true);
-            isAdmin = !!(retryToken && retryToken.claims && retryToken.claims.admin === true);
-          }
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          const retryToken = await user.getIdTokenResult();
+          isAdmin = !!(retryToken && retryToken.claims && retryToken.claims.admin === true);
         } catch (e2) { isAdmin = false; }
       }
 
@@ -1625,8 +1580,6 @@ Object.assign(Store, {
       S.sessionName = 'Admin Warunge Mimi';
       S.sessionStartedAt = new Date().toISOString();
       S.activeCustomerId = null;
-      // Jeda agar UI sempat update sebelum listener berat jalan
-      await new Promise(r => setTimeout(r, 100));
       this.startAdminSubs();
       this.render('session', 'profile');
     }
