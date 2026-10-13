@@ -1621,6 +1621,8 @@ Object.assign(Store, {
       S.sessionName = 'Admin Warunge Mimi';
       S.sessionStartedAt = new Date().toISOString();
       S.activeCustomerId = null;
+      // Jeda agar UI sempat update sebelum listener berat jalan
+      await new Promise(r => setTimeout(r, 100));
       this.startAdminSubs();
       this.render('session', 'profile');
     }
