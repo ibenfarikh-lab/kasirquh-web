@@ -16,6 +16,12 @@
  * nyata; koleksi kosong → empty state jujur di UI ("belum ada transaksi").
  */
 
+// Gambar "kosong" untuk produk yang belum ada foto: 1x1 piksel transparan.
+// Prinsip: foto produk HANYA dari database (photoUrl). Tidak ada lagi
+// placeholder gambar produk di assets/ — yang belum difoto tampil kosong
+// agar jelas perlu diinput manual. (2026-10-14)
+const IMG_EMPTY = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
 // Kunci tanggal sesi (Asia/Jakarta). Dipakai juga sebagai nilai
 // awal S.activePurchaseDate — dihitung sekali di sini agar konsisten.
 const __todayKey = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -352,7 +358,8 @@ const Store = {
       price: Math.max(0, Math.round(Number(d.price) || 0)),
       cost: Math.max(0, Math.round(Number(d.costPrice) || 0)),
       stock: Math.max(0, Number(d.stock) || 0),
-      img: d.photoUrl || 'assets/img/img-021.png',
+      img: d.photoUrl || IMG_EMPTY,
+      hasPhoto: !!d.photoUrl,
       barcode: d.barcode || '',
       promo: !!d.promo,
       isActive: d.isActive !== false,
