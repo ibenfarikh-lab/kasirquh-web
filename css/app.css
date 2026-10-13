@@ -238,7 +238,7 @@ body[data-ui-theme="dark"] .auth-note{background:#3d2f24;color:#f4c996}body[data
 .gateway-slides{position:absolute;inset:0;z-index:-2;overflow:hidden}
 .gateway-slide{position:absolute;inset:-1px;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:scale(1.025);transition:opacity .5s ease,transform 4s ease}
 .gateway-slide.active{opacity:1;transform:scale(1)}
-.gateway-slide:nth-child(1){background-image:url('../assets/img/img-002.webp')}
+.gateway-slide:nth-child(1){background-image:url('../assets/img/img-001.webp')}
 .gateway-slide:nth-child(2){background-image:url('../assets/img/img-003.webp')}
 .gateway-slide:nth-child(3){background-image:url('../assets/img/img-004.webp')}
 .gateway-progress button{width:.48rem;height:.48rem;border:0;border-radius:999px;background:#6f574b;padding:0;transition:width .2s ease,background .2s ease,transform .2s ease}
