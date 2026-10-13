@@ -1452,16 +1452,20 @@ Object.assign(Store, {
       /* Admin: custom claim admin:true (TIDAK ADA pendaftaran admin mandiri) */
       let isAdmin = false;
       try {
-        const token = await user.getIdTokenResult();
+        // Force refresh untuk pastikan claims terbaru (bukan cache basi)
+        const token = await user.getIdTokenResult(true);
         isAdmin = !!(token && token.claims && token.claims.admin === true);
       } catch (e) {
         // Gagal transient (jaringan belum siap saat tab baru dibuka):
-        // coba sekali lagi sebelum menyerah. Kegagalan di sini tidak
-        // boleh menghancurkan sesi (lihat bawah: tanpa signOut).
+        // coba dengan cache dulu, lalu force refresh sekali lagi.
         try {
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          const retryToken = await user.getIdTokenResult();
-          isAdmin = !!(retryToken && retryToken.claims && retryToken.claims.admin === true);
+          const cachedToken = await user.getIdTokenResult(false);
+          isAdmin = !!(cachedToken && cachedToken.claims && cachedToken.claims.admin === true);
+          if (!isAdmin) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const retryToken = await user.getIdTokenResult(true);
+            isAdmin = !!(retryToken && retryToken.claims && retryToken.claims.admin === true);
+          }
         } catch (e2) { isAdmin = false; }
       }
 
