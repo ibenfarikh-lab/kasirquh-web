@@ -142,6 +142,7 @@ const S = {
   inboxReadIds: [], // ID notifikasi yg sudah dibaca (persisten Firestore)
   patunganList: [], // koleksi `patungan` (limit 20, hemat kuota)
   rutinPackages: [], // koleksi `rutinPackages`
+  hajatanPackages: [], // koleksi `hajatanPackages`
   customerData: [], // koleksi `customers` (approved) — admin saja
   pendingCustomers: [], // koleksi `customers` (pending/rejected) — admin saja
   onlineOrders: [], // koleksi `orders` (admin: semua; pelanggan: milik sendiri)
@@ -595,6 +596,7 @@ Object.assign(Store, {
     this.refreshProducts();
     this.watchPatungan();
     this.watchRutinPackages();
+    this.watchHajatanPackages();
     this.watchRecipes();
 
     /* Promo: tarik manual (hemat kuota) — bukan real-time. */
@@ -838,6 +840,43 @@ Object.assign(Store, {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
     await FB.db.collection('rutinPackages').doc(id).update({ isActive: false, updatedAt: FB.serverTimestamp() });
+  },
+
+  watchHajatanPackages() {
+    if (!this.needOnline()) return;
+    const db = FB.db;
+    this.onPublic(db.collection('hajatanPackages').where('isActive', '==', true).onSnapshot(snap => {
+      try {
+        S.hajatanPackages = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+        this.render('hajatanPackages');
+        if (typeof renderHajatanAdminList === 'function') { try { renderHajatanAdminList(); } catch(e){} }
+      } catch (e) { console.error('[KasirQuh] hajatan render gagal:', e); }
+    }, err => this.onSubError('hajatanPackages', err)));
+  },
+
+  async saveHajatanPackage(data, id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const db = FB.db, ts = FB.serverTimestamp();
+    const base = {
+      name: String(data.name || ''),
+      description: String(data.description || ''),
+      items: Array.isArray(data.items) ? data.items : [],
+      isActive: true,
+      updatedAt: ts,
+    };
+    if (id) {
+      await db.collection('hajatanPackages').doc(id).update(base);
+    } else {
+      base.createdAt = ts;
+      await db.collection('hajatanPackages').add(base);
+    }
+  },
+
+  async deleteHajatanPackage(id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('hajatanPackages').doc(id).update({ isActive: false, updatedAt: FB.serverTimestamp() });
   },
 
   async createPatungan(data) {
