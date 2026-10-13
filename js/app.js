@@ -289,7 +289,7 @@ function renderDashboardShortcuts(){const container=$('#dashboardShortcuts');if(
 function renderShortcutPicker(){const list=$('#shortcutPickerList'),status=$('#shortcutPickerStatus');if(!list||!status)return;const groups=[...new Set(S.dashboardShortcutCatalog.map(item=>item.group))],full=S.dashboardShortcutIds.length>=6;list.innerHTML=groups.map(group=>`<section class="shortcut-picker-group"><h3>${escapeHtml(group.toUpperCase())}</h3><div class="shortcut-picker-grid">${S.dashboardShortcutCatalog.filter(item=>item.group===group).map(item=>{const added=S.dashboardShortcutIds.includes(item.id);return `<button class="shortcut-pick" data-pick-shortcut="${item.id}"${added||full?' disabled':''}>${iconSvg(item.icon)}<span><b>${escapeHtml(item.label)}</b><small>${escapeHtml(item.detail)}</small></span><span class="shortcut-pick-state">${added?'Terpasang':full?'Penuh':'＋'}</span></button>`}).join('')}</div></section>`).join('');status.textContent=full?'6 dari 6 terpasang · hapus satu shortcut untuk menambah tujuan lain.':S.dashboardShortcutIds.length+' dari 6 terpasang · pilihan tersimpan di akun.';$$('[data-pick-shortcut]').forEach(button=>button.onclick=()=>{if(S.dashboardShortcutIds.length>=6)return toast('Maksimal 6 shortcut. Hapus satu terlebih dahulu.');if(S.dashboardShortcutIds.includes(button.dataset.pickShortcut))return;S.dashboardShortcutIds.push(button.dataset.pickShortcut);saveDashboardShortcuts();S.dashboardShortcutEdit=false;renderDashboardShortcuts();closeSheets();const item=dashboardShortcutById(button.dataset.pickShortcut);toast('Shortcut '+item.label+' ditambahkan')})}
 function closeSheets(){stopBarcodeScanner();if(typeof Store!=='undefined'&&Store.stopWatchingThread)Store.stopWatchingThread();const resumeGateway=$('#adminPinModal')&&$('#adminPinModal').classList.contains('open')&&$('#gateway').classList.contains('active');$$('.modal').forEach(m=>m.classList.remove('open'));if(resumeGateway)setTimeout(startGateway,0)}
 
-function openSheet(id){closeSheets();if(id==='adminSessionModal')renderSessionInfo();if(id==='transferModal')renderTransfers();if(id==='orderModal')renderActiveOrder();if(id==='priceAlertModal')renderPriceAlerts();if(id==='historyModal'||id==='notesModal')renderAccountTiles();if(id==='stockShoppingModal'){renderLowStockSuggestions();updateStockProgress()}if(id==='shortcutPickerModal'){if(S.dashboardShortcutIds.length>=6)return toast('Maksimal 6 shortcut. Hapus satu terlebih dahulu.');renderShortcutPicker()}const modal=$('#'+id);if(modal){formatNumericInputs(modal);modal.classList.add('open');if(id==='missionsModal'){try{renderMissions()}catch(e){console.error('renderMissions gagal',e)}}if(id==='budgetModal'){budgetSelectedIds=new Set();renderBudgetProductList();previewBudgetV2({})}if(id==='hajatanAdminModal'){hajatanEditingId=null;hajatanItems=[];var ni=$('#hajatanNameInput');if(ni)ni.value='';var di=$('#hajatanDescInput');if(di)di.value='';renderHajatanItemList();renderHajatanAdminList();initHajatanAdmin()}if(id==='priceGuessModal'){try{renderGuessGame()}catch(e){console.error('renderGuessGame gagal',e)}}}if(id==='scannerModal')startBarcodeScanner();if(id==='homeControlModal'){const flashSel=$('#flashProductInput');if(flashSel)flashSel.innerHTML=productOptions(S.flashProductId||'');storeVoid('syncSettingsForms')}if(id==='storeProfileModal'||id==='coinSettingsModal'||id==='adminSettingsModal'){storeVoid('syncSettingsForms')}if(id==='adminSettingsModal'){syncSoundControls();syncNavMotionToggle()}}
+function openSheet(id){closeSheets();if(id==='adminSessionModal')renderSessionInfo();if(id==='transferModal')renderTransfers();if(id==='orderModal')renderActiveOrder();if(id==='priceAlertModal')renderPriceAlerts();if(id==='historyModal'||id==='notesModal')renderAccountTiles();if(id==='stockShoppingModal'){renderLowStockSuggestions();updateStockProgress()}if(id==='shortcutPickerModal'){if(S.dashboardShortcutIds.length>=6)return toast('Maksimal 6 shortcut. Hapus satu terlebih dahulu.');renderShortcutPicker()}const modal=$('#'+id);if(modal){formatNumericInputs(modal);modal.classList.add('open');if(id==='missionsModal'){try{renderMissions()}catch(e){console.error('renderMissions gagal',e)}}if(id==='budgetModal'){budgetSelectedIds=new Set();renderBudgetProductList();previewBudgetV2({})}if(id==='rutinAdminModal'){rutinEditingId=null;rutinItems=[];var ni=$('#rutinNameInput');if(ni)ni.value='';var di=$('#rutinDescInput');if(di)di.value='';renderRutinItemList();renderRutinAdminList();initRutinAdmin();}if(id==='hajatanAdminModal'){hajatanEditingId=null;hajatanItems=[];var ni=$('#hajatanNameInput');if(ni)ni.value='';var di=$('#hajatanDescInput');if(di)di.value='';renderHajatanItemList();renderHajatanAdminList();initHajatanAdmin()}if(id==='priceGuessModal'){try{renderGuessGame()}catch(e){console.error('renderGuessGame gagal',e)}}}if(id==='scannerModal')startBarcodeScanner();if(id==='homeControlModal'){const flashSel=$('#flashProductInput');if(flashSel)flashSel.innerHTML=productOptions(S.flashProductId||'');storeVoid('syncSettingsForms')}if(id==='storeProfileModal'||id==='coinSettingsModal'||id==='adminSettingsModal'){storeVoid('syncSettingsForms')}if(id==='adminSettingsModal'){syncSoundControls();syncNavMotionToggle()}}
 function showAdminView(name){closeSheets();$$('.subview').forEach(v=>v.classList.toggle('active',v.id===name+'View'));const primary=['dashboard','kasir','pesanan','note','menu'].includes(name)?name:'menu';$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===primary));if(name==='note')renderPurchaseNotes();if(name==='online')renderOnlineOrders();if(name==='data')renderCustomerData();if(name==='chat')renderAdminChatList();if(name==='bookkeeping'||name==='dashboard'||name==='data')renderFinance();if(name==='dashboard')renderDashboardShortcuts();window.scrollTo(0,0)}
 function gatewaySlidesCopy(){const gs=S.gatewaySlides||{},fromSettings=k=>cleanInput(gs[k]),fromInput=(id,fb)=>cleanInput($(id)?$(id).value:'')||fb;return [
 {kicker:'PROMO UTAMA',title:fromSettings('title1')||fromInput('#gatewayTitle1Input','Hemat belanja, senang di rumah'),copy:fromSettings('copy1')||fromInput('#gatewayCopy1Input','Promo pilihan Warunge Mimi untuk kebutuhan harian keluarga.')},
@@ -482,7 +482,19 @@ $$('#fulfillmentMethod button').forEach(b=>b.onclick=()=>{$$('#fulfillmentMethod
 $$('#payMethod button').forEach(b=>b.onclick=()=>{$$('#payMethod button').forEach(x=>x.classList.remove('active'));b.classList.add('active');S.payMethod=b.dataset.value;const wrap=$('#transferRefWrap'),isTransfer=S.payMethod==='transfer';if(wrap){wrap.style.display=isTransfer?'grid':'none';if(!isTransfer){const inp=$('#transferRefInput');if(inp)inp.value=''}}});
 $('#confirmOrderBtn').onclick=()=>{if(requireCustomer('checkout'))return;if(!Object.keys(S.customerCart).length)return toast('Keranjang masih kosong');const stockIssue=cartStockIssue(S.customerCart);if(stockIssue)return toast('Stok '+(stockIssue.product?stockIssue.product.short:'produk')+' tidak cukup · tersedia '+(stockIssue.product?stockText(stockIssue.product):0)+', diminta '+stockIssue.qty);if(S.fulfillment==='delivery'&&!$('#deliveryAddress').value.trim())return toast('Tambahkan patokan rumah dulu');const cartSnapshot=Object.assign({},S.customerCart),name=$('#profileName').textContent.trim()||'Mimi',fulfillment=S.fulfillment,address=fulfillment==='delivery'?$('#deliveryAddress').value.trim():'',slot=fulfillment==='delivery'?$('#deliverySlot').value:'',btn=$('#confirmOrderBtn'),doneMsg=fulfillment==='delivery'?'Pesanan dibuat · diantar '+slot:'Pesanan dibuat · siap diambil di warung';btn.disabled=true;Store.checkoutCustomer({cart:cartSnapshot,fulfillment:fulfillment,address:address,slot:slot,name:name,payMethod:S.payMethod,transferReference:S.payMethod==='transfer'&&$('#transferRefInput')?$('#transferRefInput').value.trim():''}).then(result=>{btn.disabled=false;S.activeOrder={id:result.code,customerId:S.activeCustomerId,status:'sedang menunggu konfirmasi',detail:(fulfillment==='delivery'?slot:'Ambil di warung setelah pesanan siap')+(result.redeemValue?' · koin '+money(result.redeemValue):''),method:result.method,step:0};renderActiveOrder();renderAccountTiles();playNotification('order',S.soundSettings.order,false);S.customerCart={};S.coinRedeemEnabled=false;if($('#transferRefInput'))$('#transferRefInput').value='';if($('#transferRefWrap'))$('#transferRefWrap').style.display='none';updateCustomerCart();closeSheets();goCustomer('homeCustomer');celebrate('confetti');toast(doneMsg+' · masuk Kasir Online')}).catch(error=>{btn.disabled=false;if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Checkout gagal')})};
 $$('.routine-plan').forEach(b=>b.onclick=()=>{$$('.routine-plan').forEach(x=>x.classList.remove('active'));b.classList.add('active');S.routineChoice=b.dataset.routine});
-$('#repeatRoutineBtn').onclick=()=>{const specs=S.routineChoice==='dapur'?[{kw:['minyak'],qty:1,label:'Minyak'},{kw:['mi','mie','indomie'],qty:4,label:'Mie'},{kw:['kopi'],qty:4,label:'Kopi'}]:[{kw:['aqua','air mineral'],qty:4,label:'Air mineral'},{kw:['teh'],qty:1,label:'Teh'},{kw:['kopi'],qty:5,label:'Kopi'}],bundle={},missing=[];for(const spec of specs){const p=findProductByKeywords(spec.kw);if(!p){missing.push(spec.label);continue}bundle[p.id]=(bundle[p.id]||0)+spec.qty}if(missing.length)return toast('Stok habis: '+missing.join(', ')+'. Paket belum bisa disusun.');if(!Object.keys(bundle).length)return toast('Paket belum bisa disusun · ada produk yang belum tersedia');addBundle(bundle,'Paket rutin masuk keranjang')};
+$('#repeatRoutineBtn').onclick=()=>{
+  const pkg=(S.rutinPackages||[]).find(p=>p.id===S.routineChoice);
+  if(pkg&&pkg.items&&pkg.items.length){
+    const bundle={};let missing=false;
+    for(const it of pkg.items){
+      const p=S.products.find(x=>x.id===it.productId);
+      if(!p||p.stock<=0){missing=true;break}
+      bundle[it.productId]=(bundle[it.productId]||0)+Math.max(1,Math.round(Number(it.qty)||1));
+    }
+    if(missing||!Object.keys(bundle).length)return toast('Paket belum bisa disusun · ada produk yang belum tersedia');
+    addBundle(bundle,'Paket rutin masuk keranjang');return;
+  }
+  const specs=S.routineChoice==='dapur'?[{kw:['minyak'],qty:1,label:'Minyak'},{kw:['mi','mie','indomie'],qty:4,label:'Mie'},{kw:['kopi'],qty:4,label:'Kopi'}]:[{kw:['aqua','air mineral'],qty:4,label:'Air mineral'},{kw:['teh'],qty:1,label:'Teh'},{kw:['kopi'],qty:5,label:'Kopi'}],bundle={},missing=[];for(const spec of specs){const p=findProductByKeywords(spec.kw);if(!p){missing.push(spec.label);continue}bundle[p.id]=(bundle[p.id]||0)+spec.qty}if(missing.length)return toast('Stok habis: '+missing.join(', ')+'. Paket belum bisa disusun.');if(!Object.keys(bundle).length)return toast('Paket belum bisa disusun · ada produk yang belum tersedia');addBundle(bundle,'Paket rutin masuk keranjang')};
 function routineList(){return Array.isArray(S.routines)?S.routines:[]}
 function routineNextDate(routine){const now=new Date();if(routine.interval!=='mingguan'){const next=new Date(now);next.setDate(next.getDate()+1);return next}const days=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];let diff=(days.indexOf(routine.day)-now.getDay()+7)%7;if(diff===0)diff=7;const next=new Date(now);next.setDate(next.getDate()+diff);return next}
 function saveRoutines(list){S.routines=list;renderRoutines();storePromise('saveCustomerDoc',{routines:list}).catch(error=>{if(error&&error.code!=='OFFLINE')toast('Gagal menyimpan ke akun · sesi ini saja')})}
@@ -718,6 +730,18 @@ function renderHajatanPackages(){
   if(list.length)S.hajatanChoice=list[0].id;
 }
 Store.renderers.hajatanPackages=()=>{renderHajatanPackages()};
+function renderRutinPackages(){
+  const grid=document.querySelector('#rutinModal .plan-grid');if(!grid)return;
+  const list=S.rutinPackages||[];
+  if(!list.length) return;
+  grid.innerHTML=list.map((p,i)=>`<button class="plan-card routine-plan${i===0?' active':''}" data-rutin-pkg="${p.id}"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(p.description||'')}</small><strong>Ikut harga katalog</strong></button>`).join('');
+  grid.querySelectorAll('[data-rutin-pkg]').forEach(b=>b.onclick=()=>{
+    grid.querySelectorAll('.routine-plan').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');S.routineChoice=b.dataset.rutinPkg;
+  });
+  if(list.length)S.routineChoice=list[0].id;
+}
+Store.renderers.rutinPackages=()=>{renderRutinPackages()};
 function renderWholesaleList(){const list=$('#wholesaleList');if(!list)return;const rows=(S.products||[]).filter(p=>p.wholesaleQty>0);list.innerHTML=rows.length?rows.map(p=>`<div class="service-row"><img src="${p.img}" alt="${p.name}" style="width:36px;height:36px;object-fit:contain"><div><h3>${p.name}</h3><p>${escapeHtml(p.wholesaleLabel||('Beli '+p.wholesaleQty+' pcs'))}</p></div><button data-wholesale="${p.id}">${money((p.wholesalePrice||0)*(p.wholesaleQty||1))}</button></div>`).join(''):'<div class="empty-note">Belum ada harga grosir.</div>';$$('[data-wholesale]').forEach(b=>b.onclick=()=>{const id=b.dataset.wholesale,p=S.products.find(x=>x.id===id);if(!p||!p.wholesaleQty)return toast('Harga grosir belum tersedia');S.customerCart[id]=Math.max(S.customerCart[id]||0,p.wholesaleQty);updateCustomerCart();closeSheets();goCustomer('keranjangCustomer');toast('Harga grosir aktif otomatis')})}
 function weekKeyOf(date){const t=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())),dow=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-dow+3);const first=new Date(Date.UTC(t.getUTCFullYear(),0,4));return t.getUTCFullYear()+'-W'+String(Math.ceil(((t-first)/86400000+1)/7)).padStart(2,'0')}
 function claimMissionCoins(detailLabel,claimKey){if(!S.coinProgramEnabled||!S.coinEvents.mission||!S.coinRewards.mission)return toast('Event misi sedang dimatikan admin');const done=()=>{updateCoinUI();renderMissions();celebrate('coin');toast(S.coinRewards.mission+' Koin Warga masuk')};if(S.activeCustomerId&&!S.isGuest){Store.grantCoins(S.activeCustomerId,S.coinRewards.mission,{reason:'misi',label:'Hadiah misi',detail:detailLabel,claimKey:claimKey}).then(done).catch(error=>{if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Bonus gagal')})}}
@@ -735,6 +759,53 @@ S.adminAiReplies={stock:adminAiStock,sales:adminAiSales,transactions:adminAiTran
  * (glue satu blok: menghubungkan adapter Store -> fungsi render* di atas) */
 function renderCustomerNotes(){const box=$('#customerNotes');if(!box)return;const notes=S.customerNotesList||[],typeLabel={tagihan:'Tagihan',pembayaran:'Pembayaran',catatan:'Catatan'};box.innerHTML=notes.length?notes.map(n=>`<article class="note-card"><header><h3>${escapeHtml(typeLabel[n.type]||'Catatan')}${n.amount?' · '+money(n.amount):''}</h3><span class="stock-pill">Baru</span></header><p>${escapeHtml(n.note)}</p><small>${escapeHtml(n.time||'')}</small></article>`).join(''):'<div class="empty-note">Belum ada catatan dari warung.</div>'}
 Store.notify=msg=>toast(msg);
+
+
+let rutinEditingId=null, rutinItems=[];
+function renderRutinItemList(){
+  const box=$('#rutinItemList');if(!box)return;
+  box.innerHTML=rutinItems.length?rutinItems.map((it,i)=>{const p=S.products.find(x=>x.id===it.productId);return `<div class="service-row"><div><h3>${escapeHtml(p?p.name:'?')}</h3><p>Qty: ${it.qty}</p></div><button data-rutin-del="${i}">Hapus</button></div>`}).join(''):'<div class="empty-note">Belum ada produk. Tambahkan di bawah.</div>';
+  const c=$('#rutinItemCount');if(c)c.textContent=`(${rutinItems.length} produk)`;
+  box.querySelectorAll('[data-rutin-del]').forEach(b=>b.onclick=()=>{rutinItems.splice(Number(b.dataset.rutinDel),1);renderRutinItemList()});
+}
+function renderRutinAdminList(){
+  const box=$('#rutinAdminList');if(!box)return;
+  const list=S.rutinPackages||[];
+  box.innerHTML=list.length?list.map(p=>`<article class="note-card"><header><h3>${escapeHtml(p.name)}</h3></header><p>${escapeHtml(p.description||'')} · ${(p.items||[]).length} produk</p><div class="card-actions"><button class="ghost" data-rutin-edit="${p.id}">Ubah</button><button class="ghost" data-rutin-del-pkg="${p.id}">Hapus</button></div></article>`).join(''):'<div class="empty-note">Belum ada paket. Buat di atas.</div>';
+  box.querySelectorAll('[data-rutin-edit]').forEach(b=>b.onclick=()=>{
+    const p=(S.rutinPackages||[]).find(x=>x.id===b.dataset.rutinEdit);if(!p)return;
+    rutinEditingId=p.id;$('#rutinNameInput').value=p.name||'';$('#rutinDescInput').value=p.description||'';
+    rutinItems=(p.items||[]).map(it=>({productId:it.productId,qty:it.qty}));renderRutinItemList();
+    toast('Edit paket: '+p.name);
+  });
+  box.querySelectorAll('[data-rutin-del-pkg]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Hapus paket ini?'))return;
+    storePromise('deleteRutinPackage',b.dataset.rutinDelPkg).then(()=>toast('Paket dihapus')).catch(e=>toast('Gagal hapus'));
+  });
+}
+function initRutinAdmin(){
+  const sel=$('#rutinProductSelect');
+  if(sel)sel.innerHTML=(S.products||[]).filter(p=>p.stock>0).sort((a,b)=>a.name.localeCompare(b.name,'id')).map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${money(p.price)}</option>`).join('');
+  const addBtn=$('#rutinAddItem');
+  if(addBtn)addBtn.onclick=()=>{
+    const pid=$('#rutinProductSelect').value, qty=Math.max(1,Math.round(Number($('#rutinProductQty').value)||1));
+    if(!pid)return; if(rutinItems.some(it=>it.productId===pid))return toast('Produk sudah ada di paket');
+    rutinItems.push({productId:pid,qty});renderRutinItemList();
+  };
+  const saveBtn=$('#saveRutinPackage');
+  if(saveBtn)saveBtn.onclick=()=>{
+    const name=$('#rutinNameInput').value.trim();
+    if(!name)return toast('Isi nama paket');
+    if(!rutinItems.length)return toast('Tambahkan minimal 1 produk');
+    const data={name,description:$('#rutinDescInput').value.trim(),items:rutinItems};
+    saveBtn.disabled=true;
+    storePromise('saveRutinPackage',data,rutinEditingId||null).then(()=>{
+      saveBtn.disabled=false;rutinEditingId=null;rutinItems=[];
+      $('#rutinNameInput').value='';$('#rutinDescInput').value='';renderRutinItemList();
+      toast('Paket tersimpan');
+    }).catch(e=>{saveBtn.disabled=false;toast('Gagal simpan')});
+  };
+}
 
 let hajatanEditingId=null, hajatanItems=[];
 function renderHajatanItemList(){
