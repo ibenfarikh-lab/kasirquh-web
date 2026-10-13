@@ -1110,14 +1110,14 @@ Object.assign(Store, {
       this.render('orders', 'inbox');
     }, err => this.onSubError('orders', err)));
 
-    this.onRole(db.collection('customers').where('approvalStatus', '==', 'approved').onSnapshot(snap => {
+    this.onRole(db.collection('customers').where('approvalStatus', '==', 'approved').limit(100).onSnapshot(snap => {
       S.customerData = snap.docs.map(d => this.mapCustomer(d));
       this.refreshCustomerSpend();
       this.rebuildInboxDebounced();
       this.render('customers');
     }, err => this.onSubError('customers', err)));
 
-    this.onRole(db.collection('customers').where('approvalStatus', 'in', ['pending', 'rejected']).onSnapshot(snap => {
+    this.onRole(db.collection('customers').where('approvalStatus', 'in', ['pending', 'rejected']).limit(50).onSnapshot(snap => {
       S.pendingCustomers = snap.docs.map(d => this.mapPending(d));
       this.rebuildInboxDebounced();
       this.render('customers', 'inbox');
@@ -1128,7 +1128,7 @@ Object.assign(Store, {
       this.render('journal');
     }, err => this.onSubError('journal', err)));
 
-    this.onRole(db.collection('stock_notes').orderBy('date', 'desc').onSnapshot(snap => {
+    this.onRole(db.collection('stock_notes').orderBy('date', 'desc').limit(50).onSnapshot(snap => {
       const grouped = {};
       snap.docs.forEach(d => {
         const note = this.mapStockNote(d);
