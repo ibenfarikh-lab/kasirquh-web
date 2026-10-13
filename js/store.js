@@ -141,6 +141,7 @@ const S = {
   inboxItems: [], // diturunkan: antrean pelanggan + pesanan aktif + stok menipis + chat
   inboxReadIds: [], // ID notifikasi yg sudah dibaca (persisten Firestore)
   patunganList: [], // koleksi `patungan` (limit 20, hemat kuota)
+  rutinPackages: [], // koleksi `rutinPackages`
   customerData: [], // koleksi `customers` (approved) — admin saja
   pendingCustomers: [], // koleksi `customers` (pending/rejected) — admin saja
   onlineOrders: [], // koleksi `orders` (admin: semua; pelanggan: milik sendiri)
@@ -593,6 +594,7 @@ Object.assign(Store, {
 
     this.refreshProducts();
     this.watchPatungan();
+    this.watchRutinPackages();
     this.watchRecipes();
 
     /* Promo: tarik manual (hemat kuota) — bukan real-time. */
@@ -799,6 +801,43 @@ Object.assign(Store, {
         this.render('patungan');
       } catch (e) { console.error('[KasirQuh] patungan render gagal:', e); }
     }, err => this.onSubError('patungan', err)));
+  },
+
+  watchRutinPackages() {
+    if (!this.needOnline()) return;
+    const db = FB.db;
+    this.onPublic(db.collection('rutinPackages').where('isActive', '==', true).onSnapshot(snap => {
+      try {
+        S.rutinPackages = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+        this.render('rutinPackages');
+        if (typeof renderRutinAdminList === 'function') { try { renderRutinAdminList(); } catch(e){} }
+      } catch (e) { console.error('[KasirQuh] rutin render gagal:', e); }
+    }, err => this.onSubError('rutinPackages', err)));
+  },
+
+  async saveRutinPackage(data, id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const db = FB.db, ts = FB.serverTimestamp();
+    const base = {
+      name: String(data.name || ''),
+      description: String(data.description || ''),
+      items: Array.isArray(data.items) ? data.items : [],
+      isActive: true,
+      updatedAt: ts,
+    };
+    if (id) {
+      await db.collection('rutinPackages').doc(id).update(base);
+    } else {
+      base.createdAt = ts;
+      await db.collection('rutinPackages').add(base);
+    }
+  },
+
+  async deleteRutinPackage(id) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    await FB.db.collection('rutinPackages').doc(id).update({ isActive: false, updatedAt: FB.serverTimestamp() });
   },
 
   async createPatungan(data) {
