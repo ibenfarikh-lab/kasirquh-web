@@ -14,15 +14,15 @@ if(!track)return;
 var dots=Array.prototype.slice.call(document.querySelectorAll('.kabar-dot'));
 if(!dots.length)return;
 var idx=0;
-function go(i){
+function kabarGo(i){
 idx=i;
 track.style.transform='translateX(-'+(i*100)+'%)';
 for(var j=0;j<dots.length;j++){dots[j].classList.toggle('active',j===i);}
 }
 for(var k=0;k<dots.length;k++){
-(function(n){dots[n].addEventListener('click',function(e){e.preventDefault();go(n);});})(k);
+(function(n){dots[n].addEventListener('click',function(e){e.preventDefault();kabarGo(n);});})(k);
 }
-setInterval(function(){go((idx+1)%dots.length);},5000);
+setInterval(function(){kabarGo((idx+1)%dots.length);},5000);
 }catch(e){}
 }
 
