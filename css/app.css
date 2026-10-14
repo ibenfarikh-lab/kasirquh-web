@@ -60,6 +60,9 @@ body[data-ui-theme="light"] .kabar-dot{background:#c8c0ba}
 body[data-ui-theme="dark"] .customer-head{background:rgba(25,23,24,.94)}
 body[data-ui-theme="dark"] .admin{background:#000000}
 body[data-ui-theme="dark"] .menu-launch,body[data-ui-theme="dark"] .feature-launch{background:#0a0908;border-color:#2a2a2a}
+body[data-ui-theme="dark"] .pos-search,body[data-ui-theme="dark"] .pos-sticky-head,body[data-ui-theme="dark"] .pos-scan-button,body[data-ui-theme="dark"] .pos-product-empty{background:#0a0908;border-color:#2a2a2a}
+body[data-ui-theme="dark"] .inbox-card,body[data-ui-theme="dark"] .inbox-group-head,body[data-ui-theme="dark"] .inbox-filter,body[data-ui-theme="dark"] .inbox-actions{background:#0a0908;border-color:#2a2a2a}
+body[data-ui-theme="dark"] .note-builder,body[data-ui-theme="dark"] .note-card{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .chip{background:#0a0908;color:#c4bec0}
 body[data-ui-theme="dark"] .chip.outline{background:#0a0908}
 body[data-ui-theme="dark"] .product-card,body[data-ui-theme="dark"] .head-action,body[data-ui-theme="dark"] .quick-card,body[data-ui-theme="dark"] .popular-card,body[data-ui-theme="dark"] .profile-card,body[data-ui-theme="dark"] .settings-list,body[data-ui-theme="dark"] .checkout-card,body[data-ui-theme="dark"] .chat-choice article{border-color:#2a2a2a}
