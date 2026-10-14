@@ -520,3 +520,8 @@ body[data-ui-theme="dark"] .coin-card,body[data-ui-theme="dark"] .recipe-card,bo
 body[data-ui-theme="dark"] .section-heading{background:#160d04;border-radius:12px;padding:8px 12px}
 body[data-ui-theme="dark"] .scroll-hint{background:#f49a24;color:#1d0d00;border-radius:999px;padding:4px 12px;font-weight:700}
 body[data-ui-theme="dark"] .promo-carousel{border-top:2px solid #f49a24}
+body[data-ui-theme="dark"] .metric-card,body[data-ui-theme="dark"] .menu-launch,body[data-ui-theme="dark"] .product-admin-card,body[data-ui-theme="dark"] .info-card,body[data-ui-theme="dark"] .finance-total,body[data-ui-theme="dark"] .report-metric,body[data-ui-theme="dark"] .capital-card,body[data-ui-theme="dark"] .notification-item,body[data-ui-theme="dark"] .online-order-card,body[data-ui-theme="dark"] .customer-card{background:#0a0908;border-color:#5b3814}
+body[data-ui-theme="dark"] .admin-page-head h2,body[data-ui-theme="dark"] .admin-task-head h2,body[data-ui-theme="dark"] .dashboard-lead h2{color:#fff}
+body[data-ui-theme="dark"] .admin-menu-section>h3{color:#f49a24}
+body[data-ui-theme="dark"] .metric-card.primary{border-top:2px solid #f49a24}
+body[data-ui-theme="dark"] .dashboard-section-head{background:#160d04;border-radius:12px;padding:8px 12px}
