@@ -422,10 +422,10 @@ Store.refreshAll();
 $$('[data-admin-ai]').forEach(b=>b.onclick=()=>$('#adminAiAnswer').textContent=S.adminAiReplies[b.dataset.adminAi]());
 $('#adminAiSend').onclick=askAdminAi;$('#adminAiInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();askAdminAi()}});
 async function startBarcodeScanner(){
-  await stopBarcodeScanner();barcodeScanBusy=false;
+  await stopBarcodeScanner();
   const mySession=++barcodeScanSession;
   setScannerHint('Menyiapkan kamera…');
-  if(!barcodeLibReady()){setScannerHint('Pustaka pindai gagal dimuat · pakai ketik manual di bawah');return;}
+  if(!barcodeLibReady()){setScannerHint('Browser tidak mendukung pindai otomatis · pakai ketik manual di bawah');return;}
   try{
     if(navigator.permissions&&navigator.permissions.query){
       const ps=await navigator.permissions.query({name:'camera'});
@@ -442,14 +442,43 @@ async function startBarcodeScanner(){
   }
   try{
     setScannerHint('Meminta izin kamera…');
-    if(!barcodeScanner)barcodeScanner=new window.Html5Qrcode('scannerViewport',false);
-    const scanner=barcodeScanner;
-    await scanner.start({facingMode:'environment'},{fps:20,qrbox:{width:300,height:150}},onBarcodeScanned,()=>{});
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    if(mySession!==barcodeScanSession){try{stream.getTracks().forEach(t=>t.stop());}catch(e){}return;}
+    barcodeStream=stream;
+    const viewport=$('#scannerViewport');
+    if(viewport){
+      viewport.innerHTML='';
+      const video=document.createElement('video');
+      video.setAttribute('autoplay','');video.setAttribute('playsinline','');video.setAttribute('muted','');
+      video.style.width='100%';video.style.height='100%';video.style.objectFit='cover';
+      video.srcObject=stream;
+      viewport.appendChild(video);
+      try{await video.play();}catch(e){}
+    }
     if(mySession!==barcodeScanSession)return;
     setScannerHint('Arahkan barcode ke dalam bingkai');
+    let detector=null;
+    try{
+      detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','upc_a','upc_e','itf','codabar','qr_code']});
+    }catch(e){
+      try{detector=new BarcodeDetector();}catch(e2){detector=null;}
+    }
+    if(!detector){setScannerHint('Pemindai tidak tersedia · pakai ketik manual di bawah');return;}
+    barcodeDetectTimer=setInterval(async()=>{
+      if(mySession!==barcodeScanSession)return;
+      if(barcodeScanBusy)return;
+      try{
+        const videoEl=viewport?viewport.querySelector('video'):null;
+        if(!videoEl||videoEl.readyState<2)return;
+        const codes=await detector.detect(videoEl);
+        if(codes&&codes.length){
+          const code=String((codes[0]&&codes[0].rawValue)||'').trim();
+          if(code)onBarcodeScanned(code);
+        }
+      }catch(e){}
+    },500);
   }catch(err){
     if(mySession!==barcodeScanSession)return;
-    barcodeScanner=null;
     const nm=err&&(err.name||'');
     if(nm==='NotAllowedError'){
       setScannerHint('Izin kamera ditolak · aktifkan di Pengaturan HP > Aplikasi > Izin');
@@ -458,9 +487,9 @@ async function startBarcodeScanner(){
     }else if(nm==='NotReadableError'){
       setScannerHint('Kamera dipakai aplikasi lain · tutup dulu');
     }else{
-      setScannerHint('Gagal memulai scanner · atau ketik manual di bawah');
+      setScannerHint('Gagal memulai kamera · atau ketik manual di bawah');
     }
-    toast('Gagal memulai scanner');
+    toast('Gagal memulai kamera');
   }
 }
 

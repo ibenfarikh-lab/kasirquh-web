@@ -1,15 +1,18 @@
 /* KasirQuh Web — js/features/admin/scanner.js
- * Diekstrak verbatim dari js/app.js (Tahap 4 modularisasi). */
+ * Scanner simpel: getUserMedia langsung + BarcodeDetector bawaan browser.
+ * Tanpa library eksternal. */
 
-// --- state modul, dari js/app.js baris 710-710 ---
-let barcodeScanner=null,barcodeScanBusy=false,barcodeScanSession=0;
-// --- dari js/app.js baris 711 (pindah verbatim, tanpa ubah logika) ---
-function barcodeLibReady(){return typeof window!=='undefined'&&typeof window.Html5Qrcode==='function';}
-// --- dari js/app.js baris 712 (pindah verbatim, tanpa ubah logika) ---
+// --- state modul ---
+let barcodeStream=null,barcodeDetectTimer=null,barcodeScanBusy=false,barcodeScanSession=0;
+
+function barcodeLibReady(){return typeof window!=='undefined'&&'BarcodeDetector' in window;}
+
 function setScannerHint(text){const hint=$('#scannerHint');if(hint)hint.textContent=text;}
-// --- dari js/app.js baris 780 (pindah verbatim, tanpa ubah logika) ---
+
 async function stopBarcodeScanner(){
   barcodeScanSession++;
-  const scanner=barcodeScanner;barcodeScanBusy=false;
-  if(scanner){try{if(scanner.isScanning)await scanner.stop();}catch(e){}}
+  barcodeScanBusy=false;
+  if(barcodeDetectTimer){clearInterval(barcodeDetectTimer);barcodeDetectTimer=null;}
+  if(barcodeStream){try{barcodeStream.getTracks().forEach(t=>t.stop());}catch(e){}barcodeStream=null;}
+  const viewport=$('#scannerViewport');if(viewport)viewport.innerHTML='';
 }
