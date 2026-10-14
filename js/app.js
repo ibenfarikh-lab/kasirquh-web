@@ -499,10 +499,18 @@ function onBarcodeScanned(decodedText){
   barcodeScanBusy=true;
   handleBarcodeCode(code);
 }
+let barcodeScanTarget=null;
 function handleBarcodeCode(rawCode){
   const code=String(rawCode||'').trim();
   stopBarcodeScanner();
   if(!code){closeSheets();return;}
+  if(barcodeScanTarget){
+    const input=$('#'+barcodeScanTarget);barcodeScanTarget=null;
+    closeSheets();openSheet('productFormModal');
+    if(input){input.value=code;input.focus();}
+    toast('Barcode terisi: '+code);
+    return;
+  }
   const product=(S.products||[]).find(p=>String(p.barcode||'').trim()===code);
   closeSheets();
   if(!product){toast('Barcode tidak dikenali · produk belum terdaftar');return;}
@@ -513,6 +521,7 @@ function handleBarcodeCode(rawCode){
 }
 const scannerManualBtn=$('#scannerManualBtn'),scannerManualInput=$('#scannerManualInput');
 if(scannerManualBtn)scannerManualBtn.onclick=()=>{const value=scannerManualInput?(scannerManualInput.value||'').trim():'';if(!value){toast('Ketik dulu kode barcodenya');return;}if(scannerManualInput)scannerManualInput.value='';handleBarcodeCode(value);};
+const productBarcodeScanBtn=$('#productBarcodeScanBtn');if(productBarcodeScanBtn)productBarcodeScanBtn.onclick=()=>{barcodeScanTarget='productBarcodeInput';openSheet('scannerModal');};
 if(scannerManualInput)scannerManualInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(scannerManualBtn)scannerManualBtn.click();}});
 $$('[data-ledger-period]').forEach(button=>button.onclick=()=>{S.journalPeriod=button.dataset.ledgerPeriod;$$('[data-ledger-period]').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-selected',active)});renderFinance()});
 $('#toggleManualLedger').onclick=()=>{const form=$('#manualLedgerForm'),open=form.hidden;resetLedgerForm();form.hidden=!open;$('#toggleManualLedger').setAttribute('aria-expanded',open);if(open)$('#manualLedgerDesc').focus()};
