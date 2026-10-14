@@ -1,0 +1,7 @@
+/* KasirQuh Web — js/features/admin/settings.js
+ * Diekstrak verbatim dari js/app.js (Tahap 4 modularisasi). */
+
+// --- dari js/app.js baris 212 (pindah verbatim, tanpa ubah logika) ---
+function renderSessionInfo(){const role=S.sessionRole==='customer'?'Pelanggan':S.sessionRole==='admin'?'Admin':'Tamu',name=S.sessionName||(role==='Admin'?'Admin Warunge Mimi':role==='Tamu'?'Belum masuk':'Pelanggan'),time=S.sessionStartedAt?new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(S.sessionStartedAt)).replace('.',':'):'Belum masuk';$('#sessionInfoRole').textContent=role;$('#sessionInfoName').textContent=name;$('#sessionInfoTime').textContent=time}
+// --- dari js/app.js baris 569 (pindah verbatim, tanpa ubah logika) ---
+function renderStoreMemos(){const list=$('#storeNotesList');if(!list)return;const memos=S.storeMemos||[];list.innerHTML=memos.length?memos.map(m=>`<article class="store-note"><header><b>${m.title?escapeHtml(m.title):'Catatan toko'}</b><small>${escapeHtml(m.time||'')}</small></header><p>${escapeHtml(m.body)}</p><button class="mini-btn delete-memo-btn" data-delete-memo="${m.id}" aria-label="Hapus catatan">${iconSvg('trash')}</button></article>`).join(''):'<div class="empty-note">Belum ada catatan.</div>';$$('[data-delete-memo]').forEach(b=>b.onclick=()=>storePromise('deleteStoreMemo',b.dataset.deleteMemo).catch(error=>{if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Hapus catatan gagal')}))}
