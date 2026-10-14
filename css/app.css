@@ -43,7 +43,7 @@
 @media(prefers-color-scheme:dark){.kabar-carousel{border-color:#3d383a}.kabar-label{color:#f0a64d}.kabar-dot{background:#625b57}}
 /* Tema terang/gelap per mode dan pengaturan dering */
 body[data-ui-theme="light"]{--ink:#242329;--muted:#777277;--paper:#f7f4f1;--card:#fffdfa;--line:#ded8d2;--shadow:0 8px 22px rgba(46,36,29,.13);background:#dedbd7;color-scheme:light}
-body[data-ui-theme="dark"]{--ink:#ffffff;--muted:#999999;--paper:#000000;--card:#000000;--line:#2a2a2a;--shadow:0 8px 22px rgba(0,0,0,.6);background:#000000;color-scheme:dark}
+body[data-ui-theme="dark"]{--ink:#ffffff;--muted:#999999;--paper:#000000;--card:#0a0908;--line:#2a2a2a;--shadow:0 8px 22px rgba(0,0,0,.6);background:#000000;color-scheme:dark}
 body[data-ui-theme="light"] .customer-head{background:rgba(247,244,241,.95)}
 body[data-ui-theme="light"] .chip{background:#e9e6e3;color:#787376}
 body[data-ui-theme="light"] .chip.outline{background:#fffdfa}
