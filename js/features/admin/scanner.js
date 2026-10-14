@@ -10,7 +10,6 @@ function setScannerHint(text){const hint=$('#scannerHint');if(hint)hint.textCont
 // --- dari js/app.js baris 780 (pindah verbatim, tanpa ubah logika) ---
 async function stopBarcodeScanner(){
   barcodeScanSession++;
-  const scanner=barcodeScanner;barcodeScanner=null;barcodeScanBusy=false;
-  if(scanner){try{await scanner.stop();}catch(e){}try{scanner.clear();}catch(e){}}
-  const viewport=$('#scannerViewport');if(viewport)viewport.innerHTML='';
+  const scanner=barcodeScanner;barcodeScanBusy=false;
+  if(scanner){try{if(scanner.isScanning)await scanner.stop();}catch(e){}}
 }

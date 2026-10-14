@@ -442,9 +442,9 @@ async function startBarcodeScanner(){
   }
   try{
     setScannerHint('Meminta izin kamera…');
-    const scanner=new window.Html5Qrcode('scannerViewport',false);
-    barcodeScanner=scanner;
-    await scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:150}},onBarcodeScanned,()=>{});
+    if(!barcodeScanner)barcodeScanner=new window.Html5Qrcode('scannerViewport',false);
+    const scanner=barcodeScanner;
+    await scanner.start({facingMode:'environment'},{fps:20,qrbox:{width:300,height:150}},onBarcodeScanned,()=>{});
     if(mySession!==barcodeScanSession)return;
     setScannerHint('Arahkan barcode ke dalam bingkai');
   }catch(err){
