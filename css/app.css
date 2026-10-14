@@ -469,6 +469,7 @@ body[data-ui-theme="dark"] .promo-slide{background:#000000}
 body[data-ui-theme="dark"] .kabar-carousel{background:#000000;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .recipe-card{background:#0a0908;border:1px solid #2a2a2a}
 body[data-ui-theme="dark"] .product-card,body[data-ui-theme="dark"] .quick-card,body[data-ui-theme="dark"] .popular-card,body[data-ui-theme="dark"] .kabar-carousel,body[data-ui-theme="dark"] .coin-card{background:#0a0908}
+body[data-ui-theme="dark"] .cart-page .sheet-row,body[data-ui-theme="dark"] .checkout-card,body[data-ui-theme="dark"] .checkout-summary,body[data-ui-theme="dark"] .chat-choice article,body[data-ui-theme="dark"] .profile-card,body[data-ui-theme="dark"] .settings-list{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .running-info{background:#000000;border:1px solid #2a2a2a}
 body[data-ui-theme="dark"] .flash-card{background:#0a0908;border-color:#2a2a2a;color:#fff}
 body[data-ui-theme="dark"] .coin-balance-inline{background:#0a0908;border:1px solid #2a2a2a}
@@ -493,7 +494,7 @@ body[data-ui-theme="dark"] .det-hero{background:#000000}
 /* kat-chip: kategori produk (class yang benar!) */
 #customer[data-render-theme="dark"] .kat-chip{background:#000000;border-color:#2a2a2a;color:#fff}
 #customer[data-render-theme="dark"] .kat-chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
-body[data-ui-theme="dark"] .kat-chip{background:#000000;border-color:#2a2a2a;color:#fff}
+body[data-ui-theme="dark"] .kat-chip{background:#0a0908;border-color:#2a2a2a;color:#fff}
 body[data-ui-theme="dark"] .kat-chip.active{background:#000000;border:2px solid #ff9b3e;color:#ff9b3e}
 
 /* STOK box: oranye → hitam di tema gelap */
