@@ -525,3 +525,26 @@ body[data-ui-theme="dark"] .admin-page-head h2,body[data-ui-theme="dark"] .admin
 body[data-ui-theme="dark"] .admin-menu-section>h3{color:#f49a24}
 body[data-ui-theme="dark"] .metric-card.primary{border-top:2px solid #f49a24}
 body[data-ui-theme="dark"] .dashboard-section-head{background:#160d04;border-radius:12px;padding:8px 12px}
+
+/* === ACCENT lanjutan (2026-10-14) : semua elemen merata === */
+/* KATEGORI 1: kartu umum -> warm border */
+body[data-ui-theme="dark"] .product-card,body[data-ui-theme="dark"] .profile-card,body[data-ui-theme="dark"] .checkout-card,body[data-ui-theme="dark"] .checkout-summary,body[data-ui-theme="dark"] .recipe-section,body[data-ui-theme="dark"] .det-info.acc,body[data-ui-theme="dark"] .detail-visual,body[data-ui-theme="dark"] .guess-product,body[data-ui-theme="dark"] .running-info,body[data-ui-theme="dark"] .coin-balance-inline,body[data-ui-theme="dark"] .ai-message,body[data-ui-theme="dark"] .chat-choice article,body[data-ui-theme="dark"] .online-photo-panel,body[data-ui-theme="dark"] .settings-list,body[data-ui-theme="dark"] .margin-preview,body[data-ui-theme="dark"] .unit-cost,body[data-ui-theme="dark"] .auth-note,body[data-ui-theme="dark"] .home-section,body[data-ui-theme="dark"] .customer-head,body[data-ui-theme="dark"] .activity-strip,body[data-ui-theme="dark"] .promo-banner,body[data-ui-theme="dark"] .promo-slide,body[data-ui-theme="dark"] .det-hero{background:#0a0908;border-color:#5b3814}
+/* KATEGORI 2: chip/tab -> border hangat */
+body[data-ui-theme="dark"] .chip,body[data-ui-theme="dark"] .kat-chip,body[data-ui-theme="dark"] .source-pill{border-color:#5b3814}
+/* KATEGORI 3: tombol ghost/back -> teks hangat */
+body[data-ui-theme="dark"] .sheet .ghost,body[data-ui-theme="dark"] .purchase-delete-actions .back,body[data-ui-theme="dark"] .purchase-detail-actions .back,body[data-ui-theme="dark"] .purchase-edit-actions .back,body[data-ui-theme="dark"] .summary-actions .back{border-color:#5b3814;color:#ffb45f}
+/* KATEGORI 4: elemen khusus */
+body[data-ui-theme="dark"] .note-card.due{background:#0a0908;border-color:#75502f}
+body[data-ui-theme="dark"] .patungan-bar{background:#0a0908}
+body[data-ui-theme="dark"] .progress-track{background:#2a1a0a}
+body[data-ui-theme="dark"] .online-photo-btn{background:#0a0908;border-color:#5b3814;color:#ffc276}
+body[data-ui-theme="dark"] .segmented button.active{border-color:#f49a24}
+body[data-ui-theme="dark"] .service-card.featured{border-color:#f49a24}
+body[data-ui-theme="dark"] .guess-options button.correct{border-color:#4d9b65}
+body[data-ui-theme="dark"] .guess-options button.wrong{border-color:#e05252}
+body[data-ui-theme="dark"] .sheet-close{background:rgba(244,154,36,.12);border-color:#5b3814;color:#ffb45f}
+body[data-ui-theme="dark"] .choice-btn,body[data-ui-theme="dark"] .chip.outline,body[data-ui-theme="dark"] .head-action,body[data-ui-theme="dark"] .service-row button,body[data-ui-theme="dark"] .profile-card button{border-color:#5b3814}
+body[data-ui-theme="dark"] .coin-chip{background:rgba(244,154,36,.12);border-color:#5b3814;color:#ffb45f}
+body[data-ui-theme="dark"] .kabar-dot{background:#3a2a18}
+body[data-ui-theme="dark"] .kabar-dot.active{background:#f49a24}
+body[data-ui-theme="dark"] .stock-warning{background:#0a0908;border-color:#75502f;color:#ffb45f}
