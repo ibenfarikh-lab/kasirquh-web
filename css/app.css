@@ -509,3 +509,14 @@ body[data-ui-theme="dark"] .det-info.acc b{color:#ff9b3e}
 .product-data-filters{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:10px}
 .product-data-filters .pos-search{margin:0}
 .product-data-filters select{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 10px}
+
+/* === ACCENT dark mode (2026-10-14, ACC user) : bikin dark hidup, tetap OLED === */
+body[data-ui-theme="dark"] .home-head{background:linear-gradient(135deg,#6f2d00,#a84800 55%,#d96e06);border:1px solid rgba(244,154,36,.55);border-radius:18px;padding:14px 16px;margin-bottom:12px}
+body[data-ui-theme="dark"] .home-head h1{color:#fff}
+body[data-ui-theme="dark"] .home-head .greeting{color:#ffd9a8}
+body[data-ui-theme="dark"] .home-head .customer-logo{color:#fff}
+body[data-ui-theme="dark"] .home-head .coin-chip{background:rgba(0,0,0,.35);border-color:rgba(255,255,255,.25);color:#fff}
+body[data-ui-theme="dark"] .coin-card,body[data-ui-theme="dark"] .recipe-card,body[data-ui-theme="dark"] .service-card,body[data-ui-theme="dark"] .quick-card,body[data-ui-theme="dark"] .popular-card,body[data-ui-theme="dark"] .mission-card,body[data-ui-theme="dark"] .promo-carousel,body[data-ui-theme="dark"] .kabar-carousel,body[data-ui-theme="dark"] .flash-card,body[data-ui-theme="dark"] .checkin-card,body[data-ui-theme="dark"] .daily-game{background:#0a0908;border-color:#5b3814}
+body[data-ui-theme="dark"] .section-heading{background:#160d04;border-radius:12px;padding:8px 12px}
+body[data-ui-theme="dark"] .scroll-hint{background:#f49a24;color:#1d0d00;border-radius:999px;padding:4px 12px;font-weight:700}
+body[data-ui-theme="dark"] .promo-carousel{border-top:2px solid #f49a24}
