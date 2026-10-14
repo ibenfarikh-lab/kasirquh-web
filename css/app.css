@@ -503,5 +503,4 @@ body[data-ui-theme="dark"] .det-info.acc small{color:#999}
 body[data-ui-theme="dark"] .det-info.acc b{color:#ff9b3e}
 .barcode-input-row{display:flex;gap:8px;align-items:center}
 .barcode-input-row input{flex:1;min-width:0}
-.barcode-scan-btn{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--orange);background:transparent;color:var(--orange);display:grid;place-items:center;cursor:pointer}
-.barcode-scan-btn .icon{width:22px;height:22px}
+.barcode-scan-btn{flex:none;height:44px;padding:0 16px;border-radius:12px;border:none;background:#0f766e;color:#fff;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
