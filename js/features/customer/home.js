@@ -7,12 +7,15 @@ function updatePremiumHeader(){const h=new Date().getHours(),greet=h<11?'Selamat
 
 
 // --- dari js/app.js baris 170 (pindah verbatim, tanpa ubah logika) ---
+var kabarCarouselInit=false;
 function initKabarCarousel(){
+if(kabarCarouselInit)return;
 try{
 var track=document.getElementById('kabarTrack');
 if(!track)return;
 var dots=Array.prototype.slice.call(document.querySelectorAll('.kabar-dot'));
 if(!dots.length)return;
+kabarCarouselInit=true;
 var idx=0;
 function kabarGo(i){
 idx=i;

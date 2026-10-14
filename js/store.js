@@ -819,7 +819,7 @@ Object.assign(Store, {
       try {
         S.rutinPackages = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
         this.render('rutinPackages');
-        if (typeof renderRutinAdminList === 'function') { try { renderRutinAdminList(); } catch(e){} }
+        if (typeof renderRutinAdminList === 'function') { try { renderRutinAdminList(); } catch(e){ console.error('renderRutinAdminList gagal', e); } }
       } catch (e) { console.error('[KasirQuh] rutin render gagal:', e); }
     }, err => this.onSubError('rutinPackages', err)));
   },
@@ -856,7 +856,7 @@ Object.assign(Store, {
       try {
         S.hajatanPackages = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
         this.render('hajatanPackages');
-        if (typeof renderHajatanAdminList === 'function') { try { renderHajatanAdminList(); } catch(e){} }
+        if (typeof renderHajatanAdminList === 'function') { try { renderHajatanAdminList(); } catch(e){ console.error('renderHajatanAdminList gagal', e); } }
       } catch (e) { console.error('[KasirQuh] hajatan render gagal:', e); }
     }, err => this.onSubError('hajatanPackages', err)));
   },
