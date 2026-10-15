@@ -1270,9 +1270,11 @@ Object.assign(Store, {
 
     var isFirstAdminChatLoad = true;
     var adminChatPrevUnread = {};
-    this.onRole(db.collection('chat_threads')
-      .orderBy('updatedAt', 'desc').limit(50).onSnapshot(snap => {
-        // Filter type toko di klien (seperti orders yang bekerja pakai orderBy)
+    var self = this;
+    /* Handler dipisah agar bisa dipakai get() fast-path + onSnapshot.
+     * Listener realtime terbukti bisa macet tanpa callback di sebagian
+     * perangkat — fast-path memastikan daftar tetap tampil. */
+    function handleAdminChatSnap(snap) {
         if (!isFirstAdminChatLoad && typeof playNotification === 'function') {
           snap.docChanges().forEach(function(change){
             var d = change.doc.data() || {};
@@ -1286,9 +1288,19 @@ Object.assign(Store, {
         }
         isFirstAdminChatLoad = false;
         snap.docChanges().forEach(function(change){ var dd = change.doc.data() || {}; adminChatPrevUnread[change.doc.id] = Number(dd.unreadAdmin) || 0; });
-        this.sortDocs(snap.docs.filter(d => (d.data()||{}).type === 'toko'), 'updatedAt').forEach(d => this.upsertAdminThread(d));
-        this.rebuildInboxDebounced();
-        this.render('chat', 'inbox');
+        self.sortDocs(snap.docs.filter(d => (d.data()||{}).type === 'toko'), 'updatedAt').forEach(d => self.upsertAdminThread(d));
+        self.rebuildInboxDebounced();
+        self.render('chat', 'inbox');
+    }
+    var adminChatRef = db.collection('chat_threads').orderBy('updatedAt', 'desc').limit(50);
+    /* Fast-path: ambil sekali via get() agar daftar tidak tergantung penuh
+     * pada listener realtime. */
+    adminChatRef.get().then(function(snap){
+      handleAdminChatSnap(snap);
+    }).catch(function(){ /* listener yang menangani error */ });
+    this.onRole(adminChatRef.onSnapshot(function(snap){
+        // Filter type toko di klien (seperti orders yang bekerja pakai orderBy)
+        handleAdminChatSnap(snap);
       }, err => this.onSubError('chat_threads', err)));
   },
 
