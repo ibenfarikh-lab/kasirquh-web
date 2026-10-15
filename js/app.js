@@ -537,23 +537,6 @@ async function identifyKasirMember(code){
   }catch(e){toast('Gagal cari member');}
 }
 function clearKasirMember(){S.kasirMember=null;S.kasirRedeem=false;renderKasirMember();}
-/* Opsi B: hitung koin yang akan didapat dari total belanja */
-function kasirEarnedCoins(total){
-  if(!S.coinProgramEnabled||!S.coinEvents||!S.coinEvents.spend)return 0;
-  const rule=Math.max(1,Math.round(Number(S.coinSpendRule)||0)),reward=Math.max(0,Math.round(Number(S.coinSpendReward)||0));
-  if(rule<=0||reward<=0)return 0;
-  return Math.floor(Math.max(0,total)/rule)*reward;
-}
-/* Opsi B: maksimal koin yang bisa ditukar = min(saldo, 50% total) */
-function kasirMaxRedeem(total){
-  const m=S.kasirMember;
-  if(!m||!S.coinProgramEnabled||!S.coinRedeemEnabled)return 0;
-  const pct=Math.min(100,Math.max(0,Math.round(Number(S.coinRedeemPercent)||0)));
-  const val=Math.max(1,Math.round(Number(S.coinValue)||1));
-  if(pct<=0||val<=0)return 0;
-  const maxByTotal=Math.floor(Math.max(0,total)*pct/100/val);
-  return Math.max(0,Math.min(m.coins,maxByTotal));
-}
 function renderKasirMember(){
   const badge=$('#kasirMemberBadge');if(!badge)return;
   const m=S.kasirMember;

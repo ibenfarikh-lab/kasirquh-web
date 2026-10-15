@@ -4,7 +4,25 @@
 // --- dari js/app.js baris 280 (pindah verbatim, tanpa ubah logika) ---
 function renderAdminCart(){const entries=Object.entries(S.adminCart).filter(x=>x[1]>0&&S.products.some(p=>p.id===x[0])),itemCount=entries.reduce((sum,[,q])=>sum+q,0);$('#adminItemCount').textContent=itemCount+' item';$('#adminCart').innerHTML=entries.length?entries.map(([id,q])=>{const p=S.products.find(x=>x.id===id);return `<div class="line-item"><div class="item-copy"><strong>${p.short}</strong><small>${money(p.price)} · ×${q}</small></div><div class="qty" aria-label="Jumlah ${p.name}"><button class="mini-btn" data-a-dec="${id}" aria-label="Kurangi ${p.name}">−</button><b>${q}</b><button class="mini-btn plus" data-a-inc="${id}" aria-label="Tambah ${p.name}">+</button></div></div>`}).join(''):'<div class="empty-note">Belum ada barang.</div>';const total=entries.reduce((s,[id,q])=>s+S.products.find(p=>p.id===id).price*q,0);$('#subtotal').textContent=$('#total').textContent=$('#payTotal').textContent=money(total);$$('[data-a-dec]').forEach(b=>b.onclick=()=>{S.adminCart[b.dataset.aDec]--;if(S.adminCart[b.dataset.aDec]<=0)delete S.adminCart[b.dataset.aDec];renderAdminCart()});$$('[data-a-inc]').forEach(b=>b.onclick=()=>{S.adminCart[b.dataset.aInc]++;renderAdminCart()})}
 // --- dari js/app.js baris 293 (pindah verbatim, tanpa ubah logika) ---
+/* Opsi B: hitung koin yang akan didapat dari total belanja */
+function kasirEarnedCoins(total){
+  if(!S.coinProgramEnabled||!S.coinEvents||!S.coinEvents.spend)return 0;
+  const rule=Math.max(1,Math.round(Number(S.coinSpendRule)||0)),reward=Math.max(0,Math.round(Number(S.coinSpendReward)||0));
+  if(rule<=0||reward<=0)return 0;
+  return Math.floor(Math.max(0,total)/rule)*reward;
+}
+/* Opsi B: maksimal koin yang bisa ditukar = min(saldo, 50% total) */
+function kasirMaxRedeem(total){
+  const m=S.kasirMember;
+  if(!m||!S.coinProgramEnabled||!S.coinRedeemEnabled)return 0;
+  const pct=Math.min(100,Math.max(0,Math.round(Number(S.coinRedeemPercent)||0)));
+  const val=Math.max(1,Math.round(Number(S.coinValue)||1));
+  if(pct<=0||val<=0)return 0;
+  const maxByTotal=Math.floor(Math.max(0,total)*pct/100/val);
+  return Math.max(0,Math.min(m.coins,maxByTotal));
+}
 /* Opsi B: total setelah potongan koin (jika toggle ON) */
+
 function kasirPayableTotal(){const total=adminCartPaymentTotal();if(S.kasirMember&&S.kasirRedeem){const rc=kasirMaxRedeem(total);return Math.max(0,total-rc*Math.max(1,Math.round(Number(S.coinValue)||1)));}return total;}
 function renderCashPayment(){const rawTotal=adminCartPaymentTotal(),total=kasirPayableTotal(),received=numericValue($('#cashReceivedInput').value),change=received-total,valid=total>0&&received>=total;$('#cashPaymentTotal').textContent=money(total);
 /* Opsi B: tampilkan toggle tukar koin jika member ada & punya koin */
