@@ -73,7 +73,13 @@ const FCM = {
       this.token = token;
 
       // Simpan token ke Firestore (per user/device)
-      const uid = (window.S && (S.activeCustomerId || S.activeAdminId)) || 'anon';
+      // Pakai Firebase Auth UID langsung agar admin pun teridentifikasi
+      let uid = 'anon';
+      try {
+        const au = (window.firebase && firebase.auth && firebase.auth().currentUser) || null;
+        if (au && au.uid) uid = au.uid;
+        else if (window.S && S.activeCustomerId) uid = S.activeCustomerId;
+      } catch (e) {}
       const db = firebase.firestore();
       await db.collection('fcm_tokens').doc(uid + '_' + token.slice(-12)).set({
         uid: uid,
