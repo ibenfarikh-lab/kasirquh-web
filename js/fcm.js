@@ -10,6 +10,7 @@ const FCM = {
   messaging: null,
   token: null,
   initialized: false,
+  swRegistration: null,
 
   /* Inisialisasi FCM (dipanggil setelah Firebase ready & user login) */
   async init() {
@@ -24,6 +25,17 @@ const FCM = {
         return false;
       }
       this.messaging = firebase.messaging();
+
+      // Daftarkan service worker untuk FCM (wajib sebelum getToken)
+      try {
+        if ('serviceWorker' in navigator) {
+          this.swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          console.log('[FCM] Service worker terdaftar');
+        }
+      } catch (swErr) {
+        console.log('[FCM] SW gagal:', swErr.message);
+      }
+
       this.initialized = true;
 
       // Foreground message handler
@@ -68,7 +80,9 @@ const FCM = {
         console.log('[FCM] Izin notifikasi ditolak user');
         return null;
       }
-      const token = await this.messaging.getToken({ vapidKey: FCM_VAPID_KEY });
+      const tokenOpts = { vapidKey: FCM_VAPID_KEY };
+      if (this.swRegistration) tokenOpts.serviceWorkerRegistration = this.swRegistration;
+      const token = await this.messaging.getToken(tokenOpts);
       if (!token) return null;
       this.token = token;
 
@@ -81,17 +95,30 @@ const FCM = {
         else if (window.S && S.activeCustomerId) uid = S.activeCustomerId;
       } catch (e) {}
       const db = firebase.firestore();
-      await db.collection('fcm_tokens').doc(uid + '_' + token.slice(-12)).set({
-        uid: uid,
-        token: token,
-        platform: 'web',
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
+      try {
+        await db.collection('fcm_tokens').doc(uid + '_' + token.slice(-12)).set({
+          uid: uid,
+          token: token,
+          platform: 'web',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      } catch (dbErr) {
+        console.log('[FCM] Firestore gagal:', dbErr.message);
+        // Simpan token lokal sebagai fallback agar bisa didiagnosis
+        try { localStorage.setItem('fcm_token_pending', token); } catch (e) {}
+        throw new Error('Firestore: ' + (dbErr.message || 'tulis ditolak'));
+      }
 
       console.log('[FCM] Token terdaftar');
       return token;
     } catch (e) {
       console.log('[FCM] Register gagal:', e.message);
+      if (typeof toast === 'function') {
+        const msg = String(e.message || '');
+        if (msg.includes('permission')) toast('Izin notifikasi dibutuhkan');
+        else if (msg.includes('ServiceWorker') || msg.includes('service worker')) toast('Gagal daftar service worker');
+        else toast('Notifikasi gagal aktif: ' + msg.slice(0, 50));
+      }
       return null;
     }
   },
