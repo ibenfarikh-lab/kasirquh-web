@@ -1299,20 +1299,41 @@ Object.assign(Store, {
     if (this._msgUnsub) { try { this._msgUnsub(); } catch (e) {} this._msgUnsub = null; }
     if (!threadId || !FB.ready()) return;
     /* Tandai sedang memuat: UI tampil "Memuat pesan…" (jujur) bukan
-     * "Belum ada percakapan" (bohong) selama subscription belum kembali.
-     * Di koneksi lambat, modal langsung dibuka tapi data butuh waktu. */
+     * "Belum ada percakapan" (bohong) selama data belum kembali. */
     const th0 = S.directThreads[threadId];
     if (th0) { th0._loadingMessages = true; this.render('chat'); }
     const ref = FB.db.collection('chat_threads').doc(threadId)
       .collection('messages').orderBy('createdAt', 'asc').limit(30);
+    const clearLoading = () => {
+      const th = S.directThreads[threadId];
+      if (th) th._loadingMessages = false;
+    };
+    /* Fast-path: ambil sekali via get() — tidak tergantung penuh pada
+     * listener realtime (yang terbukti bisa macet tanpa callback di
+     * sebagian perangkat). Yang datang duluan yang dipakai. */
+    ref.get().then(snap => {
+      const thread = S.directThreads[threadId];
+      if (!thread || S.activeDirectThread !== threadId) return;
+      clearLoading();
+      thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
+      this.render('chat');
+    }).catch(() => { /* listener yang menangani error */ });
+    /* Batas aman: jangan biarkan "Memuat…" macet selamanya. */
+    setTimeout(() => {
+      const th = S.directThreads[threadId];
+      if (th && th._loadingMessages && S.activeDirectThread === threadId) {
+        th._loadingMessages = false;
+        this.render('chat');
+        this.notifyUser('Gagal memuat pesan · periksa koneksi lalu buka ulang');
+      }
+    }, 15000);
     this._msgUnsub = ref.onSnapshot(snap => {
       const thread = S.directThreads[threadId] || this.upsertAdminThread({ id: threadId, data: () => ({}) });
-      thread._loadingMessages = false;
+      clearLoading();
       thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
       this.render('chat');
     }, err => {
-      const th = S.directThreads[threadId];
-      if (th) th._loadingMessages = false;
+      clearLoading();
       this.onSubError('chat messages', err, true);
       this.render('chat');
     });
