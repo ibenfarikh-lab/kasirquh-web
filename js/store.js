@@ -1387,7 +1387,7 @@ Object.assign(Store, {
     if (this._rebuildInboxTimer) clearTimeout(this._rebuildInboxTimer);
     this._rebuildInboxTimer = setTimeout(() => {
       this._rebuildInboxTimer = null;
-      this.rebuildInboxDebounced();
+      this.rebuildInbox();
     }, 500);
   },
   rebuildInbox() {
