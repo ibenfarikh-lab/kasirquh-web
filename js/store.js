@@ -2416,35 +2416,10 @@ Object.assign(Store, {
       text: text,
       createdAt: ts,
     }), WRITE_TIMEOUT_MS, 'Kirim pesan');
-    /* Optimistic UI: langsung tampilkan pesan tanpa tunggu subscription */
-    try {
-      const threadKey = side === 'admin' ? threadId : 'toko';
-      console.log('[Chat] optimistic threadKey:', threadKey, 'side:', side);
-      console.log('[Chat] directThreads keys:', Object.keys(S.directThreads || {}));
-      const thread = S.directThreads[threadKey];
-      console.log('[Chat] thread found:', !!thread);
-      if (thread) {
-        thread.messages = thread.messages || [];
-        thread.messages.push({
-          id: msgRef.id,
-          side: side,
-          time: 'Baru saja',
-          text: text,
-        });
-        thread.lastMessage = text;
-        console.log('[Chat] optimistic message added, total:', thread.messages.length);
-      }
-    } catch (e) { console.error('[Chat] optimistic failed:', e); }
-    /* Refresh paksa: pastikan data terbaru tampil */
-    try {
-      if (side === 'customer' && S.activeCustomerId) {
-        const freshSnap = await threadRef.collection('messages').orderBy('createdAt', 'asc').limit(30).get();
-        const thread = S.directThreads['toko'];
-        if (thread && freshSnap) {
-          thread.messages = freshSnap.docs.map(d => this.mapThreadMessage(d));
-        }
-      }
-    } catch (e) { /* abaikan, optimistic UI sudah tampil */ }
+    /* Optimistic UI sudah ditangani pemanggil (sendDirectMessage di
+     * js/shared/chat.js) — JANGAN push duplikat di sini. Dulu blok ini
+     * push kedua kali sehingga pesan tampil ganda. Cukup render ulang;
+     * sinkronisasi ID asli biar lewat subscription / buka ulang. */
     this.render('chat');
   },
 
