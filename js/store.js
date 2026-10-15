@@ -1298,13 +1298,24 @@ Object.assign(Store, {
   watchThreadMessages(threadId) {
     if (this._msgUnsub) { try { this._msgUnsub(); } catch (e) {} this._msgUnsub = null; }
     if (!threadId || !FB.ready()) return;
+    /* Tandai sedang memuat: UI tampil "Memuat pesan…" (jujur) bukan
+     * "Belum ada percakapan" (bohong) selama subscription belum kembali.
+     * Di koneksi lambat, modal langsung dibuka tapi data butuh waktu. */
+    const th0 = S.directThreads[threadId];
+    if (th0) { th0._loadingMessages = true; this.render('chat'); }
     const ref = FB.db.collection('chat_threads').doc(threadId)
       .collection('messages').orderBy('createdAt', 'asc').limit(30);
     this._msgUnsub = ref.onSnapshot(snap => {
       const thread = S.directThreads[threadId] || this.upsertAdminThread({ id: threadId, data: () => ({}) });
+      thread._loadingMessages = false;
       thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
       this.render('chat');
-    }, err => this.onSubError('chat messages', err, true));
+    }, err => {
+      const th = S.directThreads[threadId];
+      if (th) th._loadingMessages = false;
+      this.onSubError('chat messages', err, true);
+      this.render('chat');
+    });
   },
 
   stopWatchingThread() {
