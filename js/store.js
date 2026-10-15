@@ -1437,6 +1437,7 @@ Object.assign(Store, {
     });
 
     S.inboxItems = [...local, ...derived];
+    this.render('inbox');
   },
 
   /* Item inbox lokal sesi (titip/share) — tidak ditimpa rebuild turunan */
