@@ -2344,6 +2344,7 @@ Object.assign(Store, {
       threadId = customerId;
       side = 'customer';
     }
+    if (!threadId || threadId === 'null' || threadId === 'undefined') throw new Error('ID percakapan tidak valid');
     const threadRef = db.collection('chat_threads').doc(threadId);
     const unreadField = side === 'admin' ? 'unreadCustomer' : 'unreadAdmin';
     const header = { type: 'toko', customerId: customerId, lastMessage: text, updatedAt: ts };
@@ -2358,7 +2359,10 @@ Object.assign(Store, {
     /* Optimistic UI: langsung tampilkan pesan tanpa tunggu subscription */
     try {
       const threadKey = side === 'admin' ? threadId : 'toko';
+      console.log('[Chat] optimistic threadKey:', threadKey, 'side:', side);
+      console.log('[Chat] directThreads keys:', Object.keys(S.directThreads || {}));
       const thread = S.directThreads[threadKey];
+      console.log('[Chat] thread found:', !!thread);
       if (thread) {
         thread.messages = thread.messages || [];
         thread.messages.push({
@@ -2368,8 +2372,9 @@ Object.assign(Store, {
           text: text,
         });
         thread.lastMessage = text;
+        console.log('[Chat] optimistic message added, total:', thread.messages.length);
       }
-    } catch (e) { /* abaikan, subscription akan sync */ }
+    } catch (e) { console.error('[Chat] optimistic failed:', e); }
     /* Refresh paksa: pastikan data terbaru tampil */
     try {
       if (side === 'customer' && S.activeCustomerId) {

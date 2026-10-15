@@ -28,7 +28,17 @@ function renderAdminChatList(){const list=$('#adminChatList');if(!list)return;co
 function renderCustomerChatSummary(){const thread=S.directThreads.toko,latest=thread&&thread.messages[thread.messages.length-1],badge=$('#customerStoreUnread'),time=$('#customerChatTime');$('#customerChatPreview').textContent=latest?latest.text:'Belum ada percakapan dengan toko.';time.textContent=latest?latest.time:'';time.hidden=!latest;const unread=thread?Number(thread.customerUnread||0):0;badge.textContent=unread;badge.hidden=unread===0}
 
 // --- dari js/app.js baris 200 (pindah verbatim, tanpa ubah logika) ---
-function sendDirectMessage(){const input=$('#directChatInput'),text=input.value.trim();if(!text)return toast('Tulis pesan dulu');const role=S.directChatRole;input.value='';$('#directTyping').hidden=true;Store.sendChatMessage(text).then(()=>{renderDirectThread();renderAdminChatList();toast(role==='admin'?'Balasan terkirim ke pelanggan':'Pesan terkirim ke warung')}).catch(error=>{if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Pesan gagal dikirim')})}
+function sendDirectMessage(){const input=$('#directChatInput'),text=input.value.trim();if(!text)return toast('Tulis pesan dulu');const role=S.directChatRole;input.value='';$('#directTyping').hidden=true;
+/* Tampilkan langsung di UI sebelum kirim (optimistic) */
+const tKey=S.activeDirectThread||'toko';
+try{
+  if(!S.directThreads[tKey])S.directThreads[tKey]={name:role==='admin'?'Pelanggan':'Warunge Mimi',initial:'?',messages:[],unread:0,customerUnread:0};
+  S.directThreads[tKey].messages=S.directThreads[tKey].messages||[];
+  S.directThreads[tKey].messages.push({id:'tmp-'+Date.now(),side:role,time:'Baru saja',text:text});
+  S.directThreads[tKey].lastMessage=text;
+  renderDirectThread();
+}catch(e){}
+Store.sendChatMessage(text).then(()=>{renderDirectThread();renderAdminChatList();toast(role==='admin'?'Balasan terkirim ke pelanggan':'Pesan terkirim ke warung')}).catch(error=>{if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Pesan gagal dikirim')})}
 
 // --- dari js/app.js baris 206 (pindah verbatim, tanpa ubah logika) ---
 function sendAdminRumpi(){const input=$('#adminRumpiInputTab'),text=input.value.trim(),photo=S.pendingAdminRumpiPhoto||'';if(!text&&!photo)return toast('Tulis balasan atau tambah foto dulu');input.value='';Store.sendRumpi(text,photo).then(()=>{setRumpiPhoto('admin','');toast('Postingan tampil di Rumpi pelanggan')}).catch(error=>{if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Gagal mengirim')})}
