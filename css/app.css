@@ -62,6 +62,7 @@ body[data-ui-theme="dark"] .admin{background:#000000}
 body[data-ui-theme="dark"] .metric-card,body[data-ui-theme="dark"] .metric-card.primary{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .dashboard-shortcut{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .pos-header-scan{background:#0a0908;border-color:#2a2a2a}
+body[data-ui-theme="dark"] .moderate-delete{background:#0a0908;border:1px solid #2a2a2a;color:#f1aaa1}
 body[data-ui-theme="dark"] .approval-item,body[data-ui-theme="dark"] .cash-card,body[data-ui-theme="dark"] .inbox-group,body[data-ui-theme="dark"] .notification-item,body[data-ui-theme="dark"] .purchase-note-card,body[data-ui-theme="dark"] .report-metric,body[data-ui-theme="dark"] .mood-card,body[data-ui-theme="dark"] .restock-summary-foot,body[data-ui-theme="dark"] .inbox-group-head-row,body[data-ui-theme="dark"] .scanner-sheet,body[data-ui-theme="dark"] .inbox-group-count,body[data-ui-theme="dark"] .capital-card,body[data-ui-theme="dark"] .code-card,body[data-ui-theme="dark"] .control-recipe-item,body[data-ui-theme="dark"] .info-card,body[data-ui-theme="dark"] .group-avatar,body[data-ui-theme="dark"] .shortcut-picker-status{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .menu-launch,body[data-ui-theme="dark"] .feature-launch{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .pos-search,body[data-ui-theme="dark"] .pos-sticky-head,body[data-ui-theme="dark"] .pos-scan-button,body[data-ui-theme="dark"] .pos-product-empty{background:#0a0908;border-color:#2a2a2a}
