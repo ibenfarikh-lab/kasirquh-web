@@ -585,8 +585,11 @@ Store.whenAuthReady().then(()=>safeInit('Gateway',startGateway));
 /* Kontrak lintas-script resmi: fungsi gateway yang dibutuhkan store.js
  * (pemulihan sesi lintas-tab, temuan G1/G2). IIFE ini menutup scope,
  * sehingga store.js mengaksesnya lewat window.KasirQuhUI — bukan lewat
- * typeof global yang tidak pernah lolos sebelum perbaikan ini. */
-window.KasirQuhUI={go:go,stopGatewayTimer:stopGatewayTimer,syncGatewayPromo:syncGatewayPromo};
+ * typeof global yang tidak pernah lolos sebelum perbaikan ini.
+ * openDirectChat ikut dikontrak: js/shared/chat.js (hasil ekstraksi verbatim)
+ * memanggilnya dari luar IIFE — tanpa ini klik daftar chat admin selalu
+ * ReferenceError dan toast 'Gagal buka chat'. */
+window.KasirQuhUI={go:go,stopGatewayTimer:stopGatewayTimer,syncGatewayPromo:syncGatewayPromo,openDirectChat:openDirectChat};
 })();
 
 
