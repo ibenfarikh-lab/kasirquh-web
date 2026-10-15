@@ -1133,8 +1133,30 @@ Object.assign(Store, {
       this.render('chat');
     }, err => this.onSubError('chat_threads', err)));
     let isFirstChatLoad = true;
-    this.onRole(threadRef.collection('messages').orderBy('createdAt', 'asc').limit(30).onSnapshot(snap => {
+    /* Samakan ketahanan dengan sisi admin: flag memuat + get() fast-path +
+     * timeout, karena listener realtime terbukti bisa macet tanpa callback
+     * di sebagian perangkat. */
+    const custThread0 = this.ensureCustomerThread(uid);
+    custThread0._loadingMessages = true;
+    const custMsgRef = threadRef.collection('messages').orderBy('createdAt', 'asc').limit(30);
+    custMsgRef.get().then(snap => {
+      const thread = S.directThreads.toko;
+      if (!thread) return;
+      thread._loadingMessages = false;
+      thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
+      isFirstChatLoad = false;
+      this.render('chat');
+    }).catch(() => { /* listener yang menangani error */ });
+    setTimeout(() => {
+      const thread = S.directThreads.toko;
+      if (thread && thread._loadingMessages) {
+        thread._loadingMessages = false;
+        this.render('chat');
+      }
+    }, 15000);
+    this.onRole(custMsgRef.onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
+      thread._loadingMessages = false;
       thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
       if (!isFirstChatLoad && typeof playNotification === 'function') {
         snap.docChanges().forEach(function(change){
@@ -1148,7 +1170,12 @@ Object.assign(Store, {
       }
       isFirstChatLoad = false;
       this.render('chat');
-    }, err => this.onSubError('chat messages', err)));
+    }, err => {
+      const thread = S.directThreads.toko;
+      if (thread) thread._loadingMessages = false;
+      this.onSubError('chat messages', err);
+      this.render('chat');
+    }));
   },
 
   ensureCustomerThread(uid) {
