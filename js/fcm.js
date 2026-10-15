@@ -4,7 +4,7 @@
  * (Project Settings → Cloud Messaging → Web Push certificates).
  * Tanpa VAPID key, getToken() akan gagal.
  */
-const FCM_VAPID_KEY = ''; // TODO: isi dari Firebase Console
+const FCM_VAPID_KEY = 'BCqm7CrTfNFb3NWswI3crJLVuL_LptKcU3iR9_miapPhkKwfREd1liSoJ-h0dpTcdGwNiKtlA75nTZeA1vJusCE'; // VAPID public key (aman di client-side)
 
 const FCM = {
   messaging: null,
