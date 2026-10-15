@@ -651,13 +651,15 @@ Object.assign(Store, {
     if (typeof d.coinSpendRule === 'number') S.coinSpendRule = Math.max(1, Math.round(d.coinSpendRule));
     if (typeof d.coinRule === 'string') S.coinRule = d.coinRule;
     /* Promo kilat: produk + harga → peta harga promo (live) */
-    const flashId = (typeof d.flashProductId === 'string' && d.flashProductId.trim()) ? d.flashProductId.trim() : null;
+    S.flashEndsAt = (d.flashEndsAt && typeof d.flashEndsAt.toDate === 'function') ? d.flashEndsAt : null;
+    /* Auto-off: jika waktu habis, promo mati otomatis */
+    const flashExpired = S.flashEndsAt && typeof S.flashEndsAt.toMillis === 'function' && S.flashEndsAt.toMillis() <= Date.now();
+    const flashId = (!flashExpired && typeof d.flashProductId === 'string' && d.flashProductId.trim()) ? d.flashProductId.trim() : null;
     S.flashProductId = flashId;
     const flashPrice = Number(d.flashPrice) > 0 ? Math.round(Number(d.flashPrice)) : 0;
     S.promoUnitPrice = (flashId && flashPrice > 0) ? { [flashId]: flashPrice } : {};
     if (typeof d.flashRule === 'string') S.flashRule = d.flashRule;
     if (typeof d.flashProductName === 'string') S.flashProductName = d.flashProductName;
-    S.flashEndsAt = (d.flashEndsAt && typeof d.flashEndsAt.toDate === 'function') ? d.flashEndsAt : null;
     /* Promo utama + slide gateway + kabar (live) */
     if (typeof d.promoTitle === 'string') S.promoTitle = d.promoTitle;
     if (typeof d.promoProductId === 'string') S.promoProductId = d.promoProductId || null;
