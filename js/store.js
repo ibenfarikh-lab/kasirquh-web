@@ -995,7 +995,12 @@ Object.assign(Store, {
         return;
       }
       if (data.approvalStatus !== 'approved') {
-        FB.auth.signOut();
+        /* JANGAN signOut di sini — status non-approved pada subscription live
+         * sering kali transient (cache basi / race saat login ulang).
+         * SignOut agresif menyebabkan sesi terputus berulang (temuan R4).
+         * Penolakan eksplisit sudah ditangani di atas ('rejected').
+         * Cukup tampilkan mode terbatas; sesi Firebase dipertahankan. */
+        this.render('session', 'profile');
         return;
       }
       S.coinBalance = Math.max(0, Math.round(Number(data.coins) || 0));
