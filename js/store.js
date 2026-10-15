@@ -421,7 +421,6 @@ const Store = {
       wa: customer ? (customer.wa || '') : '',
       address: String(d.note || (fulfillment === 'delivery' ? 'Diantar ke rumah' : 'Ambil di warung')),
       method: d.paymentMethod === 'transfer' ? 'Transfer' : (fulfillment === 'delivery' ? 'COD' : 'Bayar di warung'),
-      paid: raw === 'selesai',
       transferStatus: String(d.transferStatus || ''),
       transferReference: String(d.transferReference || ''),
       items: items,
