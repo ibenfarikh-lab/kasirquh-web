@@ -1835,7 +1835,7 @@ Object.assign(Store, {
 
   /* Kasir admin (tunai + kembalian): decrement stok atomik (batch) +
    * jurnal pemasukan penjualan. Struk tetap dirender app.js. */
-  async completeCashSale({ lines, total, profit, itemCount }) {
+  async completeCashSale({ lines, total, profit, itemCount, redeemCoins, earnedCoins }) {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
     if (!lines || !lines.length) throw new Error('Transaksi masih kosong');
@@ -1850,14 +1850,48 @@ Object.assign(Store, {
     });
     /* Opsi A: catat member jika teridentifikasi di kasir */
     const km = (typeof S !== 'undefined' && S.kasirMember) || null;
+    /* Opsi B: koin tukar & dapat */
+    redeemCoins = Math.max(0, Math.round(Number(redeemCoins) || 0));
+    earnedCoins = Math.max(0, Math.round(Number(earnedCoins) || 0));
+    const coinVal = Math.max(1, Math.round(Number(S.coinValue) || 1));
     batch.set(db.collection('journal').doc(), {
       type: 'pemasukan', category: 'penjualan',
       amount: Math.round(total),
       note: 'Penjualan · Kasir', refId: '', method: 'Tunai',
       profit: Math.round(profit || 0), itemCount: itemCount || 0,
       customerId: km ? km.uid : '', customerName: km ? km.name : '',
+      coinUsed: redeemCoins, coinValue: redeemCoins * coinVal, earnedCoins: earnedCoins,
       createdAt: ts,
     });
+    if (km && km.uid) {
+      const coinDelta = earnedCoins - redeemCoins;
+      if (coinDelta !== 0) batch.update(db.collection('customers').doc(km.uid), { coins: FV.increment(coinDelta) });
+      if (redeemCoins > 0) {
+        batch.set(db.collection('coin_ledger').doc(), {
+          customerId: km.uid, amount: -redeemCoins, reason: 'tukar',
+          label: 'Ditukar di kasir',
+          detail: 'Potongan Rp' + (redeemCoins * coinVal).toLocaleString('id-ID'),
+          createdAt: ts,
+        });
+        /* Beban promosi untuk koin yang ditukar */
+        batch.set(db.collection('journal').doc(), {
+          type: 'pengeluaran', category: 'beban_promosi',
+          amount: redeemCoins * coinVal,
+          note: 'Penukaran koin · ' + redeemCoins.toLocaleString('id-ID') + ' koin (kasir)',
+          refId: '', method: 'Koin Warga', profit: 0, itemCount: 0,
+          customerId: km.uid, customerName: km.name,
+          createdAt: ts,
+        });
+      }
+      if (earnedCoins > 0) {
+        batch.set(db.collection('coin_ledger').doc(), {
+          customerId: km.uid, amount: earnedCoins, reason: 'belanja',
+          label: 'Bonus belanja kasir',
+          detail: 'Rp' + Math.round(total + redeemCoins * coinVal).toLocaleString('id-ID') + ' belanja',
+          createdAt: ts,
+        });
+      }
+    }
     /* Naikkan counter penjualan per produk agar masuk Sedang Laris */
     lines.forEach(l => {
       batch.update(db.collection('products').doc(l.productId), {

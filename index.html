@@ -9,7 +9,7 @@
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:,">
 <title>KasirQuh · Warunge Mimi</title>
-<link rel="stylesheet" href="css/app.css?v=20261018m">
+<link rel="stylesheet" href="css/app.css?v=20261018n">
 <style>
 .segmented button.active{background:var(--card)!important;color:var(--ink)!important;border:2px solid var(--orange)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--orange) 30%,transparent)!important;}
 .checkout-summary{background:var(--card)!important;color:var(--ink)!important;border:1px solid var(--line)!important;}
@@ -223,7 +223,7 @@
 <div id="adminAiModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Asisten operasional</small><h2>AI Admin</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup AI Admin">×</button></div><div id="adminAiAnswer" class="admin-ai-answer" aria-live="polite">Pilih ringkasan atau tanyakan omzet, transaksi, stok, pelanggan, maupun arus kas. Jawaban hanya memakai data sesi ini.</div><div class="ai-admin-chips"><button data-admin-ai="stock">Prioritas restok</button><button data-admin-ai="sales">Omzet hari ini</button><button data-admin-ai="transactions">Transaksi hari ini</button><button data-admin-ai="customers">Pelanggan baru</button><button data-admin-ai="cash">Cek arus kas</button></div><div class="admin-ai-compose"><input id="adminAiInput" class="ai-admin-input" placeholder="Contoh: stok apa yang menipis?" autocomplete="off"><button id="adminAiSend" type="button">Tanya</button></div></section></div>
 <div id="scannerModal" class="modal"><section class="sheet feature-sheet scanner-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Kasir cepat</small><h2>Pindai Barcode</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup pemindai">×</button></div><div class="scanner-frame" aria-label="Pratinjau kamera pemindai barcode"><div id="scannerViewport" class="scanner-viewport"></div><div class="scanner-corners"></div><span class="scanner-line" aria-hidden="true"></span><span id="scannerHint" class="scanner-hint">Menyiapkan kamera…</span></div><div class="scanner-manual"><label for="scannerManualInput">Kode susah terpindai? Ketik manual</label><div class="scanner-manual-row"><input id="scannerManualInput" inputmode="text" autocomplete="off" placeholder="Contoh: 8991002103733" aria-label="Ketik kode barcode manual"><button id="scannerManualBtn" type="button">Cari</button></div></div><div class="scanner-actions"><button class="scanner-close-button" data-close-sheet>Tutup</button></div></section></div>
 <div id="transferModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Pembayaran non-tunai</small><h2>Konfirmasi Transfer</h2></div><button class="sheet-close" data-close-sheet>×</button></div><div id="transferList" class="transfer-list"><div class="empty-note">Belum ada bukti transfer.</div></div></section></div>
-<div id="cashPaymentModal" class="modal"><section class="sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Kasir tunai</small><h2>Pembayaran</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup">×</button></div><div class="cash-payment-total"><span><small>Total belanja</small><b id="cashPaymentTotal">Rp0</b></span><svg class="icon" aria-hidden="true"><use href="#cash"/></svg></div><label class="field-label">Uang diterima (Rp)<input id="cashReceivedInput" inputmode="numeric" placeholder="Contoh: 50000" autocomplete="off"></label><div class="cash-change"><span>Kembalian</span><b id="cashChange">Belum dihitung</b></div><p id="cashPaymentStatus" class="cash-payment-status">Masukkan jumlah uang yang diterima.</p><button id="confirmCashPayment" class="primary-wide" disabled>Selesaikan &amp; buka struk</button></section></div>
+<div id="cashPaymentModal" class="modal"><section class="sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Kasir tunai</small><h2>Pembayaran</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup">×</button></div><div class="cash-payment-total"><span><small>Total belanja</small><b id="cashPaymentTotal">Rp0</b></span><svg class="icon" aria-hidden="true"><use href="#cash"/></svg></div><label id="kasirRedeemRow" class="kasir-redeem-row" hidden><span><b>Tukar Koin</b><small id="kasirRedeemNominal"></small></span><span class="switch"><input type="checkbox" id="kasirRedeemToggle"><i></i></span></label><label class="field-label">Uang diterima (Rp)<input id="cashReceivedInput" inputmode="numeric" placeholder="Contoh: 50000" autocomplete="off"></label><div class="cash-change"><span>Kembalian</span><b id="cashChange">Belum dihitung</b></div><p id="cashPaymentStatus" class="cash-payment-status">Masukkan jumlah uang yang diterima.</p><button id="confirmCashPayment" class="primary-wide" disabled>Selesaikan &amp; buka struk</button></section></div>
 <div id="receiptModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Siap untuk pencetak 58mm</small><h2>Struk Termal</h2></div><button class="sheet-close" data-close-sheet>×</button></div><div id="receiptPaper" class="receipt-paper"><div class="empty-note">Belum ada transaksi.</div></div><button id="downloadReceipt" class="download-card" disabled><svg class="icon" style="vertical-align:middle;width:18px"><use href="#download"/></svg> Unduh struk .txt</button></section></div>
 <div id="directChatModal" class="modal"><section class="sheet feature-sheet chat-thread-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small id="directChatKicker" class="page-kicker">Percakapan toko</small><h2 id="directChatTitle">Warunge Mimi</h2><span id="directChatStatus" class="thread-status">Aktif sekarang</span></div><button class="sheet-close" data-close-sheet aria-label="Tutup percakapan">×</button></div><div id="directChatFeed" class="thread-feed" aria-live="polite"></div><div id="directTyping" class="typing-indicator" hidden><span></span><span></span><span></span><b>mengetik...</b></div><div class="thread-composer"><input id="directChatInput" maxlength="240" placeholder="Tulis pesan…" aria-label="Tulis pesan"><button id="sendDirectChat" aria-label="Kirim pesan"><svg class="icon"><use href="#chat"/></svg><span>Kirim</span></button></div></section></div>
 <div id="adminRecipeModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Beranda Pelanggan</small><h2 id="adminRecipeFormTitle">Tambah Ide Masak</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup">×</button></div><div class="form-stack"><label for="adminRecipeName">Nama menu</label><input id="adminRecipeName" maxlength="54" placeholder="Contoh: Mi goreng warung"><label for="adminRecipeDesc">Deskripsi singkat</label><textarea id="adminRecipeDesc" maxlength="110" placeholder="Cerita singkat racikan ini"></textarea><div class="recipe-photo-block"><label>Foto Resep <span style="font-weight:600">(opsional)</span></label><div class="product-photo-field"><img id="adminRecipePhotoPreview" class="recipe-photo-preview" alt="Pratinjau foto resep" hidden><div class="product-photo-actions"><label class="file-control" for="adminRecipePhotoInput"><svg class="icon" aria-hidden="true"><use href="#image"/></svg><span>Pilih dari HP</span><input id="adminRecipePhotoInput" type="file" accept="image/*"></label><small class="photo-help">Disimpan sebagai PNG · maksimal 300 px · transparansi tetap terjaga.</small></div></div></div><label>Daftar bahan</label><div id="adminRecipeIngredients" class="ingredient-editor"></div><button id="addAdminIngredient" class="ingredient-add">+ Tambah baris bahan</button></div><div id="adminRecipeSummary" class="recipe-form-summary">Pilih bahan untuk melihat perkiraan total.</div><button id="saveAdminRecipe" class="primary-wide">Simpan Ide Masak</button></section></div>
@@ -278,47 +278,47 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
-<script defer src="js/config.js?v=20261018m"></script>
-<script defer src="js/fcm.js?v=20261018m"></script>
-<script defer src="js/firebase.js?v=20261018m"></script>
-<script defer src="js/store.js?v=20261018m"></script>
-<script defer src="js/biometric.js?v=20261018m"></script>
-<script defer src="js/shared/dom.js?v=20261018m"></script>
-<script defer src="js/shared/format.js?v=20261018m"></script>
-<script defer src="js/shared/store-adapter.js?v=20261018m"></script>
-<script defer src="js/shared/audio.js?v=20261018m"></script>
-<script defer src="js/shared/theme.js?v=20261018m"></script>
-<script defer src="js/shared/fx.js?v=20261018m"></script>
-<script defer src="js/shared/photo.js?v=20261018m"></script>
-<script defer src="js/shared/recipe-form.js?v=20261018m"></script>
-<script defer src="js/shared/chat.js?v=20261018m"></script>
-<script defer src="js/shared/coin-program.js?v=20261018m"></script>
-<script defer src="js/init/gateway.js?v=20261018m"></script>
-<script defer src="js/init/auth.js?v=20261018m"></script>
-<script defer src="js/features/customer/home.js?v=20261018m"></script>
-<script defer src="js/features/customer/catalog.js?v=20261018m"></script>
-<script defer src="js/features/customer/cart.js?v=20261018m"></script>
-<script defer src="js/features/customer/checkout.js?v=20261018m"></script>
-<script defer src="js/features/customer/quiz.js?v=20261018m"></script>
-<script defer src="js/features/customer/recipes.js?v=20261018m"></script>
-<script defer src="js/features/customer/coins.js?v=20261018m"></script>
-<script defer src="js/features/customer/account.js?v=20261018m"></script>
-<script defer src="js/features/customer/services.js?v=20261018m"></script>
-<script defer src="js/features/admin/products.js?v=20261018m"></script>
-<script defer src="js/features/admin/orders.js?v=20261018m"></script>
-<script defer src="js/features/admin/finance.js?v=20261018m"></script>
-<script defer src="js/features/admin/stock.js?v=20261018m"></script>
-<script defer src="js/features/admin/pos.js?v=20261018m"></script>
-<script defer src="js/features/admin/notes.js?v=20261018m"></script>
-<script defer src="js/features/admin/inbox.js?v=20261018m"></script>
-<script defer src="js/features/admin/settings.js?v=20261018m"></script>
-<script defer src="js/features/admin/dashboard.js?v=20261018m"></script>
-<script defer src="js/features/admin/rutin.js?v=20261018m"></script>
-<script defer src="js/features/admin/hajatan.js?v=20261018m"></script>
-<script defer src="js/features/admin/ai.js?v=20261018m"></script>
-<script defer src="js/features/admin/scanner.js?v=20261018m"></script>
-<script defer src="js/features/admin/calc.js?v=20261018m"></script>
-<script defer src="js/app.js?v=20261018m"></script>
+<script defer src="js/config.js?v=20261018n"></script>
+<script defer src="js/fcm.js?v=20261018n"></script>
+<script defer src="js/firebase.js?v=20261018n"></script>
+<script defer src="js/store.js?v=20261018n"></script>
+<script defer src="js/biometric.js?v=20261018n"></script>
+<script defer src="js/shared/dom.js?v=20261018n"></script>
+<script defer src="js/shared/format.js?v=20261018n"></script>
+<script defer src="js/shared/store-adapter.js?v=20261018n"></script>
+<script defer src="js/shared/audio.js?v=20261018n"></script>
+<script defer src="js/shared/theme.js?v=20261018n"></script>
+<script defer src="js/shared/fx.js?v=20261018n"></script>
+<script defer src="js/shared/photo.js?v=20261018n"></script>
+<script defer src="js/shared/recipe-form.js?v=20261018n"></script>
+<script defer src="js/shared/chat.js?v=20261018n"></script>
+<script defer src="js/shared/coin-program.js?v=20261018n"></script>
+<script defer src="js/init/gateway.js?v=20261018n"></script>
+<script defer src="js/init/auth.js?v=20261018n"></script>
+<script defer src="js/features/customer/home.js?v=20261018n"></script>
+<script defer src="js/features/customer/catalog.js?v=20261018n"></script>
+<script defer src="js/features/customer/cart.js?v=20261018n"></script>
+<script defer src="js/features/customer/checkout.js?v=20261018n"></script>
+<script defer src="js/features/customer/quiz.js?v=20261018n"></script>
+<script defer src="js/features/customer/recipes.js?v=20261018n"></script>
+<script defer src="js/features/customer/coins.js?v=20261018n"></script>
+<script defer src="js/features/customer/account.js?v=20261018n"></script>
+<script defer src="js/features/customer/services.js?v=20261018n"></script>
+<script defer src="js/features/admin/products.js?v=20261018n"></script>
+<script defer src="js/features/admin/orders.js?v=20261018n"></script>
+<script defer src="js/features/admin/finance.js?v=20261018n"></script>
+<script defer src="js/features/admin/stock.js?v=20261018n"></script>
+<script defer src="js/features/admin/pos.js?v=20261018n"></script>
+<script defer src="js/features/admin/notes.js?v=20261018n"></script>
+<script defer src="js/features/admin/inbox.js?v=20261018n"></script>
+<script defer src="js/features/admin/settings.js?v=20261018n"></script>
+<script defer src="js/features/admin/dashboard.js?v=20261018n"></script>
+<script defer src="js/features/admin/rutin.js?v=20261018n"></script>
+<script defer src="js/features/admin/hajatan.js?v=20261018n"></script>
+<script defer src="js/features/admin/ai.js?v=20261018n"></script>
+<script defer src="js/features/admin/scanner.js?v=20261018n"></script>
+<script defer src="js/features/admin/calc.js?v=20261018n"></script>
+<script defer src="js/app.js?v=20261018n"></script>
 
 <!-- Overlay loading login -->
 </body>

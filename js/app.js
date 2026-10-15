@@ -222,8 +222,9 @@ $('#confirmJoinPatungan').onclick=()=>{if(!joinPatunganId)return;const btn=$('#c
 $$('[data-view]').forEach(b=>b.onclick=()=>showAdminView(b.dataset.view));$$('[data-admin-jump]').forEach(b=>b.onclick=()=>{showAdminView(b.dataset.adminJump);if(b.dataset.adminTab)setDataTab(b.dataset.adminTab)});$$('[data-admin-home]').forEach(b=>b.onclick=()=>showAdminView('dashboard'));$('#shortcutEditToggle').onclick=()=>{S.dashboardShortcutEdit=!S.dashboardShortcutEdit;renderDashboardShortcuts()};
 $('#markAllInboxRead').onclick=()=>{S.inboxItems.forEach(x=>x.read=true);saveInboxRead();renderInbox();updateInboxBadge();toast('Semua notifikasi ditandai dibaca')};
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-mark-group]');if(btn){e.stopPropagation();markInboxGroupRead(btn.dataset.markGroup);toast('Ditandai dibaca')}});$$('[data-online-tab]').forEach(b=>b.onclick=()=>setOnlineTab(b.dataset.onlineTab));$$('[data-data-tab]').forEach(b=>b.onclick=()=>setDataTab(b.dataset.dataTab));
-function openCashPayment(){const entries=Object.entries(S.adminCart).filter(([,qty])=>qty>0);if(!entries.length)return toast('Transaksi masih kosong');const insufficient=cartStockIssue(S.adminCart);if(insufficient)return toast('Stok '+(insufficient.product?insufficient.product.short:'produk')+' tidak cukup · tersedia '+(insufficient.product?stockText(insufficient.product):0)+', diminta '+insufficient.qty);$('#cashReceivedInput').value='';renderCashPayment();openSheet('cashPaymentModal');setTimeout(()=>$('#cashReceivedInput').focus(),80)}
-function completeCashPayment(){const entries=Object.entries(S.adminCart).filter(([,qty])=>qty>0),total=adminCartPaymentTotal(),received=numericValue($('#cashReceivedInput').value);if(!entries.length||received<total){renderCashPayment();return}const insufficient=cartStockIssue(S.adminCart);if(insufficient){closeSheets();return toast('Stok '+(insufficient.product?insufficient.product.short:'produk')+' tidak cukup')}let profit=0,itemCount=0;const lines=entries.map(([id,q])=>{const p=S.products.find(x=>x.id===id);profit+=(p.price-p.cost)*q;itemCount+=q;return {productId:id,qty:q,name:p.short,total:p.price*q}}),btn=$('#confirmCashPayment'),at=new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date());btn.disabled=true;Store.completeCashSale({lines:lines,total:total,profit:profit,itemCount:itemCount}).then(()=>{btn.disabled=false;S.lastReceipt={at:at,items:lines.map(l=>({name:l.name,qty:l.qty,total:l.total})),total:total,cashReceived:received,change:received-total,member:S.kasirMember?{name:S.kasirMember.name,memberCode:S.kasirMember.memberCode}:null};renderReceipt();S.adminCart={};S.kasirMember=null;renderKasirMember();renderAdminCart();renderAdminProducts();renderAdminProductData();renderCustomer();renderHome();closeSheets();openSheet('receiptModal');toast('Pembayaran berhasil · stok & Pembukuan diperbarui')}).catch(error=>{btn.disabled=false;if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Penyimpanan gagal')})}
+function openCashPayment(){const entries=Object.entries(S.adminCart).filter(([,qty])=>qty>0);if(!entries.length)return toast('Transaksi masih kosong');const insufficient=cartStockIssue(S.adminCart);if(insufficient)return toast('Stok '+(insufficient.product?insufficient.product.short:'produk')+' tidak cukup · tersedia '+(insufficient.product?stockText(insufficient.product):0)+', diminta '+insufficient.qty);S.kasirRedeem=false;const tgl=$('#kasirRedeemToggle');if(tgl){tgl.checked=false;tgl.onchange=()=>{S.kasirRedeem=tgl.checked;renderCashPayment();};}$('#cashReceivedInput').value='';renderCashPayment();openSheet('cashPaymentModal');setTimeout(()=>$('#cashReceivedInput').focus(),80)}
+function completeCashPayment(){const entries=Object.entries(S.adminCart).filter(([,qty])=>qty>0),rawTotal=adminCartPaymentTotal(),total=kasirPayableTotal(),received=numericValue($('#cashReceivedInput').value);if(!entries.length||received<total){renderCashPayment();return}const insufficient=cartStockIssue(S.adminCart);if(insufficient){closeSheets();return toast('Stok '+(insufficient.product?insufficient.product.short:'produk')+' tidak cukup')}let profit=0,itemCount=0;const lines=entries.map(([id,q])=>{const p=S.products.find(x=>x.id===id);profit+=(p.price-p.cost)*q;itemCount+=q;return {productId:id,qty:q,name:p.short,total:p.price*q}}),btn=$('#confirmCashPayment'),at=new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date());btn.disabled=true;const redeemCoins=(S.kasirMember&&S.kasirRedeem)?kasirMaxRedeem(rawTotal):0,earnedCoins=S.kasirMember?kasirEarnedCoins(rawTotal):0;
+Store.completeCashSale({lines:lines,total:total,profit:profit,itemCount:itemCount,redeemCoins:redeemCoins,earnedCoins:earnedCoins}).then(()=>{btn.disabled=false;S.lastReceipt={at:at,items:lines.map(l=>({name:l.name,qty:l.qty,total:l.total})),total:total,rawTotal:rawTotal,cashReceived:received,change:received-total,redeemCoins:redeemCoins,earnedCoins:earnedCoins,member:S.kasirMember?{name:S.kasirMember.name,memberCode:S.kasirMember.memberCode}:null};renderReceipt();S.adminCart={};S.kasirMember=null;S.kasirRedeem=false;renderKasirMember();renderAdminCart();renderAdminProducts();renderAdminProductData();renderCustomer();renderHome();closeSheets();openSheet('receiptModal');toast('Pembayaran berhasil · stok & Pembukuan diperbarui')}).catch(error=>{btn.disabled=false;if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Penyimpanan gagal')})}
 $('#payBtn').onclick=openCashPayment;$('#cashReceivedInput').oninput=()=>{$('#cashReceivedInput').value=$('#cashReceivedInput').value.replace(/[^\d]/g,'');renderCashPayment()};$('#confirmCashPayment').onclick=completeCashPayment;
 document.addEventListener('click',e=>{const b=e.target.closest('[data-open-sheet]');if(b){e.stopPropagation();openSheet(b.dataset.openSheet)}});$$('[data-close-sheet]').forEach(b=>b.onclick=closeSheets);$$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeSheets()}));document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheets();$('#aiPanel').classList.remove('open')}});$$('[data-slide]').forEach(b=>b.onclick=()=>showDetailSlide(Number(b.dataset.slide)));$('#openCustomerStoreChat').onclick=()=>{if(requireCustomer('chatCustomer'))return;openDirectChat('toko','customer')};$('#openCustomerRumpi').onclick=()=>{if(requireCustomer('chatCustomer'))return;markRumpiSeen();renderAllRumpi();openSheet('customerRumpiModal')};$('#sendDirectChat').onclick=sendDirectMessage;$('#directChatInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendDirectMessage()}});$('#sendAdminRumpiTab').onclick=sendAdminRumpi;$('#adminRumpiInputTab').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendAdminRumpi()}});$('#adminRumpiPhotoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)resizeRumpiPhoto(f,'admin')};$('#adminRumpiPhotoClear').onclick=()=>setRumpiPhoto('admin','');$('#customerRumpiPhotoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)resizeRumpiPhoto(f,'customer')};$('#customerRumpiPhotoClear').onclick=()=>setRumpiPhoto('customer','');$$('[data-admin-chat-tab]').forEach(b=>b.onclick=()=>setAdminChatTab(b.dataset.adminChatTab));$('#sendCustomerRumpi').onclick=sendCustomerRumpi;$('#customerRumpiPost').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendCustomerRumpi()}});
 $('#addAdminRecipe').onclick=()=>openAdminRecipeForm();
@@ -529,17 +530,37 @@ async function identifyKasirMember(code){
     if(snap.empty){toast('Member tidak ditemukan');return;}
     const doc=snap.docs[0],data=doc.data()||{};
     if(data.approvalStatus!=='approved'){toast('Member belum disetujui');return;}
-    S.kasirMember={uid:doc.id,name:data.name||'Member',memberCode:code};
+    S.kasirMember={uid:doc.id,name:data.name||'Member',memberCode:code,coins:Math.max(0,Math.round(Number(data.coins)||0))};
+    S.kasirRedeem=false;
     renderKasirMember();
     toast('Member: '+S.kasirMember.name);
   }catch(e){toast('Gagal cari member');}
 }
-function clearKasirMember(){S.kasirMember=null;renderKasirMember();}
+function clearKasirMember(){S.kasirMember=null;S.kasirRedeem=false;renderKasirMember();}
+/* Opsi B: hitung koin yang akan didapat dari total belanja */
+function kasirEarnedCoins(total){
+  if(!S.coinProgramEnabled||!S.coinEvents||!S.coinEvents.spend)return 0;
+  const rule=Math.max(1,Math.round(Number(S.coinSpendRule)||0)),reward=Math.max(0,Math.round(Number(S.coinSpendReward)||0));
+  if(rule<=0||reward<=0)return 0;
+  return Math.floor(Math.max(0,total)/rule)*reward;
+}
+/* Opsi B: maksimal koin yang bisa ditukar = min(saldo, 50% total) */
+function kasirMaxRedeem(total){
+  const m=S.kasirMember;
+  if(!m||!S.coinProgramEnabled||!S.coinRedeemEnabled)return 0;
+  const pct=Math.min(100,Math.max(0,Math.round(Number(S.coinRedeemPercent)||0)));
+  const val=Math.max(1,Math.round(Number(S.coinValue)||1));
+  if(pct<=0||val<=0)return 0;
+  const maxByTotal=Math.floor(Math.max(0,total)*pct/100/val);
+  return Math.max(0,Math.min(m.coins,maxByTotal));
+}
 function renderKasirMember(){
   const badge=$('#kasirMemberBadge');if(!badge)return;
   const m=S.kasirMember;
   badge.hidden=!m;
-  if(m){badge.innerHTML=`<span>👤 ${escapeHtml(m.name)}</span><button data-clear-member aria-label="Hapus member">×</button>`;
+  if(m){
+    const total=adminCartPaymentTotal(),earned=kasirEarnedCoins(total);
+    badge.innerHTML=`<span>👤 ${escapeHtml(m.name)}</span><span class="kasir-coin-info">Saldo: ${m.coins.toLocaleString('id-ID')} koin · Akan dapat: ${earned.toLocaleString('id-ID')}</span><button data-clear-member aria-label="Hapus member">×</button>`;
     const btn=badge.querySelector('[data-clear-member]');
     if(btn)btn.onclick=clearKasirMember;
   }

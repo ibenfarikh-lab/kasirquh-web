@@ -146,6 +146,17 @@ body[data-ui-theme="light"] .flash-card small{color:#9c5a20}
 #kasirView .kasir-stepper b{font-size:14px;min-width:20px;text-align:center}
 /* Opsi A: badge member di panel kasir */
 .kasir-member-badge{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#2d231e;border:1px solid #f49a24;border-radius:12px;padding:8px 12px;margin-bottom:8px;font-size:13px;font-weight:700;color:#ffbe78}
+
+/* Opsi B: toggle tukar koin di layar bayar */
+.kasir-redeem-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#2d231e;border:1px solid #f49a24;border-radius:12px;padding:10px 12px;margin:8px 0;cursor:pointer}
+.kasir-redeem-row b{font-size:14px;color:#ffbe78}
+.kasir-redeem-row small{display:block;font-size:12px;color:#a89f91;margin-top:2px}
+.kasir-redeem-row .switch{position:relative;flex:none;width:44px;height:24px}
+.kasir-redeem-row .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.kasir-redeem-row .switch i{position:absolute;inset:0;background:#4a3f35;border-radius:999px;transition:background .2s}
+.kasir-redeem-row .switch i::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+.kasir-redeem-row .switch input:checked+i{background:#f49a24}
+.kasir-redeem-row .switch input:checked+i::after{left:23px}
 .kasir-member-badge button{border:0;background:none;color:#ffbe78;font-size:18px;line-height:1;padding:2px 6px;cursor:pointer}
 #admin[data-render-theme="light"] .admin-catalog-head span,#admin[data-render-theme="light"] .admin-catalog-head b{color:#9a5b22}#admin[data-render-theme="light"] .admin-catalog::-webkit-scrollbar-track,#admin[data-render-theme="light"] #adminCart::-webkit-scrollbar-track{background:#e8dfd8}#admin[data-render-theme="light"] .admin-catalog::-webkit-scrollbar-thumb,#admin[data-render-theme="light"] #adminCart::-webkit-scrollbar-thumb{background:#bd8a60}#admin[data-render-theme="light"] .transaction-count{background:#f6dfc5;color:#99530e}#admin[data-render-theme="light"] #kasirView .line-item{border-color:#ded4cd}#admin[data-render-theme="light"] #kasirView .item-copy small{color:#746c68}
 /* Sinkronisasi sesi: pusat kendali, inbox, catatan, dan koin */
