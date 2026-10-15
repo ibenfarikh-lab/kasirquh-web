@@ -1976,7 +1976,7 @@ Object.assign(Store, {
         totalTerjual: FV.increment(l.qty),
       });
     });
-    await batch.commit();
+    await __withTimeout(batch.commit(), WRITE_TIMEOUT_MS, 'Kasir tunai');
   },
 
   /* Produk: tambah (stok awal langsung) / ubah (stok via DELTA, bukan absolut) */
@@ -2074,7 +2074,7 @@ Object.assign(Store, {
             created++;
           }
         });
-        await batch.commit();
+        await __withTimeout(batch.commit(), WRITE_TIMEOUT_MS, 'Impor produk');
         done += slice.length;
         if (onProgress) onProgress(done, ops.length);
       }
@@ -2185,7 +2185,7 @@ Object.assign(Store, {
       amount: Math.round(total), note: 'Kulakan · Catatan manual',
       refId: supplier, method: 'Kas', profit: 0, itemCount: 0, createdAt: ts,
     });
-    await batch.commit();
+    await __withTimeout(batch.commit(), WRITE_TIMEOUT_MS, 'Catat belanja');
   },
 
   /* Ubah/hapus arsip catatan: HANYA arsip — stok & Pembukuan tidak dihitung ulang */
@@ -2399,7 +2399,7 @@ Object.assign(Store, {
         refId: '', method: 'Koin Warga', profit: 0, itemCount: 0, createdAt: ts,
       });
     }
-    await batch.commit();
+    await __withTimeout(batch.commit(), WRITE_TIMEOUT_MS, 'Atur koin');
   },
 
   /* Chat: kirim pesan (thread dibuat dulu agar lolos rules get()) */
