@@ -1174,15 +1174,7 @@ Object.assign(Store, {
       this.render('journal');
     }, err => this.onSubError('journal', err)));
 
-    this.onRole(db.collection('stock_notes').orderBy('date', 'desc').onSnapshot(snap => {
-      const grouped = {};
-      snap.docs.forEach(d => {
-        const note = this.mapStockNote(d);
-        (grouped[note.date] = grouped[note.date] || []).push(note);
-      });
-      S.purchaseNotes = grouped;
-      this.render('stockNotes');
-    }, err => this.onSubError('stock_notes', err)));
+    /* stock_notes TIDAK auto-load (keputusan user): admin tekan refresh manual */
 
     this.onRole(db.collection('customer_notes').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
       S.adminCustomerNotes = snap.docs.map(d => this.mapCustomerNote(d));
@@ -2520,6 +2512,24 @@ Object.assign(Store, {
       status: status,
       updatedAt: FB.serverTimestamp(),
     });
+  },
+  /* Muat stock_notes MANUAL dengan filter tanggal (tidak auto-load) */
+  async loadStockNotes(dateStr) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const db = FB.db;
+    let q = db.collection('stock_notes').orderBy('date', 'desc');
+    if (dateStr) q = q.where('date', '==', dateStr);
+    else q = q.limit(50);
+    const snap = await q.get();
+    const grouped = {};
+    snap.docs.forEach(d => {
+      const note = this.mapStockNote(d);
+      (grouped[note.date] = grouped[note.date] || []).push(note);
+    });
+    S.purchaseNotes = grouped;
+    this.render('stockNotes');
+    return Object.values(grouped).flat().length;
   },
   /* Simpan field profil pelanggan sendiri (pantauan harga, jadwal rutin).
    * Tamu: hanya sesi ini (tanpa uid). approvalStatus TIDAK ikut diubah. */
