@@ -1243,10 +1243,8 @@ Object.assign(Store, {
 
     var isFirstAdminChatLoad = true;
     var adminChatPrevUnread = {};
-    this.onRole(db.collection('chat_threads')
+    this.onRole(db.collection('chat_threads').where('type', '==', 'toko')
       .limit(50).onSnapshot(snap => {
-        /* Filter type=='toko' di klien (hindari masalah rules dengan where filter) */
-        const tokoDocs = snap.docs.filter(d => (d.data() || {}).type === 'toko');
         if (!isFirstAdminChatLoad && typeof playNotification === 'function') {
           snap.docChanges().forEach(function(change){
             var d = change.doc.data() || {};
@@ -1260,7 +1258,7 @@ Object.assign(Store, {
         }
         isFirstAdminChatLoad = false;
         snap.docChanges().forEach(function(change){ var dd = change.doc.data() || {}; adminChatPrevUnread[change.doc.id] = Number(dd.unreadAdmin) || 0; });
-        this.sortDocs(tokoDocs, 'updatedAt').forEach(d => this.upsertAdminThread(d));
+        this.sortDocs(snap.docs, 'updatedAt').forEach(d => this.upsertAdminThread(d));
         this.rebuildInboxDebounced();
         this.render('chat', 'inbox');
       }, err => this.onSubError('chat_threads', err)));
