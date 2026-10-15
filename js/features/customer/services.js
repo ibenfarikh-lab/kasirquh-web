@@ -54,7 +54,7 @@ function renderPriceAlerts(){const box=$('#priceAlertList'),rows=priceWatchList(
 
 
 // --- dari js/app.js baris 641 (pindah verbatim, tanpa ubah logika) ---
-function findProductByKeywords(keywords){const list=(keywords||[]).map(k=>String(k).toLowerCase());return S.products.find(p=>p.stock>0&&list.some(k=>p.name.toLowerCase().indexOf(k)>=0))}
+function findProductByKeywords(keywords){const list=(keywords||[]).map(k=>String(k).toLowerCase());return S.products.find(p=>p.isActive!==false&&p.stock>0&&list.some(k=>p.name.toLowerCase().indexOf(k)>=0))}
 
 
 // --- dari js/app.js baris 758 (pindah verbatim, tanpa ubah logika) ---
