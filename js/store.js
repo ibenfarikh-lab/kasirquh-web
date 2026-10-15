@@ -2510,6 +2510,17 @@ Object.assign(Store, {
     }), WRITE_TIMEOUT_MS, 'Kirim titipan');
   },
 
+  /* Ubah status titipan MANUAL oleh admin (tidak otomatis) */
+  async setTitipStatus(docId, status) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const allowed = ['baru', 'diproses', 'tersedia', 'selesai', 'dibatalkan'];
+    if (!allowed.includes(status)) throw new Error('Status tidak valid');
+    await FB.db.collection('titip_requests').doc(docId).update({
+      status: status,
+      updatedAt: FB.serverTimestamp(),
+    });
+  },
   /* Simpan field profil pelanggan sendiri (pantauan harga, jadwal rutin).
    * Tamu: hanya sesi ini (tanpa uid). approvalStatus TIDAK ikut diubah. */
   async saveCustomerDoc(patch) {
