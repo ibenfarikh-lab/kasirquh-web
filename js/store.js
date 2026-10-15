@@ -1138,12 +1138,12 @@ Object.assign(Store, {
      * di sebagian perangkat. */
     const custThread0 = this.ensureCustomerThread(uid);
     custThread0._loadingMessages = true;
-    const custMsgRef = threadRef.collection('messages').orderBy('createdAt', 'asc').limit(30);
+    const custMsgRef = threadRef.collection('messages').orderBy('createdAt', 'desc').limit(30);
     custMsgRef.get().then(snap => {
       const thread = S.directThreads.toko;
       if (!thread) return;
       thread._loadingMessages = false;
-      thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
+      thread.messages = snap.docs.map(d => this.mapThreadMessage(d)).reverse();
       isFirstChatLoad = false;
       this.render('chat');
     }).catch(() => { /* listener yang menangani error */ });
@@ -1157,7 +1157,7 @@ Object.assign(Store, {
     this.onRole(custMsgRef.onSnapshot(snap => {
       const thread = this.ensureCustomerThread(uid);
       thread._loadingMessages = false;
-      thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
+      thread.messages = snap.docs.map(d => this.mapThreadMessage(d)).reverse();
       if (!isFirstChatLoad && typeof playNotification === 'function') {
         snap.docChanges().forEach(function(change){
           if (change.type !== 'added') return;
@@ -1330,7 +1330,7 @@ Object.assign(Store, {
     const th0 = S.directThreads[threadId];
     if (th0) { th0._loadingMessages = true; this.render('chat'); }
     const ref = FB.db.collection('chat_threads').doc(threadId)
-      .collection('messages').orderBy('createdAt', 'asc').limit(30);
+      .collection('messages').orderBy('createdAt', 'desc').limit(30);
     const clearLoading = () => {
       const th = S.directThreads[threadId];
       if (th) th._loadingMessages = false;
@@ -1342,7 +1342,7 @@ Object.assign(Store, {
       const thread = S.directThreads[threadId];
       if (!thread || S.activeDirectThread !== threadId) return;
       clearLoading();
-      thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
+      thread.messages = snap.docs.map(d => this.mapThreadMessage(d)).reverse();
       this.render('chat');
     }).catch(() => { /* listener yang menangani error */ });
     /* Batas aman: jangan biarkan "Memuat…" macet selamanya. */
@@ -1357,7 +1357,7 @@ Object.assign(Store, {
     this._msgUnsub = ref.onSnapshot(snap => {
       const thread = S.directThreads[threadId] || this.upsertAdminThread({ id: threadId, data: () => ({}) });
       clearLoading();
-      thread.messages = snap.docs.map(d => this.mapThreadMessage(d));
+      thread.messages = snap.docs.map(d => this.mapThreadMessage(d)).reverse();
       this.render('chat');
     }, err => {
       clearLoading();
