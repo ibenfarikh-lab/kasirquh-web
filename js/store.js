@@ -579,6 +579,10 @@ Object.assign(Store, {
     FB.auth.onAuthStateChanged(async user => {
       try {
         await this.handleAuthState(user);
+        /* FCM: daftarkan token push (non-blocking, abaikan gagal) */
+        if (window.FCM && user) {
+          FCM.init().then(ok => { if (ok) FCM.registerToken().catch(()=>{}); }).catch(()=>{});
+        }
       } finally {
         /* Hanya callback pertama yang menutup gerbang boot. Perubahan auth
          * berikutnya tetap berjalan normal tanpa menahan UI. */
