@@ -60,6 +60,7 @@ const S = {
   sessionName: null,
   sessionStartedAt: null,
   activeCustomerId: null,
+  kasirMember: null, /* Opsi A: member teridentifikasi di kasir */
   isGuest: true,
   pendingGuestAction: null,
   gatewayTimer: null,
@@ -1847,11 +1848,14 @@ Object.assign(Store, {
         stock: FV.increment(-l.qty), updatedAt: ts,
       });
     });
+    /* Opsi A: catat member jika teridentifikasi di kasir */
+    const km = (typeof S !== 'undefined' && S.kasirMember) || null;
     batch.set(db.collection('journal').doc(), {
       type: 'pemasukan', category: 'penjualan',
       amount: Math.round(total),
       note: 'Penjualan · Kasir', refId: '', method: 'Tunai',
       profit: Math.round(profit || 0), itemCount: itemCount || 0,
+      customerId: km ? km.uid : '', customerName: km ? km.name : '',
       createdAt: ts,
     });
     /* Naikkan counter penjualan per produk agar masuk Sedang Laris */
@@ -2223,7 +2227,9 @@ Object.assign(Store, {
   async approveCustomer(uid) {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
-    await FB.db.collection('customers').doc(uid).update({ approvalStatus: 'approved' });
+    /* Opsi A: generate memberCode unik KQ-XXXXXXXX (8 char awal UID, uppercase) */
+    const memberCode = 'KQ-' + String(uid).slice(0, 8).toUpperCase();
+    await FB.db.collection('customers').doc(uid).update({ approvalStatus: 'approved', memberCode: memberCode });
   },
 
   async rejectCustomer(uid) {
