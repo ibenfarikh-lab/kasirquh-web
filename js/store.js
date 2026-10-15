@@ -2349,12 +2349,27 @@ Object.assign(Store, {
     const header = { type: 'toko', customerId: customerId, lastMessage: text, updatedAt: ts };
     header[unreadField] = FB.FieldValue.increment(1);
     await __withTimeout(threadRef.set(header, { merge: true }), WRITE_TIMEOUT_MS, 'Kirim pesan');
-    await __withTimeout(threadRef.collection('messages').add({
+    const msgRef = await __withTimeout(threadRef.collection('messages').add({
       senderId: side === 'admin' ? 'admin' : customerId,
       senderRole: side,
       text: text,
       createdAt: ts,
     }), WRITE_TIMEOUT_MS, 'Kirim pesan');
+    /* Optimistic UI: langsung tampilkan pesan tanpa tunggu subscription */
+    try {
+      const threadKey = side === 'admin' ? threadId : 'toko';
+      const thread = S.directThreads[threadKey];
+      if (thread) {
+        thread.messages = thread.messages || [];
+        thread.messages.push({
+          id: msgRef.id,
+          side: side,
+          time: 'Baru saja',
+          text: text,
+        });
+        thread.lastMessage = text;
+      }
+    } catch (e) { /* abaikan, subscription akan sync */ }
     this.render('chat');
   },
 
