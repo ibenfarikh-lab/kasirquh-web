@@ -64,7 +64,7 @@ body[data-ui-theme="dark"] .metric-card,body[data-ui-theme="dark"] .metric-card.
 body[data-ui-theme="dark"] .dashboard-shortcut{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .pos-header-scan{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .moderate-delete{background:#0a0908;border:1px solid #2a2a2a;color:#f1aaa1}
-body[data-ui-theme="dark"] .admin-product{background:#0a0908;border-color:#2a2a2a}
+body[data-ui-theme="dark"] .admin-product{background:#0a0908;border:1px solid #d4d4d4}
 body[data-ui-theme="dark"] .transaction{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .control-intro{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .metric-card.primary small,body[data-ui-theme="dark"] .metric-card.primary span{color:#ffc276}
