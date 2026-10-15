@@ -59,6 +59,7 @@ body[data-ui-theme="light"] .kabar-label{color:#b5670b}
 body[data-ui-theme="light"] .kabar-dot{background:#c8c0ba}
 body[data-ui-theme="dark"] .customer-head{background:rgba(25,23,24,.94)}
 body[data-ui-theme="dark"] .admin{background:#000000}
+body[data-ui-theme="dark"] .metric-card,body[data-ui-theme="dark"] .metric-card.primary{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .menu-launch,body[data-ui-theme="dark"] .feature-launch{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .pos-search,body[data-ui-theme="dark"] .pos-sticky-head,body[data-ui-theme="dark"] .pos-scan-button,body[data-ui-theme="dark"] .pos-product-empty{background:#0a0908;border-color:#2a2a2a}
 body[data-ui-theme="dark"] .inbox-card,body[data-ui-theme="dark"] .inbox-group-head,body[data-ui-theme="dark"] .inbox-filter,body[data-ui-theme="dark"] .inbox-actions{background:#0a0908;border-color:#2a2a2a}
