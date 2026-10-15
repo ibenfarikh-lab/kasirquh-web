@@ -2142,6 +2142,20 @@ Object.assign(Store, {
     });
   },
 
+  /* Ubah status pesanan: menunggu → dikemas → dikirim (admin) */
+  async setOrderStatus(orderId, status) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const allowed = ['dikemas', 'dikirim'];
+    if (!allowed.includes(status)) throw new Error('Status tidak valid');
+    const db = FB.db;
+    const ref = db.collection('orders').doc(orderId);
+    const snap = await ref.get();
+    if (!snap.exists) throw new Error('Pesanan tidak ditemukan');
+    const d = snap.data() || {};
+    if (d.status === 'selesai' || d.status === 'dibatalkan') throw new Error('Pesanan sudah selesai/dibatalkan');
+    await ref.update({ status: status, updatedAt: FB.serverTimestamp() });
+  },
   /* Batalkan pesanan (admin): kembalikan stok + koin, status → dibatalkan */
   async cancelOrder(orderId) {
     if (!this.needOnline()) throw __offlineError();
