@@ -1,5 +1,54 @@
 (function(){
 
+/* ============ PENCATAT ERROR (2026-10-16) ============
+ * Error tidak lagi cuma di console — dicatat agar terlihat.
+ * - S.errorLog: 50 error terakhir di memori (untuk halaman Log Error admin)
+ * - Firestore `client_errors`: untuk pantau remote (throttle 1/menit)
+ * - Toast hanya untuk error kritis (opsional per panggilan)
+ */
+if (!Array.isArray(S.errorLog)) S.errorLog = [];
+var _lastRemoteErrorAt = 0;
+function logError(source, err, opts) {
+  opts = opts || {};
+  var msg = '';
+  if (err && err.message) msg = String(err.message);
+  else if (typeof err === 'string') msg = err;
+  else { try { msg = String(err); } catch (e) { msg = 'Unknown error'; } }
+  var entry = {
+    at: new Date().toISOString(),
+    source: String(source || 'app'),
+    message: msg.slice(0, 500),
+  };
+  S.errorLog.push(entry);
+  if (S.errorLog.length > 50) S.errorLog.splice(0, S.errorLog.length - 50);
+  if (opts.toast && typeof toast === 'function') {
+    try { toast('Terjadi galat: ' + msg.slice(0, 120)); } catch (e) {}
+  }
+  /* Kirim remote: throttle 1/menit, hanya saat online & login */
+  try {
+    var now = Date.now();
+    if (now - _lastRemoteErrorAt < 60000) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    if (!window.FB || !FB.db || !FB.auth || !FB.auth.currentUser) return;
+    _lastRemoteErrorAt = now;
+    FB.db.collection('client_errors').add({
+      at: FB.serverTimestamp ? FB.serverTimestamp() : new Date(),
+      source: entry.source,
+      message: entry.message,
+      url: String(location.pathname || ''),
+      uid: FB.auth.currentUser.uid,
+    }).catch(function(){ /* best-effort */ });
+  } catch (e) {}
+}
+window.KasirQuhLogError = logError;
+window.addEventListener('error', function(e) {
+  logError('window', e.message || (e.error && e.error.message));
+});
+window.addEventListener('unhandledrejection', function(e) {
+  var r = e.reason;
+  logError('promise', r && r.message ? r.message : r);
+});
+
 document.addEventListener('input',event=>{if(event.target.matches&&event.target.matches('input[inputmode="numeric"]'))formatNumericInput(event.target)});
 
 
@@ -590,6 +639,36 @@ Store.whenAuthReady().then(()=>safeInit('Gateway',startGateway));
  * memanggilnya dari luar IIFE — tanpa ini klik daftar chat admin selalu
  * ReferenceError dan toast 'Gagal buka chat'. */
 window.KasirQuhUI={go:go,stopGatewayTimer:stopGatewayTimer,syncGatewayPromo:syncGatewayPromo,openDirectChat:openDirectChat};
+
+/* ============ LOG ERROR (2026-10-16) ============ */
+function renderErrorLog(){
+  var box = document.getElementById('errorLogList');
+  if (!box) return;
+  var logs = (S.errorLog || []).slice().reverse();
+  if (!logs.length) {
+    box.innerHTML = '<p class="admin-menu-note">Belum ada galat tercatat. Bagus!</p>';
+    return;
+  }
+  box.innerHTML = logs.map(function(e){
+    var t = '';
+    try { t = new Date(e.at).toLocaleString('id-ID'); } catch (x) { t = e.at || ''; }
+    return '<article class="note-card" style="margin-bottom:8px"><header><h3>' +
+      String(e.source || '').replace(/</g, '&lt;') +
+      '</h3><small>' + t + '</small></header><p>' +
+      String(e.message || '').replace(/</g, '&lt;') + '</p></article>';
+  }).join('');
+}
+var _clearBtn = document.getElementById('clearErrorLogBtn');
+if (_clearBtn) _clearBtn.onclick = function(){
+  S.errorLog = [];
+  renderErrorLog();
+  if (typeof toast === 'function') toast('Log error dihapus');
+};
+/* Render saat modal dibuka */
+document.addEventListener('click', function(e){
+  var t = e.target && e.target.closest ? e.target.closest('[data-open-sheet="errorLogModal"]') : null;
+  if (t) setTimeout(renderErrorLog, 100);
+});
 })();
 
 

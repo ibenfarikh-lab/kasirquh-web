@@ -282,6 +282,12 @@ const Store = {
 
   onSubError(label, error, quiet) {
     console.error('[KasirQuh] langganan "' + label + '" gagal:', error);
+    /* Catat ke log error terlihat (2026-10-16) */
+    try {
+      if (typeof window.KasirQuhLogError === 'function') {
+        window.KasirQuhLogError('firestore:' + label, error);
+      }
+    } catch (e) {}
     if (!quiet && error && error.code === 'permission-denied') {
       this.notifyUser('Akses data "' + label + '" ditolak — periksa aturan Firestore');
     }
