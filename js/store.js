@@ -2370,6 +2370,16 @@ Object.assign(Store, {
         thread.lastMessage = text;
       }
     } catch (e) { /* abaikan, subscription akan sync */ }
+    /* Refresh paksa: pastikan data terbaru tampil */
+    try {
+      if (side === 'customer' && S.activeCustomerId) {
+        const freshSnap = await threadRef.collection('messages').orderBy('createdAt', 'asc').limit(30).get();
+        const thread = S.directThreads['toko'];
+        if (thread && freshSnap) {
+          thread.messages = freshSnap.docs.map(d => this.mapThreadMessage(d));
+        }
+      }
+    } catch (e) { /* abaikan, optimistic UI sudah tampil */ }
     this.render('chat');
   },
 
