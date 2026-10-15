@@ -10,8 +10,28 @@ function setProfileIdentity(name){const safe=cleanInput(name)||'Pelanggan';$('#p
 function barcodeRects(value,y,height){let x=18,out='';('*'+value+'*').split('').forEach(ch=>{S.code39[ch].split('').forEach((kind,i)=>{const w=kind==='w'?5:2;if(i%2===0)out+=`<rect x="${x}" y="${y}" width="${w}" height="${height}" fill="#171313"/>`;x+=w});x+=2});return {rects:out,width:x+18}}
 
 
-// --- dari js/app.js baris 351 (pindah verbatim, tanpa ubah logika) ---
-function renderAppBarcode(){const made=barcodeRects('20261005',8,78);const svg=$('#appBarcode');svg.setAttribute('viewBox',`0 0 ${made.width} 104`);svg.innerHTML=`<rect width="100%" height="104" fill="#fff"/>${made.rects}<text x="${made.width/2}" y="99" text-anchor="middle" font-family="monospace" font-size="10" fill="#171313">*20261005*</text>`}
+// --- Barcode member: UNIK per member, format KQ-XXXXXXXX (8 karakter awal UID Auth) ---
+function memberBarcodeCode(){
+  const uid = (window.S && S.activeCustomerId) || '';
+  if (!uid) return null;
+  return 'KQ-' + String(uid).slice(0, 8).toUpperCase();
+}
+
+function renderAppBarcode(){
+  const code = memberBarcodeCode();
+  const svg=$('#appBarcode');
+  if (!svg) return;
+  if (!code) {
+    svg.innerHTML = '<text x="160" y="52" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#777">Login untuk barcode member</text>';
+    return;
+  }
+  const made=barcodeRects(code,8,78);
+  svg.setAttribute('viewBox',`0 0 ${made.width} 104`);
+  svg.innerHTML=`<rect width="100%" height="104" fill="#fff"/>${made.rects}<text x="${made.width/2}" y="99" text-anchor="middle" font-family="monospace" font-size="10" fill="#171313">*${code}*</text>`;
+  // Update label teks di bawah barcode
+  const label = svg.closest('.code-card')?.querySelector('strong');
+  if (label) label.textContent = code;
+}
 
 
 // --- dari js/app.js baris 651 (pindah verbatim, tanpa ubah logika) ---
