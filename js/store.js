@@ -905,7 +905,7 @@ Object.assign(Store, {
     });
   },
 
-  async joinPatungan(patunganId, slots) {
+  async joinPatungan(patunganId, slots, payMethod) {
     if (!this.needOnline()) throw __offlineError();
     if (!S.activeCustomerId) throw new Error('Login dulu untuk ikut patungan');
     const db = FB.db, ref = db.collection('patungan').doc(patunganId);
@@ -920,11 +920,31 @@ Object.assign(Store, {
       const parts = Array.isArray(d.participants) ? d.participants.slice() : [];
       const me = parts.find(p => p.customerId === S.activeCustomerId);
       if (me) throw new Error('Kamu sudah ikut patungan ini');
-      parts.push({ customerId: S.activeCustomerId, name: S.sessionName || 'Warga', slots: want, joinedAt: new Date().toISOString() });
+      parts.push({ customerId: S.activeCustomerId, name: S.sessionName || 'Warga', slots: want, joinedAt: new Date().toISOString(), paymentStatus: 'menunggu bayar', paymentMethod: payMethod === 'transfer' ? 'transfer' : 'tunai' });
       t.update(ref, { participants: parts, filledSlots: filled + want, status: (filled + want >= total) ? 'penuh' : 'aktif', updatedAt: FB.serverTimestamp() });
     });
   },
 
+  /* Konfirmasi pembayaran patungan oleh admin: menunggu bayar → lunas */
+  async confirmPatunganPayment(patunganId, customerId, method) {
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const db = FB.db, ref = db.collection('patungan').doc(patunganId);
+    await db.runTransaction(async t => {
+      const snap = await t.get(ref);
+      if (!snap.exists) throw new Error('Patungan tidak ditemukan');
+      const d = snap.data() || {};
+      const parts = Array.isArray(d.participants) ? d.participants.slice() : [];
+      const idx = parts.findIndex(p => p.customerId === customerId);
+      if (idx < 0) throw new Error('Peserta tidak ditemukan');
+      parts[idx] = Object.assign({}, parts[idx], {
+        paymentStatus: 'lunas',
+        paymentMethod: method || parts[idx].paymentMethod || 'tunai',
+        paidAt: new Date().toISOString(),
+      });
+      t.update(ref, { participants: parts, updatedAt: FB.serverTimestamp() });
+    });
+  },
   async setPatunganStatus(id, status) {
     if (!this.needOnline()) throw __offlineError();
     this.assertAdmin();
