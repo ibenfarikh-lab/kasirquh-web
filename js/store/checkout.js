@@ -157,6 +157,21 @@ const StoreCheckout = {
     redeemCoins = Math.max(0, Math.round(Number(redeemCoins) || 0));
     earnedCoins = Math.max(0, Math.round(Number(earnedCoins) || 0));
     const coinVal = Math.max(1, Math.round(Number(S.coinValue) || 1));
+    /* [FIX SOP 2026-10-16] Cegah koin minus: S.kasirMember.coins dibaca sekali
+     * saat scan (bisa stale jika saldo berubah sebelum bayar).
+     * Baca ulang saldo aktual, clamp redeemCoins, hitung ulang total konsisten. */
+    if (km && km.uid && redeemCoins > 0) {
+      let actualCoins = 0;
+      try {
+        const cs = await db.collection('customers').doc(km.uid).get();
+        actualCoins = Math.max(0, Math.round(Number(cs.data() && cs.data().coins) || 0));
+      } catch (e) { actualCoins = 0; }
+      if (redeemCoins > actualCoins) {
+        redeemCoins = actualCoins;
+        const rawTotal = lines.reduce((s, l) => s + (Number(l.total) || 0), 0);
+        total = Math.max(0, rawTotal - redeemCoins * coinVal);
+      }
+    }
     batch.set(db.collection('journal').doc(), {
       type: 'pemasukan', category: 'penjualan',
       amount: Math.round(total),
