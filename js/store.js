@@ -1612,6 +1612,14 @@ Object.assign(Store, {
       }
 
       if (isAdmin) {
+        // [2026-10-16] Cegah admin salah pintu: jika login via pintu pelanggan,
+        // jangan bentuk sesi admin — signOut agar loginCustomer menolak tegas.
+        if (S._loginDoor === 'customer') {
+          S._loginDoor = null;
+          try { await FB.auth.signOut(); } catch (e) {}
+          this.render('session', 'profile');
+          return;
+        }
         S.isGuest = false;
         S.sessionRole = 'admin';
         S.sessionName = 'Admin Warunge Mimi';
@@ -1716,29 +1724,22 @@ Object.assign(Store, {
   async loginCustomer(email, password) {
     if (!this.needOnline()) throw __offlineError();
     let cred;
+    // [2026-10-16] Tandai pintu login agar handleAuthState bisa cegah admin salah pintu.
+    S._loginDoor = 'customer';
     try {
       cred = await FB.auth.signInWithEmailAndPassword(email, password);
     } catch (error) {
+      S._loginDoor = null;
       throw new Error(this.authErrorMessage(error));
     }
     const uid = cred.user.uid;
-    const reject = async msg => { try { await FB.auth.signOut(); } catch (e) {} throw new Error(msg); };
-    // [2026-10-16] TOLAK TEGAS admin di pintu pelanggan (kembali ke base building:
-    // hanya 3 mode — Guest, Customer, Admin). Admin wajib lewat pintu admin (logo toko).
-    // Cek claim dengan retry (token custom claim kadang belum siap tepat setelah sign-in).
-    let isAdminClaim = false;
-    for (let attempt = 0; attempt < 3 && !isAdminClaim; attempt++) {
-      try {
-        const u = (FB.auth && FB.auth.currentUser) || cred.user;
-        const token = await u.getIdTokenResult(attempt > 0);
-        isAdminClaim = !!(token && token.claims && token.claims.admin === true);
-      } catch (e) { isAdminClaim = false; }
-      if (!isAdminClaim && attempt < 2) {
-        await new Promise(r => setTimeout(r, 800));
-      }
-    }
-    if (isAdminClaim) {
-      await reject('Ini akun admin — masuk lewat pintu admin (ketuk logo toko)');
+    const reject = async msg => { S._loginDoor = null; try { await FB.auth.signOut(); } catch (e) {} throw new Error(msg); };
+    // Tunggu sebentar agar handleAuthState sempat jalan (cegah admin salah pintu).
+    // Jika handleAuthState sudah signOut, currentUser null → tolak tegas.
+    await new Promise(r => setTimeout(r, 1200));
+    S._loginDoor = null;
+    if (!FB.auth.currentUser) {
+      throw new Error('Ini akun admin — masuk lewat pintu admin (ketuk logo toko)');
     }
     let snap = null;
     try {
