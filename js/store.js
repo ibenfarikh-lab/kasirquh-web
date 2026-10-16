@@ -57,6 +57,7 @@ const S = {
   navMotion: true, // preferensi admin (persist di store_settings/main.adminNavMotion)
   activeRole: null,
   sessionRole: null,
+  _loginDoor: null, // 'customer' saat login via pintu pelanggan (untuk cegah admin salah pintu)
   sessionName: null,
   sessionStartedAt: null,
   activeCustomerId: null,
@@ -1734,9 +1735,9 @@ Object.assign(Store, {
     }
     const uid = cred.user.uid;
     const reject = async msg => { S._loginDoor = null; try { await FB.auth.signOut(); } catch (e) {} throw new Error(msg); };
-    // Tunggu sebentar agar handleAuthState sempat jalan (cegah admin salah pintu).
-    // Jika handleAuthState sudah signOut, currentUser null → tolak tegas.
-    await new Promise(r => setTimeout(r, 1200));
+    // Tunggu agar handleAuthState sempat jalan (cegah admin salah pintu).
+    // 2500ms > retry 1500ms di handleAuthState (tutup lubang race saat jaringan blip).
+    await new Promise(r => setTimeout(r, 2500));
     S._loginDoor = null;
     if (!FB.auth.currentUser) {
       throw new Error('Ini akun admin — masuk lewat pintu admin (ketuk logo toko)');
