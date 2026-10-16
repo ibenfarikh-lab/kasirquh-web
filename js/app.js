@@ -573,6 +573,9 @@ function handleBarcodeCode(rawCode){
 }
 /* Opsi A: lookup member by memberCode untuk identifikasi di kasir */
 async function identifyKasirMember(code){
+  /* [FIX SOP 2026-10-16] Validasi format: KQ- + 8 alfanumerik.
+   * Tanpa ini, "KQ-", "KQ-!!!", "KQ-WM-2026" memicu query sia-sia. */
+  if(!/^KQ-[A-Z0-9]{8}$/i.test(String(code||''))){toast('Kode member tidak valid');return;}
   try{
     if(!window.FB||!FB.db)throw new Error('offline');
     const snap=await FB.db.collection('customers').where('memberCode','==',code).limit(1).get();
