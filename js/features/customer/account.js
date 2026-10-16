@@ -53,6 +53,8 @@ function renderCustomerNotes(){const box=$('#customerNotes');if(!box)return;cons
 // --- dari js/app.js baris 928 (pindah verbatim, tanpa ubah logika) ---
 function renderAccountTiles(){
   try{
+    // Render kartu member (pastikan barcode tampil setelah login)
+    if (typeof renderMemberCard === 'function') renderMemberCard();
     // Update meta pesanan di halaman akun
     const orderMeta=$('#accountOrderMeta');
     if(orderMeta){
