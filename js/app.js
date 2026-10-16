@@ -578,8 +578,12 @@ async function identifyKasirMember(code){
   if(!/^KQ-[A-Z0-9]{8}$/i.test(String(code||''))){toast('Kode member tidak valid');return;}
   try{
     if(!window.FB||!FB.db)throw new Error('offline');
-    const snap=await FB.db.collection('customers').where('memberCode','==',code).limit(1).get();
+    const snap=await FB.db.collection('customers').where('memberCode','==',code).limit(2).get();
     if(snap.empty){toast('Member tidak ditemukan');return;}
+    /* [FIX SOP 2026-10-16 #2] Deteksi kolisi memberCode: 8 char awal UID
+     * secara teori bisa sama antar user. Tolak daripada salah identifikasi
+     * (soal uang & identitas) — admin selesaikan manual di Data Pelanggan. */
+    if(snap.size>1){toast('Data member ganda — hubungi admin');return;}
     const doc=snap.docs[0],data=doc.data()||{};
     if(data.approvalStatus!=='approved'){toast('Member belum disetujui');return;}
     S.kasirMember={uid:doc.id,name:data.name||'Member',memberCode:code,coins:Math.max(0,Math.round(Number(data.coins)||0))};
