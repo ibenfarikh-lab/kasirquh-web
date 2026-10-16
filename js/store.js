@@ -1725,12 +1725,13 @@ Object.assign(Store, {
     const reject = async msg => { try { await FB.auth.signOut(); } catch (e) {} throw new Error(msg); };
     // [2026-10-16] TOLAK TEGAS admin di pintu pelanggan (kembali ke base building:
     // hanya 3 mode — Guest, Customer, Admin). Admin wajib lewat pintu admin (logo toko).
-    let claims = null;
+    // Cek via getIdTokenResult TANPA force-refresh (sama seperti handleAuthState).
+    let isAdminClaim = false;
     try {
-      const token = await cred.user.getIdTokenResult(true);
-      claims = (token && token.claims) || {};
-    } catch (e) { claims = null; }
-    if (claims && claims.admin === true) {
+      const token = await cred.user.getIdTokenResult();
+      isAdminClaim = !!(token && token.claims && token.claims.admin === true);
+    } catch (e) { isAdminClaim = false; }
+    if (isAdminClaim) {
       await reject('Ini akun admin — masuk lewat pintu admin (ketuk logo toko)');
     }
     let snap = null;
