@@ -157,15 +157,22 @@ const StoreCheckout = {
     redeemCoins = Math.max(0, Math.round(Number(redeemCoins) || 0));
     earnedCoins = Math.max(0, Math.round(Number(earnedCoins) || 0));
     const coinVal = Math.max(1, Math.round(Number(S.coinValue) || 1));
-    /* [FIX SOP 2026-10-16] Cegah koin minus: S.kasirMember.coins dibaca sekali
-     * saat scan (bisa stale jika saldo berubah sebelum bayar).
-     * Baca ulang saldo aktual, clamp redeemCoins, hitung ulang total konsisten. */
-    if (km && km.uid && redeemCoins > 0) {
-      let actualCoins = 0;
+    /* [FIX SOP 2026-10-16 #4] Validasi ulang member saat bayar: antara scan
+     * dan pembayaran, member bisa di-reject/dihapus admin. Satu read dokumen
+     * dipakai untuk dua cek (#3 koin & #4 approval) — efisien, tanpa read ganda. */
+    let memberDoc = null;
+    if (km && km.uid) {
       try {
-        const cs = await db.collection('customers').doc(km.uid).get();
-        actualCoins = Math.max(0, Math.round(Number(cs.data() && cs.data().coins) || 0));
-      } catch (e) { actualCoins = 0; }
+        memberDoc = await db.collection('customers').doc(km.uid).get();
+      } catch (e) { memberDoc = null; }
+      const mdata = memberDoc && memberDoc.exists ? memberDoc.data() : null;
+      if (!mdata || mdata.approvalStatus !== 'approved') {
+        throw new Error('Member tidak valid — transaksi dibatalkan');
+      }
+    }
+    /* [FIX SOP 2026-10-16 #3] Cegah koin minus — pakai ulang memberDoc di atas. */
+    if (km && km.uid && redeemCoins > 0 && memberDoc) {
+      const actualCoins = Math.max(0, Math.round(Number(memberDoc.data().coins) || 0));
       if (redeemCoins > actualCoins) {
         redeemCoins = actualCoins;
         const rawTotal = lines.reduce((s, l) => s + (Number(l.total) || 0), 0);
