@@ -567,3 +567,8 @@ body[data-ui-theme="dark"] .det-info.acc b{color:#ff9b3e}
 .member-card-body strong{display:block;margin-top:6px;font-family:monospace;font-size:15px;letter-spacing:2px;color:#242329}
 @media(prefers-color-scheme:dark){.member-card-section{background:#382c22;border-color:#6b4c2e}.member-card-head small{color:#d7b88f}.member-card-body{background:#1a1714}.member-card-body strong{color:#f5efe8}}
 body[data-ui-theme="light"] .member-card-section{background:#fff7ed;border-color:#f0d9b5}
+
+/* [2026-10-17] Arsitektur (keputusan user): semua modal menjadi halaman penuh; bottom sheet hanya untuk Teman Belanja (#aiPanel, bukan .modal) */
+.modal{align-items:stretch}
+.modal .sheet{height:100dvh;max-height:100dvh;border-radius:0}
+.modal .sheet-handle{display:none}
