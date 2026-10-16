@@ -554,3 +554,16 @@ body[data-ui-theme="dark"] .det-info.acc b{color:#ff9b3e}
 .product-data-filters{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:10px}
 .product-data-filters .pos-search{margin:0}
 .product-data-filters select{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 10px}
+
+/* Kartu member di halaman akun */
+.member-card-section{border:1px solid #eccb9e;background:#fff2df;border-radius:15px;padding:12px;margin:12px 0}
+.member-card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.member-card-head .icon{color:#be6c0b;width:22px;height:22px}
+.member-card-head b,.member-card-head small{display:block}
+.member-card-head b{font-size:13px}
+.member-card-head small{font-size:9px;color:#8a6844}
+.member-card-body{background:#fff;border-radius:12px;padding:12px;text-align:center}
+.member-barcode{width:100%;max-width:320px;height:auto;display:block;margin:0 auto}
+.member-card-body strong{display:block;margin-top:6px;font-family:monospace;font-size:15px;letter-spacing:2px;color:#242329}
+@media(prefers-color-scheme:dark){.member-card-section{background:#382c22;border-color:#6b4c2e}.member-card-head small{color:#d7b88f}.member-card-body{background:#1a1714}.member-card-body strong{color:#f5efe8}}
+body[data-ui-theme="light"] .member-card-section{background:#fff7ed;border-color:#f0d9b5}

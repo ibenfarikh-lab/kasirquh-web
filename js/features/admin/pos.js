@@ -14,7 +14,7 @@ function kasirEarnedCoins(total){
 /* Opsi B: maksimal koin yang bisa ditukar = min(saldo, 50% total) */
 function kasirMaxRedeem(total){
   const m=S.kasirMember;
-  if(!m||!S.coinProgramEnabled||!S.coinRedeemEnabled)return 0;
+  if(!m||!S.coinProgramEnabled)return 0;
   const pct=Math.min(100,Math.max(0,Math.round(Number(S.coinRedeemPercent)||0)));
   const val=Math.max(1,Math.round(Number(S.coinValue)||1));
   if(pct<=0||val<=0)return 0;

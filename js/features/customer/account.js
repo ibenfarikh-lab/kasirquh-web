@@ -18,19 +18,31 @@ function memberBarcodeCode(){
 }
 
 function renderAppBarcode(){
-  const code = memberBarcodeCode();
+  // Legacy: modal barcodeModal sudah dihapus, fungsi ini jadi no-op aman
   const svg=$('#appBarcode');
   if (!svg) return;
+  renderMemberCardBarcode(svg, null);
+}
+
+/* Kartu member di halaman akun: render barcode + kode */
+function renderMemberCardBarcode(svg, labelEl){
+  const code = memberBarcodeCode();
   if (!code) {
-    svg.innerHTML = '<text x="160" y="52" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#777">Login untuk barcode member</text>';
+    svg.innerHTML = '<text x="160" y="52" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#777">Login untuk kartu member</text>';
+    if (labelEl) labelEl.textContent = '-';
     return;
   }
   const made=barcodeRects(code,8,78);
   svg.setAttribute('viewBox',`0 0 ${made.width} 104`);
   svg.innerHTML=`<rect width="100%" height="104" fill="#fff"/>${made.rects}<text x="${made.width/2}" y="99" text-anchor="middle" font-family="monospace" font-size="10" fill="#171313">*${code}*</text>`;
-  // Update label teks di bawah barcode
-  const label = svg.closest('.code-card')?.querySelector('strong');
-  if (label) label.textContent = code;
+  if (labelEl) labelEl.textContent = code;
+}
+
+function renderMemberCard(){
+  const svg=$('#memberCardBarcode');
+  if (!svg) return;
+  const label=$('#memberCardCode');
+  renderMemberCardBarcode(svg, label);
 }
 
 
