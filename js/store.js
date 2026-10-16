@@ -1722,6 +1722,17 @@ Object.assign(Store, {
       throw new Error(this.authErrorMessage(error));
     }
     const uid = cred.user.uid;
+    const reject = async msg => { try { await FB.auth.signOut(); } catch (e) {} throw new Error(msg); };
+    // [2026-10-16] TOLAK TEGAS admin di pintu pelanggan (kembali ke base building:
+    // hanya 3 mode — Guest, Customer, Admin). Admin wajib lewat pintu admin (logo toko).
+    let claims = null;
+    try {
+      const token = await cred.user.getIdTokenResult(true);
+      claims = (token && token.claims) || {};
+    } catch (e) { claims = null; }
+    if (claims && claims.admin === true) {
+      await reject('Ini akun admin — masuk lewat pintu admin (ketuk logo toko)');
+    }
     let snap = null;
     try {
       snap = await FB.db.collection('customers').doc(uid).get();
@@ -1730,7 +1741,6 @@ Object.assign(Store, {
       throw new Error(this.authErrorMessage(error));
     }
     const data = snap && snap.exists ? snap.data() : null;
-    const reject = async msg => { try { await FB.auth.signOut(); } catch (e) {} throw new Error(msg); };
     if (!data) await reject('Akun tidak ditemukan, silakan daftar dulu');
     if (data.approvalStatus === 'pending') await reject('Pendaftaran masih menunggu persetujuan warung');
     if (data.approvalStatus === 'rejected') await reject('Pendaftaran ditolak');
