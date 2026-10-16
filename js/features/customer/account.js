@@ -11,16 +11,10 @@ function barcodeRects(value,y,height){let x=18,out='';('*'+value+'*').split('').
 
 
 // --- Barcode member: UNIK per member, format KQ-XXXXXXXX (8 karakter awal UID Auth) ---
-// [2026-10-16] Ikut native: hitung langsung dari Firebase Auth UID,
-// JANGAN tunggu S.activeCustomerId (yang baru di-set setelah dokumen Firestore dibaca)
 function memberBarcodeCode(){
-  let uid = '';
-  try {
-    if (window.FB && FB.auth && FB.auth.currentUser) uid = FB.auth.currentUser.uid || '';
-  } catch (e) {}
-  if (!uid && window.S && S.activeCustomerId) uid = S.activeCustomerId;
+  const uid = (window.S && S.activeCustomerId) || '';
   if (!uid) return null;
-  return 'KQ-' + String(uid).replace(/[^A-Za-z0-9]/g, '').slice(0, 8).toUpperCase();
+  return 'KQ-' + String(uid).slice(0, 8).toUpperCase();
 }
 
 function renderAppBarcode(){
