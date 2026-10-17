@@ -430,6 +430,7 @@ const StoreCore = {  /* Diisi js/app.js saat boot: nama -> fungsi render, dan (m
       email: String(d.email || ''),
       wa: String(d.wa || ''),
       address: 'Alamat belum diisi',
+      coins: Math.max(0, Math.floor(Number(d.coins) || 0)),
       spend: 0,
       history: [],
     };

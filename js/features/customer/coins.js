@@ -158,3 +158,31 @@ function renderGameTile(){
   if(replayBtn&&!replayBtn.dataset.bound){replayBtn.dataset.bound='1';replayBtn.onclick=function(){
     var p=$('#gameClaimPanel');if(p)p.hidden=true;var f=$('#gameFrame');if(f)f.src='games/tangkap-diskon.html?v=20261020ac';};}
 }
+
+/* --- Admin: daftar saldo koin pelanggan (di modal Koin Warga) ---
+ * Ikut pola native "Ubah saldo koin pelanggan": daftar + ketuk untuk koreksi.
+ * S.customerData sudah memuat semua pelanggan (field coins dipetakan). */
+function renderCoinCustomerList(){
+  var list=$('#coinCustomerList');if(!list)return;
+  var q=($('#coinCustomerSearch')&&$('#coinCustomerSearch').value||'').toLowerCase();
+  var rows=(S.customerData||[]).filter(function(x){
+    return !q||String(x.name||'').toLowerCase().indexOf(q)>=0;
+  });
+  list.innerHTML=rows.length?rows.map(function(x){
+    return '<button class="customer-row" data-adjust-coin="'+x.id+'"><span class="avatar">'+escapeHtml(String(x.name||'?').charAt(0))+'</span><span><b>'+escapeHtml(x.name)+'</b><small>'+escapeHtml(x.email||x.wa||'Akun pelanggan')+'</small></span><span class="customer-total">'+Number(x.coins||0).toLocaleString('id-ID')+' koin</span></button>';
+  }).join(''):'<div class="notification-empty"><b>Belum ada data pelanggan</b><p>Pelanggan akan tampil setelah pendaftaran disetujui admin.</p></div>';
+  list.querySelectorAll('[data-adjust-coin]').forEach(function(b){
+    b.onclick=function(){openAdjustCoin(b.getAttribute('data-adjust-coin'));};
+  });
+}
+var adjustCoinUid=null;
+function openAdjustCoin(uid){
+  var x=(S.customerData||[]).find(function(c){return c.id===uid;});if(!x)return;
+  adjustCoinUid=uid;
+  var nm=$('#adjustCoinName'),bl=$('#adjustCoinBalance');
+  if(nm)nm.textContent=x.name;
+  if(bl)bl.textContent='Saldo: '+Number(x.coins||0).toLocaleString('id-ID')+' koin';
+  var am=$('#adjustCoinAmount'),nt=$('#adjustCoinNote'),dr=$('#adjustCoinDir');
+  if(am)am.value='';if(nt)nt.value='';if(dr)dr.value='1';
+  openSheet('adjustCoinModal');
+}
