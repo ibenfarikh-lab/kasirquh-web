@@ -135,4 +135,26 @@ const StoreCustomers = {
     }
     this.render('profile', 'session');
   },
+
+  /* Event bonus: bagi koin ke SEMUA pelanggan yang disetujui (one-shot).
+   * Ikut pola native: query approved → loop → satu batch atomik per pelanggan
+   * (ledger + increment coins). Tanpa jurnal. Pelanggan baru tidak ikut.
+   * Ledger: reason=alasan admin, label='Bonus event', detail=alasan admin.
+   * Mengembalikan jumlah pelanggan yang menerima. */
+  async grantBonusToAll(amount, reason) {
+    amount = Math.max(0, Math.floor(Number(amount) || 0));
+    reason = String(reason || '').trim();
+    if (!amount) throw new Error('Jumlah koin wajib diisi');
+    if (!reason) throw new Error('Alasan wajib diisi');
+    if (!this.needOnline()) throw __offlineError();
+    this.assertAdmin();
+    const snap = await FB.db.collection('customers').where('approvalStatus', '==', 'approved').get();
+    let n = 0;
+    for (const doc of snap.docs) {
+      await this.grantCoins(doc.id, amount, { reason: reason, label: 'Bonus event', detail: reason });
+      n++;
+    }
+    return n;
+  },
 };
+

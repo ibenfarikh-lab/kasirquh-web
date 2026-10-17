@@ -309,11 +309,27 @@ if(sac&&!sac.dataset.bound){sac.dataset.bound='1';sac.onclick=function(){
   var dir=(dirEl&&dirEl.value==='-1')?-1:1,delta=dir*n,btn=sac;btn.disabled=true;
   Store.adjustCoins(adjustCoinUid,delta,{detail:((noteEl&&noteEl.value)||'').trim()||(dir>0?'Tambah manual admin':'Kurangi manual admin')}).then(function(){
     btn.disabled=false;
-    var x=(S.customerData||[]).find(function(c){return c.id===adjustCoinUid});
-    if(x)x.coins=Math.max(0,(x.coins||0)+delta);
+    /* JANGAN update lokal di sini: snapshot Firestore adalah satu-satunya
+     * sumber kebenaran dan otomatis me-render ulang daftar (lihat
+     * Store.renderers.customers). Update manual menumpuk 2x dengan snapshot. */
     adjustCoinUid=null;openSheet('coinSettingsModal');
     toast((dir>0?'+':'-')+n.toLocaleString('id-ID')+' koin tersimpan');
   }).catch(function(e){btn.disabled=false;if(!e||e.code!=='OFFLINE')toast(e&&e.message?e.message:'Gagal menyimpan');});
+};}
+var sbb=$('#sendBonusBtn');
+if(sbb&&!sbb.dataset.bound){sbb.dataset.bound='1';sbb.onclick=function(){
+  var amtEl=$('#bonusAmount'),rsnEl=$('#bonusReason');
+  var amt=Math.max(0,Math.floor(Number((amtEl&&amtEl.value)||0)));
+  var rsn=((rsnEl&&rsnEl.value)||'').trim();
+  if(!amt)return toast('Isi jumlah koin dulu');
+  if(!rsn)return toast('Isi alasan dulu');
+  sbb.disabled=true;var oldTxt=sbb.textContent;sbb.textContent='Membagikan...';
+  Store.grantBonusToAll(amt,rsn).then(function(n){
+    sbb.disabled=false;sbb.textContent=oldTxt;
+    if(amtEl)amtEl.value='';if(rsnEl)rsnEl.value='';
+    closeSheets();openSheet('coinSettingsModal');
+    toast('Bonus dibagikan ke '+n+' pelanggan');
+  }).catch(function(e){sbb.disabled=false;sbb.textContent=oldTxt;if(!e||e.code!=='OFFLINE')toast(e&&e.message?e.message:'Gagal membagikan');});
 };}
 $$('.home-section-toggle').forEach(b=>b.onclick=()=>{const key=b.dataset.section;if(!S.homeSections[key])S.homeSections[key]={show:true,order:1};S.homeSections[key].show=!S.homeSections[key].show;syncHomeSectionLayout();storePromise('saveStoreSettings',{homeSections:S.homeSections}).catch(()=>toast('Gagal menyimpan'))});$$('[data-section-order]').forEach(select=>select.onchange=()=>{const key=select.dataset.sectionOrder;if(!S.homeSections[key])S.homeSections[key]={show:true,order:1};S.homeSections[key].order=Math.max(1,Number(select.value)||1);syncHomeSectionLayout();storePromise('saveStoreSettings',{homeSections:S.homeSections}).catch(()=>toast('Gagal menyimpan'))});
 $('#applyHomeControl').onclick=()=>{const flashId=$('#flashProductInput').value||null,flashProduct=S.products.find(p=>p.id===flashId),patch={runningText:$('#homeInfoInput').value.trim(),gatewayTitle1:$('#gatewayTitle1Input').value.trim(),gatewayCopy1:$('#gatewayCopy1Input').value.trim(),gatewayTitle2:$('#gatewayTitle2Input').value.trim(),gatewayCopy2:$('#gatewayCopy2Input').value.trim(),gatewayTitle3:$('#gatewayTitle3Input').value.trim(),gatewayCopy3:$('#gatewayCopy3Input').value.trim(),flashProductId:flashId||null,flashProductName:(function(){var p=S.products.find(function(x){return x.id===flashId});return p?p.name:''})(),flashPrice:numericValue($('#flashPriceInput').value),flashRule:$('#flashRuleInput').value.trim(),kabarStatus:$('#kabarStatusInput').value.trim(),kabarMood:$('#kabarMoodInput').value.trim()};storePromise('saveStoreSettings',patch).then(()=>{closeSheets();toast('Beranda pelanggan disimpan')}).catch(error=>{if(!error||error.code!=='OFFLINE')toast(error&&error.message?error.message:'Gagal menyimpan')})};
@@ -463,7 +479,7 @@ Store.notify=msg=>toast(msg);
 Store.renderers.products=()=>{renderHome();renderFlashCard();renderCustomer();renderAdminProducts();renderAdminProductData();renderAdminCart();updateCustomerCart();renderFinance();renderWholesaleList();if($('#stockShoppingModal')&&$('#stockShoppingModal').classList.contains('open'))renderLowStockSuggestions()};
 Store.renderers.settings=()=>{renderHome();renderFinance();updateCoinUI();applyCoinProgram();renderFlashCard();renderPromoCarousel();syncHomeSectionLayout();renderKabar();applyRoleTheme('admin');syncSoundControls();syncNavMotionToggle();renderDashboardShortcuts()};
 Store.renderers.orders=()=>{renderOnlineOrders();renderTransfers();renderActiveOrder();renderAccountTiles();renderFinance()};
-Store.renderers.customers=()=>{renderCustomerData()};
+Store.renderers.customers=()=>{renderCustomerData();try{if(typeof renderCoinCustomerList==='function'&&$('#coinSettingsModal')&&$('#coinSettingsModal').classList.contains('open'))renderCoinCustomerList()}catch(e){console.error('renderCoinCustomerList gagal',e)}};
 Store.renderers.journal=()=>{renderFinance()};
 Store.renderers.stockNotes=()=>{renderPurchaseNotes();if(S.editingPurchaseNote)renderPurchaseNoteDetail()};
 Store.renderers.customerNotes=()=>{renderCustomerNotes();renderAccountTiles()};
