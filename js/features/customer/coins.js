@@ -187,3 +187,31 @@ function prepareAdjustCoin(uid){
   /* Modal dibuka via data-open-sheet="adjustCoinModal" (delegated handler di app.js);
    * openSheet() tidak global (app.js dibungkus IIFE) jadi tidak dipanggil langsung. */
 }
+
+/* ============ RIWAYAT KOIN PELANGGAN (2026-10-18) ============
+ * Ikut pola native: ikon +/- lingkaran, label, sub (detail · waktu), nominal.
+ * Data dari S.coinHistory (watch coin_ledger milik sendiri). */
+function renderCoinHistory(){
+  var el=$('#coinHistory');if(!el)return;
+  var list=S.coinHistory||[];
+  if(!list.length){el.innerHTML='<div class="notification-empty">Belum ada riwayat koin.</div>';return;}
+  el.innerHTML=list.map(function(x){
+    var plus=x.kind==='income';
+    return '<article class="coin-history-row"><span class="coin-history-icon '+(plus?'in':'out')+'">'+(plus?'+':'−')+'</span><span class="coin-history-main"><b>'+escapeHtml(x.label)+'</b><small>'+escapeHtml(x.sub||'')+'</small></span><span class="coin-history-amount '+(plus?'in':'out')+'">'+(plus?'+':'−')+Number(x.amount||0).toLocaleString('id-ID')+'</span></article>';
+  }).join('');
+}
+
+/* ============ ATURAN PROGRAM (2026-10-18) ============
+ * Daftar dibaca dari settingan live (ikut pola native), bukan teks bebas. */
+function renderCoinRuleList(){
+  var el=$('#coinRuleList');if(!el)return;
+  var r=S.coinRewards||{},spendRule=S.coinSpendRule||100,spendReward=S.coinSpendReward||1,redeem=S.coinRedeemPercent||50;
+  var items=[
+    'Bonus harian: +'+Number(r.checkin||0).toLocaleString('id-ID')+' koin (1x sehari)',
+    'Belanja: +'+Number(spendReward).toLocaleString('id-ID')+' koin tiap Rp'+Number(spendRule).toLocaleString('id-ID')+' (otomatis)',
+    'Misi koin: +'+Number(r.mission||0).toLocaleString('id-ID')+' koin per misi',
+    'Tebak harga: +'+Number(r.guess||0).toLocaleString('id-ID')+' koin (1x sehari)',
+    'Tukar: maks '+Number(redeem).toLocaleString('id-ID')+'% dari total belanja'
+  ];
+  el.innerHTML=items.map(function(t){return '<li>'+escapeHtml(t)+'</li>';}).join('');
+}

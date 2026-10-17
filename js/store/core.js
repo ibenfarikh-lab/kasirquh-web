@@ -478,12 +478,16 @@ const StoreCore = {  /* Diisi js/app.js saat boot: nama -> fungsi render, dan (m
   mapCoinEntry(doc) {
     const d = doc.data() || {};
     const amount = Math.round(Number(d.amount) || 0);
-    const reasonLabels = { harian: 'Koin masuk', belanja: 'Bonus belanja', tukar: 'Penukaran koin', koreksi_admin: 'Koreksi admin', misi: 'Hadiah misi', tebak_harga: 'Hadiah tebak harga' };
+    /* Label selaras native: label DB didahulukan, fallback per reason */
+    const reasonLabels = { harian: 'Check-in harian', belanja: 'Bonus belanja', tukar: 'Penukaran koin', koreksi_admin: 'Koreksi admin', misi: 'Hadiah misi', tebak_harga: 'Tebak Harga', game_buru_diskon: 'Buru Diskon', game_tangkap_diskon: 'Tangkap Diskon' };
+    const detail = String(d.detail || ''), time = d.createdAt ? this.dateTimeOf(d.createdAt) : '';
     return {
       kind: amount >= 0 ? 'income' : 'expense',
       amount: Math.abs(amount),
       label: String(d.label || reasonLabels[d.reason] || 'Koin'),
-      detail: String(d.detail || ''),
+      detail: detail,
+      time: time,
+      sub: detail ? (time ? detail + ' · ' + time : detail) : time,
     };
   },
 
