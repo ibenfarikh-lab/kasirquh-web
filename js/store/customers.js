@@ -44,7 +44,7 @@ const StoreCustomers = {
     await __withTimeout(batch.commit(), WRITE_TIMEOUT_MS, 'Klaim koin');
   },
 
-  /* Koin dari game Buru Diskon: dibatasi 500 koin/hari per pelanggan.
+  /* Koin dari game Tangkap Diskon: dibatasi 500 koin/hari per pelanggan.
    * WAJIB transaksi (baca → cek sisa kuota → tulis) agar dua klaim yang
    * dikirim bersamaan tidak bisa menjebol batas harian.
    * Field: gameCoinsDate (kunci tanggal), gameCoinsToday (akumulasi hari ini).
@@ -71,8 +71,8 @@ const StoreCustomers = {
         gameCoinsToday: already + grant,
       });
       tx.set(db.collection('coin_ledger').doc(), {
-        customerId: uid, amount: grant, reason: 'game_buru_diskon',
-        label: 'Buru Diskon', detail: String(meta.points || 0) + ' poin',
+        customerId: uid, amount: grant, reason: 'game_tangkap_diskon',
+        label: 'Tangkap Diskon', detail: String(meta.points || 0) + ' poin',
         createdAt: ts,
       });
       return { granted: grant, capped: grant < requestedCoins };
