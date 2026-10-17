@@ -169,14 +169,14 @@ function renderCoinCustomerList(){
     return !q||String(x.name||'').toLowerCase().indexOf(q)>=0;
   });
   list.innerHTML=rows.length?rows.map(function(x){
-    return '<button class="customer-row" data-adjust-coin="'+x.id+'"><span class="avatar">'+escapeHtml(String(x.name||'?').charAt(0))+'</span><span><b>'+escapeHtml(x.name)+'</b><small>'+escapeHtml(x.email||x.wa||'Akun pelanggan')+'</small></span><span class="customer-total">'+Number(x.coins||0).toLocaleString('id-ID')+' koin</span></button>';
+    return '<button class="customer-row" data-open-sheet="adjustCoinModal" data-adjust-coin="'+x.id+'"><span class="avatar">'+escapeHtml(String(x.name||'?').charAt(0))+'</span><span><b>'+escapeHtml(x.name)+'</b><small>'+escapeHtml(x.email||x.wa||'Akun pelanggan')+'</small></span><span class="customer-total">'+Number(x.coins||0).toLocaleString('id-ID')+' koin</span></button>';
   }).join(''):'<div class="notification-empty"><b>Belum ada data pelanggan</b><p>Pelanggan akan tampil setelah pendaftaran disetujui admin.</p></div>';
   list.querySelectorAll('[data-adjust-coin]').forEach(function(b){
-    b.onclick=function(){openAdjustCoin(b.getAttribute('data-adjust-coin'));};
+    b.onclick=function(){prepareAdjustCoin(b.getAttribute('data-adjust-coin'));};
   });
 }
 var adjustCoinUid=null;
-function openAdjustCoin(uid){
+function prepareAdjustCoin(uid){
   var x=(S.customerData||[]).find(function(c){return c.id===uid;});if(!x)return;
   adjustCoinUid=uid;
   var nm=$('#adjustCoinName'),bl=$('#adjustCoinBalance');
@@ -184,5 +184,6 @@ function openAdjustCoin(uid){
   if(bl)bl.textContent='Saldo: '+Number(x.coins||0).toLocaleString('id-ID')+' koin';
   var am=$('#adjustCoinAmount'),nt=$('#adjustCoinNote'),dr=$('#adjustCoinDir');
   if(am)am.value='';if(nt)nt.value='';if(dr)dr.value='1';
-  openSheet('adjustCoinModal');
+  /* Modal dibuka via data-open-sheet="adjustCoinModal" (delegated handler di app.js);
+   * openSheet() tidak global (app.js dibungkus IIFE) jadi tidak dipanggil langsung. */
 }
