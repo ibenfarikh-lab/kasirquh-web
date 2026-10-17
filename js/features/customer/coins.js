@@ -215,3 +215,30 @@ function renderCoinRuleList(){
   ];
   el.innerHTML=items.map(function(t){return '<li>'+escapeHtml(t)+'</li>';}).join('');
 }
+
+/* ============ BANNER PROMO KOIN BERGANTIAN (2026-10-18) ============
+ * Pilihan user: banner kecil bergantian di dompet, contoh:
+ * "Sudah main Tangkap Diskon hari ini? 500 koin menanti!"
+ * Pesan disusun dari event game yang AKTIF (jujur ikut settingan). */
+var coinBannerTimer=null,coinBannerIdx=0;
+function stopCoinBanner(){if(coinBannerTimer){clearInterval(coinBannerTimer);coinBannerTimer=null;}}
+function renderCoinBanner(){
+  var el=$('#coinPromoBanner');if(!el){stopCoinBanner();return;}
+  var msgs=[];
+  if(S.coinProgramEnabled){
+    if(S.coinEvents.tangkapDiskon)msgs.push('Sudah main Tangkap Diskon hari ini? 500 koin menanti!');
+    if(S.coinEvents.buruDiskon)msgs.push('Sudah main Buru Diskon hari ini? 500 koin menanti!');
+    if(S.coinEvents.guess)msgs.push('Sudah tebak harga hari ini? +'+Number((S.coinRewards||{}).guess||100).toLocaleString('id-ID')+' koin menanti!');
+  }
+  stopCoinBanner();
+  if(!msgs.length){el.hidden=true;return;}
+  el.hidden=false;coinBannerIdx=0;el.textContent=msgs[0];
+  if(msgs.length>1){
+    coinBannerTimer=setInterval(function(){
+      if(!document.body.contains(el)||el.hidden){stopCoinBanner();return;}
+      coinBannerIdx=(coinBannerIdx+1)%msgs.length;
+      el.classList.add('fade');
+      setTimeout(function(){el.textContent=msgs[coinBannerIdx];el.classList.remove('fade');},200);
+    },4000);
+  }
+}
