@@ -347,6 +347,7 @@ const StoreChat = {
     }
     thread.name = name;
     thread.initial = (name.charAt(0) || '?').toUpperCase();
+    thread.photoURL = customer ? String(customer.photoURL || '') : '';
     thread.unread = Number(d.unreadAdmin) || 0;
     thread.lastMessage = String(d.lastMessage || '');
     return thread;
@@ -477,6 +478,7 @@ const StoreChat = {
       authorId: isAdmin ? 'admin' : (S.activeCustomerId || 'tamu'),
       authorName: isAdmin ? 'Mimi · Warung' : (S.sessionName || 'Warga'),
       authorRole: isAdmin ? 'admin' : 'customer',
+      authorPhoto: isAdmin ? '' : String((S.myCustomerDoc && S.myCustomerDoc.photoURL) || ''),
       text: text,
       imageUrl: photo || '',
       likeCount: 0,

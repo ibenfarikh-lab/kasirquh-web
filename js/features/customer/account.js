@@ -3,7 +3,7 @@
  * Diekstrak verbatim dari js/app.js (Tahap 3 modularisasi). */
 
 // --- dari js/app.js baris 279 (pindah verbatim, tanpa ubah logika) ---
-function setProfileIdentity(name){const safe=cleanInput(name)||'Pelanggan';$('#profileName').textContent=safe;$('#profileInitial').textContent=safe.charAt(0).toUpperCase();$('#customerNameInput').value=safe}
+function setProfileIdentity(name){const safe=cleanInput(name)||'Pelanggan';$('#profileName').textContent=safe;const pi=$('#profileInitial');if(pi&&!(S.myCustomerDoc&&S.myCustomerDoc.photoURL))pi.textContent=safe.charAt(0).toUpperCase();$('#customerNameInput').value=safe;try{if(typeof renderProfilePhoto==='function')renderProfilePhoto()}catch(e){}}
 
 
 // --- dari js/app.js baris 350 (pindah verbatim, tanpa ubah logika) ---
@@ -88,3 +88,93 @@ function renderAccountTiles(){
   }catch(e){ console.error('renderAccountTiles gagal', e); }
 }
 
+
+/* ============ FOTO PROFIL PELANGGAN (2026-10-18) ============
+ * Kompres di client (max 200x200 JPEG) → base64 di field photoURL
+ * dokumen customers/{uid}. Bukan Firebase Storage. */
+
+/* Tampilkan foto profil di avatar halaman akun (ganti huruf awal). */
+function renderProfilePhoto(){
+  const box = $('#profileInitial');
+  if (!box) return;
+  const photo = (S.myCustomerDoc && S.myCustomerDoc.photoURL) || '';
+  if (photo) {
+    box.classList.add('has-photo');
+    box.innerHTML = '<img src="'+String(photo).replace(/"/g,'&quot;')+'" alt="Foto profil">';
+  } else {
+    box.classList.remove('has-photo');
+    const safe = cleanInput($('#profileName').textContent) || 'Pelanggan';
+    box.textContent = safe.charAt(0).toUpperCase();
+  }
+}
+
+/* Kompres gambar: max 200x200, JPEG 0.7 → data URL (jauh di bawah 1MB). */
+function compressPhotoFile(file){
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type || file.type.indexOf('image/') !== 0) return reject(new Error('Pilih file gambar'));
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        URL.revokeObjectURL(url);
+        const MAX = 200;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Gambar tidak bisa dibaca')); };
+    img.src = url;
+  });
+}
+
+/* Pasang handler upload foto (sekali saja). */
+let photoUploadWired = false;
+function initPhotoUpload(){
+  if (photoUploadWired) return;
+  const btn = $('#changePhotoBtn'), input = $('#photoFileInput');
+  if (!btn || !input) return;
+  photoUploadWired = true;
+  btn.onclick = () => input.click();
+  input.addEventListener('change', () => {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    btn.disabled = true;
+    btn.textContent = 'Mengompres…';
+    compressPhotoFile(file).then(dataUrl => {
+      if (dataUrl.length > 900000) throw new Error('Foto masih terlalu besar, pilih yang lebih kecil');
+      btn.textContent = 'Menyimpan…';
+      return storePromise('saveCustomerDoc', { photoURL: dataUrl }).then(() => dataUrl);
+    }).then(dataUrl => {
+      if (S.myCustomerDoc) S.myCustomerDoc.photoURL = dataUrl;
+      renderProfilePhoto();
+      renderPhotoPreview();
+      toast('Foto profil disimpan');
+    }).catch(err => {
+      toast(err && err.message ? err.message : 'Gagal simpan foto');
+    }).finally(() => {
+      btn.disabled = false;
+      btn.textContent = 'Ganti foto';
+    });
+  });
+}
+
+/* Preview foto di pengaturan (atau huruf awal bila belum ada). */
+function renderPhotoPreview(){
+  const prev = $('#photoPreview');
+  if (!prev) return;
+  const photo = (S.myCustomerDoc && S.myCustomerDoc.photoURL) || '';
+  if (photo) {
+    prev.classList.add('has-photo');
+    prev.innerHTML = '<img src="'+String(photo).replace(/"/g,'&quot;')+'" alt="Foto profil">';
+  } else {
+    prev.classList.remove('has-photo');
+    const safe = cleanInput($('#profileName').textContent) || 'P';
+    prev.textContent = safe.charAt(0).toUpperCase();
+  }
+}

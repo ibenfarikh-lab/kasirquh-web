@@ -14,3 +14,10 @@ function iconSvg(name){return `<svg class="icon" aria-hidden="true"><use href="#
 function cleanInput(value){return String(value||'').replace(/[<>]/g,'').trim()}
 // --- dari js/app.js baris 267 (pindah verbatim, tanpa ubah logika) ---
 function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+
+/* Avatar pelanggan: foto bila ada, huruf awal bila belum. (2026-10-18) */
+function avatarHtml(photoURL, initial, cls){
+  cls = cls || 'avatar';
+  if (photoURL) return '<span class="'+cls+' has-photo"><img src="'+String(photoURL).replace(/"/g,'&quot;')+'" alt="Foto profil"></span>';
+  return '<span class="'+cls+'">'+escapeHtml(initial || '?')+'</span>';
+}
