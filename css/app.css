@@ -573,3 +573,7 @@ body[data-ui-theme="light"] .member-card-section{background:#fff7ed;border-color
 .modal{align-items:stretch}
 .modal .sheet{height:100dvh;max-height:100dvh;border-radius:0}
 .modal .sheet-handle{display:none}
+
+/* [2026-10-17] Rumpi Warga: isi modal flex penuh agar tidak ada space kosong di bawah composer */
+#customerRumpiModal .sheet{display:flex;flex-direction:column}
+#customerRumpiModal .admin-rumpi-feed{max-height:none;flex:1;min-height:0}
