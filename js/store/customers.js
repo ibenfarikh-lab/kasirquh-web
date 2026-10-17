@@ -45,10 +45,11 @@ const StoreCustomers = {
   },
 
   /* Koin dari game (Tangkap Diskon / Buru Diskon): dibatasi 500 koin/hari
-   * per pelanggan — DIGABUNG untuk semua game (satu kuota harian).
+   * per pelanggan, PER GAME (kuota masing-masing, field tracking sendiri).
    * WAJIB transaksi (baca → cek sisa kuota → tulis) agar dua klaim yang
    * dikirim bersamaan tidak bisa menjebol batas harian.
-   * Field: gameCoinsDate (kunci tanggal), gameCoinsToday (akumulasi hari ini).
+   * meta.dateField/meta.todayField opsional (default: gameCoinsDate/Today
+   * untuk Tangkap Diskon; Buru Diskon pakai buruGameCoinsDate/Today).
    * meta.reason/meta.label opsional (default: game_tangkap_diskon).
    * Mengembalikan {granted, capped}. */
   async grantGameCoins(uid, requestedCoins, meta) {
@@ -60,18 +61,19 @@ const StoreCustomers = {
     const ts = FB.serverTimestamp();
     const today = S.todayKey;
     const GAME_MAX_COINS_PER_DAY = 500;
+    const dateField = meta.dateField || 'gameCoinsDate';
+    const todayField = meta.todayField || 'gameCoinsToday';
     return __withTimeout(db.runTransaction(async (tx) => {
       const ref = db.collection('customers').doc(uid);
       const snap = await tx.get(ref);
       const data = snap.exists ? snap.data() : {};
-      const already = (data.gameCoinsDate === today) ? Math.max(0, Math.floor(Number(data.gameCoinsToday) || 0)) : 0;
+      const already = (data[dateField] === today) ? Math.max(0, Math.floor(Number(data[todayField]) || 0)) : 0;
       const grant = Math.max(0, Math.min(requestedCoins, GAME_MAX_COINS_PER_DAY - already));
       if (!grant) return { granted: 0, capped: true };
-      tx.update(ref, {
-        coins: FB.FieldValue.increment(grant),
-        gameCoinsDate: today,
-        gameCoinsToday: already + grant,
-      });
+      const upd = { coins: FB.FieldValue.increment(grant) };
+      upd[dateField] = today;
+      upd[todayField] = already + grant;
+      tx.update(ref, upd);
       tx.set(db.collection('coin_ledger').doc(), {
         customerId: uid, amount: grant, reason: meta.reason || 'game_tangkap_diskon',
         label: meta.label || 'Tangkap Diskon', detail: String(meta.points || 0) + ' poin',

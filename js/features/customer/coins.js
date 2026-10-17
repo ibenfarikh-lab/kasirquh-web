@@ -108,7 +108,7 @@ function claimBuruDiskonCoins(){
   var p=S.buruPending;if(!p||!p.coins)return;
   if(!S.coinProgramEnabled){toast('Program koin sedang dimatikan admin');return;}
   var btn=$('#buruClaimBtn');if(btn)btn.disabled=true;
-  Store.grantGameCoins(S.activeCustomerId,p.coins,{points:p.points,reason:'game_buru_diskon',label:'Buru Diskon'}).then(function(res){
+  Store.grantGameCoins(S.activeCustomerId,p.coins,{points:p.points,reason:'game_buru_diskon',label:'Buru Diskon',dateField:'buruGameCoinsDate',todayField:'buruGameCoinsToday'}).then(function(res){
     if(btn)btn.disabled=false;
     if(res&&res.granted>0){
       S.buruPending=null;var panel=$('#buruClaimPanel');if(panel)panel.hidden=true;
@@ -122,7 +122,7 @@ function claimBuruDiskonCoins(){
 }
 function renderBuruDiskonTile(){
   var prog=$('#buruDayProgress'),doc=S.myCustomerDoc;
-  if(prog){var got=(doc&&doc.gameCoinsDate===S.todayKey)?Math.max(0,Math.floor(Number(doc.gameCoinsToday)||0)):0;
+  if(prog){var got=(doc&&doc.buruGameCoinsDate===S.todayKey)?Math.max(0,Math.floor(Number(doc.buruGameCoinsToday)||0)):0;
     prog.textContent='Hari ini: '+got+'/'+GAME_MAX_COINS_DAY+' koin';}
   var claimBtn=$('#buruClaimBtn');
   if(claimBtn&&!claimBtn.dataset.bound){claimBtn.dataset.bound='1';claimBtn.onclick=claimBuruDiskonCoins;}

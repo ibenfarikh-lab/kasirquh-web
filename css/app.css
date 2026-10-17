@@ -579,7 +579,7 @@ body[data-ui-theme="light"] .member-card-section{background:#fff7ed;border-color
 #customerRumpiModal .admin-rumpi-feed{max-height:none;flex:1;min-height:0}
 
 /* [2026-10-17] Game Buru Diskon: modal halaman penuh berisi iframe game + panel klaim */
-#gameModal .sheet{display:flex;flex-direction:column;overflow:hidden}
+#gameModal .sheet,#buruDiskonModal .sheet{display:flex;flex-direction:column;overflow:hidden}
 .game-wrap{flex:1;min-height:0;position:relative;display:flex}
 .game-frame{flex:1;width:100%;min-height:320px;border:0;background:#17120e}
 .game-claim{position:absolute;left:12px;right:12px;bottom:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.25);text-align:center}
