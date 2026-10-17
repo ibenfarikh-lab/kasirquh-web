@@ -31,12 +31,6 @@ function renderMissions(){const mine=currentCustomerOrders().slice().sort((a,b)=
  * via postMessage → aplikasi utama yang hitung koin (1000 poin = 1) →
  * tombol klaim → Store.grantGameCoins (transaksi, cap 500 koin/hari). */
 var GAME_POINTS_PER_COIN=1000,GAME_MAX_COINS_DAY=500,GAME_SESSION_MAX_POINTS=60000,GAME_MIN_DURATION_MS=20000;
-function openBuruDiskon(){
-  if(!S.coinProgramEnabled){toast('Program koin sedang dimatikan admin');return;}
-  var frame=$('#gameFrame');if(frame)frame.src='games/buru-diskon.html?v=20261020ab';
-  var panel=$('#gameClaimPanel');if(panel)panel.hidden=true;
-  S.gamePending=null;openSheet('gameModal');
-}
 function onBuruDiskonScore(d){
   var points=Math.max(0,Math.floor(Number(d&&d.points)||0));
   var durationMs=Math.max(0,Number(d&&d.durationMs)||0);
@@ -88,7 +82,8 @@ function claimBuruDiskonCoins(){
   });
 }
 function renderGameTile(){
-  var btn=$('#playGameBtn');if(btn)btn.onclick=openBuruDiskon;
+  // Tombol #playGameBtn membuka #gameModal secara deklaratif (data-open-sheet);
+  // di sini hanya: progres harian + binding tombol klaim/main-lagi di dalam modal game.
   var prog=$('#gameDayProgress'),doc=S.myCustomerDoc;
   if(prog){var got=(doc&&doc.gameCoinsDate===S.todayKey)?Math.max(0,Math.floor(Number(doc.gameCoinsToday)||0)):0;
     prog.textContent='Hari ini: '+got+'/'+GAME_MAX_COINS_DAY+' koin';}
@@ -96,5 +91,5 @@ function renderGameTile(){
   if(claimBtn&&!claimBtn.dataset.bound){claimBtn.dataset.bound='1';claimBtn.onclick=claimBuruDiskonCoins;}
   var replayBtn=$('#gameReplayBtn');
   if(replayBtn&&!replayBtn.dataset.bound){replayBtn.dataset.bound='1';replayBtn.onclick=function(){
-    var p=$('#gameClaimPanel');if(p)p.hidden=true;var f=$('#gameFrame');if(f)f.src='games/buru-diskon.html?v=20261020ab';};}
+    var p=$('#gameClaimPanel');if(p)p.hidden=true;var f=$('#gameFrame');if(f)f.src='games/buru-diskon.html?v=20261020ac';};}
 }
