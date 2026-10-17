@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Buru Diskon — Warunge Mimi</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;font-family:"Nunito Sans",system-ui,sans-serif;background:#17120e;color:#f7f1ec;touch-action:manipulation;user-select:none;-webkit-user-select:none;overflow:hidden}
+#stage{height:100dvh;max-width:520px;margin:0 auto;display:flex;flex-direction:column;padding:14px}
+.screen{display:none;flex-direction:column;flex:1;min-height:0;text-align:center}
+.screen.on{display:flex}
+h1{font-size:30px;margin:26px 0 6px;color:#f49a24;letter-spacing:-.5px}
+.sub{color:#c9bbaf;font-size:14px;line-height:1.6;margin:0 0 18px}
+.rules{background:#241c16;border:1px solid #4a382a;border-radius:16px;padding:14px 16px;text-align:left;font-size:13px;line-height:1.9;margin-bottom:20px}
+.rules b{color:#ffc16f}
+.btn{border:0;border-radius:18px;background:#f49a24;color:#24170f;font-weight:900;font-size:17px;padding:16px 20px;cursor:pointer;width:100%}
+.btn:active{transform:scale(.97)}
+.hud{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.score{flex:1;text-align:left;font-weight:900;font-size:20px;color:#ffc16f}
+.score small{display:block;font-size:10px;color:#a89a92;font-weight:700}
+.timer{flex:2;height:14px;border-radius:8px;background:#2c231c;overflow:hidden}
+.timer i{display:block;height:100%;width:100%;border-radius:8px;background:linear-gradient(90deg,#f49a24,#ffc16f);transition:width 1s linear}
+#grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:10px}
+.cell{position:relative;border-radius:16px;background:#241c16;border:1px solid #3a2c22;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+.cell .item{font-size:34px;line-height:1;pointer-events:none;animation:pop .18s ease-out}
+.cell .disc{position:absolute;top:6px;right:6px;background:#f49a24;color:#24170f;font-size:10px;font-weight:900;border-radius:8px;padding:2px 6px;pointer-events:none;animation:pop .18s ease-out}
+.cell .price{position:absolute;bottom:6px;left:0;right:0;font-size:9px;color:#a89a92;pointer-events:none}
+.cell.good{border-color:#f49a24;box-shadow:0 0 0 2px rgba(244,154,36,.35)}
+.cell.hit{animation:hit .25s ease-out}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes hit{0%{transform:scale(1)}40%{transform:scale(1.12);background:#3a2a1a}100%{transform:scale(1)}}
+.float{position:absolute;left:50%;top:38%;transform:translateX(-50%);font-weight:900;font-size:18px;pointer-events:none;animation:floatUp .7s ease-out forwards;z-index:5}
+.float.plus{color:#7fd08a}.float.minus{color:#df624f}
+@keyframes floatUp{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-46px)}}
+.big{font-size:64px;font-weight:900;color:#f49a24;margin:18px 0 4px}
+.conv{color:#c9bbaf;font-size:14px;margin-bottom:22px}
+.note{font-size:11px;color:#a89a92;margin-top:14px;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="screen on" id="startScreen">
+    <h1>🏷️ Buru Diskon</h1>
+    <p class="sub">Tangkap barang berlabel diskon sebelum waktu habis!</p>
+    <div class="rules">
+      👆 Ketuk barang berlabel <b>−10% s.d. −50%</b> untuk dapat poin<br>
+      🎯 Poin = % diskon × 10 (mis. −30% = 300 poin)<br>
+      🚫 Jangan ketuk barang harga normal (−150 poin)<br>
+      ⏱️ Waktu 60 detik · <b>1000 poin = 1 koin</b>
+    </div>
+    <button class="btn" id="startBtn">Mulai Berburu</button>
+    <p class="note">Maksimal 500 koin/hari dari game. Koin diklaim setelah permainan selesai.</p>
+  </div>
+  <div class="screen" id="gameScreen">
+    <div class="hud">
+      <div class="score"><span id="scoreVal">0</span><small>poin</small></div>
+      <div class="timer"><i id="timerBar"></i></div>
+    </div>
+    <div id="grid"></div>
+  </div>
+  <div class="screen" id="endScreen">
+    <h1>Waktu Habis!</h1>
+    <div class="big" id="finalScore">0</div>
+    <p class="conv" id="convLabel">= 0 koin</p>
+    <button class="btn" id="againBtn">Main Lagi</button>
+    <p class="note">Skor sudah dikirim — klaim koinmu di panel yang muncul.</p>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var PRODUCTS=[["🧴","Sabun"],["🍜","Mie"],["🧃","Susu"],["🍪","Biskuit"],["🧂","Garam"],["🍚","Beras"],["🧻","Tisu"],["🪥","Sikat"],["🧼","Deterjen"],["☕","Kopi"],["🍬","Permen"],["🫖","Teh"]];
+var DISCOUNTS=[10,10,10,20,20,20,30,30,50];
+var DURATION_MS=60000, SPAWN_MS=800, LIFE_MS=1250, MAX_LIVE=3;
+var grid=document.getElementById('grid'), scoreVal=document.getElementById('scoreVal'),
+    timerBar=document.getElementById('timerBar'), startScreen=document.getElementById('startScreen'),
+    gameScreen=document.getElementById('gameScreen'), endScreen=document.getElementById('endScreen');
+var cells=[], score=0, live=0, spawnTimer=null, endTimer=null, tickTimer=null, startTime=0, over=false, timeLeft=60;
+for(var i=0;i<12;i++){var c=document.createElement('div');c.className='cell';c.dataset.i=i;grid.appendChild(c);cells.push(c);}
+function fmt(n){return n.toLocaleString('id-ID');}
+function setScore(v){score=Math.max(0,v);scoreVal.textContent=fmt(score);}
+function floatText(cell,txt,cls){var f=document.createElement('span');f.className='float '+cls;f.textContent=txt;cell.appendChild(f);setTimeout(function(){f.remove();},720);}
+function clearCell(cell){cell.innerHTML='';cell.classList.remove('good');delete cell.dataset.live;}
+function spawn(){
+  if(over||live>=MAX_LIVE)return;
+  var empty=cells.filter(function(c){return !c.dataset.live;});
+  if(!empty.length)return;
+  var cell=empty[Math.floor(Math.random()*empty.length)];
+  var p=PRODUCTS[Math.floor(Math.random()*PRODUCTS.length)];
+  var isDisc=Math.random()<0.7, disc=isDisc?DISCOUNTS[Math.floor(Math.random()*DISCOUNTS.length)]:0;
+  cell.dataset.live='1';live++;
+  var html='<span class="item">'+p[0]+'</span>';
+  if(isDisc){html+='<span class="disc">−'+disc+'%</span>';cell.classList.add('good');}
+  else{html+='<span class="price">'+p[1]+'</span>';}
+  cell.innerHTML=html;
+  cell.dataset.disc=String(disc);
+  cell.dataset.pts=String(disc*10);
+  setTimeout(function(){if(cell.dataset.live){clearCell(cell);live--;}},LIFE_MS);
+}
+cells.forEach(function(cell){
+  cell.addEventListener('pointerdown',function(){
+    if(over||!cell.dataset.live)return;
+    var pts=parseInt(cell.dataset.pts||'0',10);
+    cell.classList.add('hit');
+    if(pts>0){setScore(score+pts);floatText(cell,'+'+pts,'plus');}
+    else{setScore(score-150);floatText(cell,'−150','minus');}
+    setTimeout(function(){cell.classList.remove('hit');},260);
+    clearCell(cell);live--;
+  });
+});
+function show(id){[startScreen,gameScreen,endScreen].forEach(function(s){s.classList.toggle('on',s.id===id);});}
+function finish(){
+  if(over)return;over=true;
+  clearInterval(spawnTimer);clearInterval(endTimer);clearInterval(tickTimer);
+  var durationMs=Date.now()-startTime;
+  document.getElementById('finalScore').textContent=fmt(score);
+  document.getElementById('convLabel').textContent='= '+fmt(Math.floor(score/1000))+' koin (1000 poin = 1 koin)';
+  show('endScreen');
+  try{parent.postMessage({type:'buruDiskonScore',points:score,durationMs:durationMs},'*');}catch(e){}
+}
+function start(){
+  setScore(0);over=false;live=0;timeLeft=60;startTime=Date.now();
+  cells.forEach(clearCell);
+  timerBar.style.transition='none';timerBar.style.width='100%';
+  void timerBar.offsetWidth;
+  timerBar.style.transition='width 1s linear';
+  show('gameScreen');
+  spawnTimer=setInterval(spawn,SPAWN_MS);spawn();spawn();
+  tickTimer=setInterval(function(){timeLeft--;timerBar.style.width=Math.max(0,timeLeft/60*100)+'%';if(timeLeft<=0)finish();},1000);
+  endTimer=setTimeout(finish,DURATION_MS+400);
+}
+document.getElementById('startBtn').addEventListener('click',start);
+document.getElementById('againBtn').addEventListener('click',start);
+})();
+</script>
+</body>
+</html>

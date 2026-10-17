@@ -44,6 +44,41 @@ const StoreCustomers = {
     await __withTimeout(batch.commit(), WRITE_TIMEOUT_MS, 'Klaim koin');
   },
 
+  /* Koin dari game Buru Diskon: dibatasi 500 koin/hari per pelanggan.
+   * WAJIB transaksi (baca → cek sisa kuota → tulis) agar dua klaim yang
+   * dikirim bersamaan tidak bisa menjebol batas harian.
+   * Field: gameCoinsDate (kunci tanggal), gameCoinsToday (akumulasi hari ini).
+   * Mengembalikan {granted, capped}. */
+  async grantGameCoins(uid, requestedCoins, meta) {
+    requestedCoins = Math.max(0, Math.floor(Number(requestedCoins) || 0));
+    if (!uid || !requestedCoins) return { granted: 0, capped: false };
+    if (!this.needOnline()) throw __offlineError();
+    meta = meta || {};
+    const db = FB.db;
+    const ts = FB.serverTimestamp();
+    const today = S.todayKey;
+    const GAME_MAX_COINS_PER_DAY = 500;
+    return __withTimeout(db.runTransaction(async (tx) => {
+      const ref = db.collection('customers').doc(uid);
+      const snap = await tx.get(ref);
+      const data = snap.exists ? snap.data() : {};
+      const already = (data.gameCoinsDate === today) ? Math.max(0, Math.floor(Number(data.gameCoinsToday) || 0)) : 0;
+      const grant = Math.max(0, Math.min(requestedCoins, GAME_MAX_COINS_PER_DAY - already));
+      if (!grant) return { granted: 0, capped: true };
+      tx.update(ref, {
+        coins: FB.FieldValue.increment(grant),
+        gameCoinsDate: today,
+        gameCoinsToday: already + grant,
+      });
+      tx.set(db.collection('coin_ledger').doc(), {
+        customerId: uid, amount: grant, reason: 'game_buru_diskon',
+        label: 'Buru Diskon', detail: String(meta.points || 0) + ' poin',
+        createdAt: ts,
+      });
+      return { granted: grant, capped: grant < requestedCoins };
+    }), WRITE_TIMEOUT_MS, 'Klaim koin game');
+  },
+
   /* Koreksi koin oleh admin: delta negatif → jurnal beban_promosi
    * |delta|×coinRate dalam batch atomik yang sama (sesuai skema). */
   async adjustCoins(uid, delta, meta) {

@@ -577,3 +577,14 @@ body[data-ui-theme="light"] .member-card-section{background:#fff7ed;border-color
 /* [2026-10-17] Rumpi Warga: isi modal flex penuh agar tidak ada space kosong di bawah composer */
 #customerRumpiModal .sheet{display:flex;flex-direction:column}
 #customerRumpiModal .admin-rumpi-feed{max-height:none;flex:1;min-height:0}
+
+/* [2026-10-17] Game Buru Diskon: modal halaman penuh berisi iframe game + panel klaim */
+#gameModal .sheet{display:flex;flex-direction:column;overflow:hidden}
+.game-wrap{flex:1;min-height:0;position:relative;display:flex}
+.game-frame{flex:1;width:100%;min-height:320px;border:0;background:#17120e}
+.game-claim{position:absolute;left:12px;right:12px;bottom:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.25);text-align:center}
+.game-claim b{font-size:18px}
+#gameCoinLabel{font-size:15px;font-weight:900;color:var(--ink);margin:4px 0 0}
+.game-claim .game-note{font-size:11px;color:var(--muted);margin:6px 0 0}
+.game-claim-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:12px}
+.game-claim-actions button{height:52px;border-radius:16px;border:0;font-weight:900}
