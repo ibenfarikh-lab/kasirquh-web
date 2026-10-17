@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Buru Diskon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fff6e9;
+        --stage: #fffdf7;
+        --stage-edge: #f3dfba;
+        --ink: #33241a;
+        --ink-soft: #7a6753;
+        --accent: #f49a24;
+        --accent-deep: #d97c06;
+        --accent-ink: #24170f;
+        --good: #1d9d57;
+        --bad: #d93a2b;
+        --gold: #e8a812;
+        --card: #ffffff;
+        --shadow: 0 10px 30px rgba(120, 72, 10, .16);
+        --hud-bg: rgba(255, 253, 247, .92);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #14100c;
+          --stage: #1d1712;
+          --stage-edge: #3a2d1e;
+          --ink: #f7ead9;
+          --ink-soft: #b8a68d;
+          --accent: #f49a24;
+          --accent-deep: #f49a24;
+          --accent-ink: #24170f;
+          --good: #3ecf7d;
+          --bad: #ff6a58;
+          --gold: #ffc93c;
+          --card: #2a211a;
+          --shadow: 0 10px 30px rgba(0, 0, 0, .5);
+          --hud-bg: rgba(29, 23, 18, .92);
+        }
+      }
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: "Nunito", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        display: flex;
+        justify-content: center;
+      }
+      #app {
+        width: 100%;
+        max-width: 520px;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        padding: env(safe-area-inset-top) 10px env(safe-area-inset-bottom);
+      }
+
+      /* ---------- HUD ---------- */
+      #hud {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 4px 8px;
+      }
+      .hud-box {
+        background: var(--hud-bg);
+        border: 2px solid var(--stage-edge);
+        border-radius: 14px;
+        padding: 4px 12px;
+        line-height: 1.15;
+      }
+      .hud-label { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+      #score { font-family: "Baloo 2", sans-serif; font-size: 24px; font-weight: 800; }
+      #lives { font-size: 19px; letter-spacing: 2px; white-space: nowrap; padding-top: 9px; padding-bottom: 9px; }
+      #lives .lost { filter: grayscale(1); opacity: .3; }
+      .hud-spacer { flex: 1; }
+      .icon-btn {
+        border: 2px solid var(--stage-edge);
+        background: var(--hud-bg);
+        color: var(--ink);
+        width: 42px; height: 42px;
+        border-radius: 14px;
+        font-size: 19px;
+        cursor: pointer;
+        display: grid; place-items: center;
+      }
+      .icon-btn:active { transform: scale(.94); }
+      #timer-wrap { padding: 0 4px 8px; }
+      #timer-bar-bg {
+        height: 12px;
+        border-radius: 99px;
+        background: var(--stage-edge);
+        overflow: hidden;
+      }
+      #timer-bar {
+        height: 100%;
+        width: 100%;
+        border-radius: 99px;
+        background: var(--accent);
+        transition: width .2s linear;
+      }
+      #timer-bar.low { background: var(--bad); }
+      #timer-text { font-size: 12px; font-weight: 800; color: var(--ink-soft); margin-top: 3px; text-align: right; }
+
+      /* ---------- Stage ---------- */
+      #stage {
+        position: relative;
+        flex: 1;
+        border-radius: 22px;
+        border: 2px solid var(--stage-edge);
+        background:
+          radial-gradient(circle at 18% 12%, rgba(244, 154, 36, .10), transparent 42%),
+          radial-gradient(circle at 85% 30%, rgba(244, 154, 36, .08), transparent 40%),
+          var(--stage);
+        overflow: hidden;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #stage.shake { animation: shake .3s; }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-7px); }
+        50% { transform: translateX(6px); }
+        75% { transform: translateX(-4px); }
+      }
+      #floor {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 14px;
+        background: repeating-linear-gradient(45deg, var(--accent) 0 18px, var(--stage-edge) 18px 36px);
+        opacity: .55;
+      }
+
+      /* ---------- Falling items ---------- */
+      .item {
+        position: absolute;
+        left: 0; top: 0;
+        width: 62px;
+        text-align: center;
+        pointer-events: none;
+        will-change: transform;
+      }
+      .item .emoji { font-size: 42px; line-height: 1; display: block; filter: drop-shadow(0 4px 5px rgba(0,0,0,.18)); }
+      .item .tag {
+        display: inline-block;
+        margin-top: 2px;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 1px 7px;
+        border-radius: 99px;
+        background: var(--good);
+        color: #fff;
+      }
+      .item.expired .emoji { filter: grayscale(.55) sepia(.7) hue-rotate(55deg) saturate(1.6) drop-shadow(0 4px 5px rgba(0,0,0,.2)); }
+      .item.expired .tag { background: var(--bad); font-size: 9.5px; letter-spacing: .02em; }
+      .item.gold .emoji { filter: drop-shadow(0 0 10px rgba(255, 190, 30, .75)); }
+      .item.gold .tag { background: var(--gold); color: #3a2703; }
+
+      /* ---------- Basket ---------- */
+      #basket {
+        position: absolute;
+        left: 0;
+        bottom: 16px;
+        width: 96px;
+        text-align: center;
+        pointer-events: none;
+        will-change: transform;
+        z-index: 5;
+      }
+      #basket .emoji { font-size: 66px; line-height: 1; display: block; filter: drop-shadow(0 6px 8px rgba(0,0,0,.22)); }
+      #basket.bump { animation: bump .18s; }
+      @keyframes bump { 0% { scale: 1; } 40% { scale: 1.12; } 100% { scale: 1; } }
+      #basket.hurt { animation: bump .18s; filter: hue-rotate(-40deg) saturate(2); }
+
+      /* ---------- Score popups ---------- */
+      .pop {
+        position: absolute;
+        font-family: "Baloo 2", sans-serif;
+        font-weight: 800;
+        font-size: 22px;
+        pointer-events: none;
+        z-index: 6;
+        animation: rise .8s ease-out forwards;
+        text-shadow: 0 2px 0 rgba(255,255,255,.35);
+      }
+      .pop.plus { color: var(--good); }
+      .pop.minus { color: var(--bad); }
+      @keyframes rise {
+        from { opacity: 1; transform: translate(-50%, 0); }
+        to { opacity: 0; transform: translate(-50%, -56px); }
+      }
+
+      /* ---------- Overlays ---------- */
+      .overlay {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        text-align: center;
+        padding: 26px 24px;
+        background: color-mix(in srgb, var(--stage) 88%, transparent);
+        backdrop-filter: blur(3px);
+        z-index: 10;
+      }
+      .overlay.hidden { display: none; }
+      .big-emoji { font-size: 74px; line-height: 1; }
+      h1 {
+        font-family: "Baloo 2", sans-serif;
+        font-size: 44px; font-weight: 800;
+        margin: 8px 0 2px;
+        line-height: 1.05;
+      }
+      h2 {
+        font-family: "Baloo 2", sans-serif;
+        font-size: 34px; font-weight: 800;
+        margin: 8px 0 2px;
+        line-height: 1.1;
+      }
+      .tagline { color: var(--ink-soft); font-weight: 700; margin: 0 0 18px; }
+      .rules {
+        background: var(--card);
+        border: 2px solid var(--stage-edge);
+        border-radius: 18px;
+        padding: 14px 18px;
+        text-align: left;
+        font-weight: 700;
+        font-size: 15px;
+        display: grid; gap: 9px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow);
+        max-width: 340px; width: 100%;
+      }
+      .rules .r { display: flex; gap: 10px; align-items: center; }
+      .rules .r span:first-child { font-size: 24px; width: 32px; text-align: center; flex: none; }
+      .rules small { color: var(--ink-soft); font-weight: 700; }
+      .btn {
+        font-family: "Baloo 2", sans-serif;
+        font-size: 21px; font-weight: 800;
+        background: var(--accent);
+        color: var(--accent-ink);
+        border: none;
+        border-radius: 99px;
+        padding: 13px 38px;
+        cursor: pointer;
+        box-shadow: 0 6px 0 var(--accent-deep), var(--shadow);
+        transition: transform .08s, box-shadow .08s;
+      }
+      .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--accent-deep); }
+      .final-score {
+        font-family: "Baloo 2", sans-serif;
+        font-size: 58px; font-weight: 800;
+        line-height: 1;
+        margin: 4px 0;
+      }
+      .best-line { color: var(--ink-soft); font-weight: 800; margin-bottom: 18px; }
+      .new-record {
+        background: var(--gold); color: #3a2703;
+        font-weight: 800; font-size: 13px;
+        padding: 3px 12px; border-radius: 99px;
+        margin-bottom: 8px;
+      }
+      .controls-hint { margin-top: 16px; font-size: 13px; color: var(--ink-soft); font-weight: 700; }
+      @media (prefers-reduced-motion: reduce) {
+        #stage.shake, #basket.bump, #basket.hurt { animation: none; }
+        .pop { animation-duration: .01s; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="hud">
+        <div class="hud-box">
+          <div class="hud-label">Skor</div>
+          <div id="score">0</div>
+        </div>
+        <div class="hud-box" id="lives" aria-label="Nyawa">❤️❤️❤️</div>
+        <div class="hud-spacer"></div>
+        <button class="icon-btn" id="sound-btn" aria-label="Suara nyala/mati">🔊</button>
+        <button class="icon-btn" id="pause-btn" aria-label="Jeda">⏸️</button>
+      </div>
+      <div id="timer-wrap">
+        <div id="timer-bar-bg"><div id="timer-bar"></div></div>
+        <div id="timer-text">60 detik</div>
+      </div>
+
+      <div id="stage">
+        <div id="floor"></div>
+        <div id="basket"><span class="emoji">🧺</span></div>
+
+        <!-- Layar mulai -->
+        <div class="overlay" id="start-screen">
+          <div class="big-emoji">🛒</div>
+          <h1>Buru Diskon</h1>
+          <p class="tagline">Tangkap barang diskon sebanyak-banyaknya sebelum waktu habis!</p>
+          <div class="rules">
+            <div class="r"><span>🧀</span><div>Barang bertanda <b>-%</b> = poin. Makin besar diskonnya, makin besar poinnya.</div></div>
+            <div class="r"><span>🎁</span><div>Paket emas = <b>+50 poin</b> dan <b>+3 detik</b> waktu.</div></div>
+            <div class="r"><span>🥛</span><div>Barang <b style="color:var(--bad)">KADALUARSA</b> jangan ditangkap! Kena penalti −25 poin dan −1 nyawa. <small>Biarin jatuh aja.</small></div></div>
+            <div class="r"><span>❤️</span><div>Nyawa cuma 3. Waktu main 60 detik.</div></div>
+          </div>
+          <button class="btn" id="start-btn">Mulai Main</button>
+          <p class="controls-hint">📱 Geser jari / mouse untuk gerakin keranjang<br />⌨️ Di komputer bisa pakai tombol ⬅️ ➡️ atau A / D</p>
+        </div>
+
+        <!-- Layar jeda -->
+        <div class="overlay hidden" id="pause-screen">
+          <div class="big-emoji">⏸️</div>
+          <h2>Istirahat Dulu</h2>
+          <p class="tagline">Permainan dijeda sebentar.</p>
+          <button class="btn" id="resume-btn">Lanjut Main</button>
+        </div>
+
+        <!-- Layar game over -->
+        <div class="overlay hidden" id="over-screen">
+          <div class="big-emoji" id="over-emoji">🏁</div>
+          <h2 id="over-title">Waktu Habis!</h2>
+          <div class="new-record hidden" id="record-badge" style="display:none">🏆 Rekor Baru!</div>
+          <div class="final-score" id="final-score">0</div>
+          <p class="best-line" id="conv-line" style="margin-bottom:4px">= 0 koin (1000 poin = 1 koin)</p>
+          <p class="best-line" id="best-line">Skor terbaik sesi ini: 0</p>
+          <div class="rules" style="margin-bottom:20px">
+            <div class="r"><span>✅</span><div>Barang diskon tertangkap: <b id="stat-caught">0</b></div></div>
+            <div class="r"><span>🤢</span><div>Kadaluarsa ketangkap: <b id="stat-expired">0</b></div></div>
+          </div>
+          <button class="btn" id="again-btn">Main Lagi</button>
+          <p class="controls-hint">Skor sudah dikirim — klaim koinmu di panel yang muncul.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      var stage = document.getElementById("stage");
+      var basketEl = document.getElementById("basket");
+      var scoreEl = document.getElementById("score");
+      var livesEl = document.getElementById("lives");
+      var timerBar = document.getElementById("timer-bar");
+      var timerText = document.getElementById("timer-text");
+      var startScreen = document.getElementById("start-screen");
+      var pauseScreen = document.getElementById("pause-screen");
+      var overScreen = document.getElementById("over-screen");
+
+      var GOODS = ["🍞","🥛","🧀","🍎","🍌","🍗","🥚","🧈","🍫","☕","🍚","🍜","🧃","🍪","🥜","🧴","🧻","🍯","🥫","🍇"];
+      var DISCOUNTS = [
+        { pct: 20, pts: 10 }, { pct: 20, pts: 10 },
+        { pct: 30, pts: 15 }, { pct: 30, pts: 15 },
+        { pct: 50, pts: 25 }, { pct: 50, pts: 25 },
+        { pct: 70, pts: 40 }
+      ];
+      var GAME_TIME = 60;
+      var BASKET_W = 96;
+
+      var state = "start"; // start | playing | paused | over
+      var score = 0, lives = 3, timeLeft = GAME_TIME, best = 0;
+      var caught = 0, expiredCaught = 0;
+      var items = [];
+      var basketX = 0, basketTarget = 0;
+      var keys = { left: false, right: false };
+      var spawnTimer = 0, lastTs = 0, elapsed = 0;
+      var soundOn = true, audioCtx = null, startTime = 0;
+
+      function stageW() { return stage.clientWidth; }
+      function clampBasket(x) {
+        var half = BASKET_W / 2;
+        return Math.max(half - 8, Math.min(stageW() - half + 8, x));
+      }
+      function placeBasket() {
+        basketEl.style.transform = "translateX(" + (basketX - BASKET_W / 2) + "px)";
+      }
+
+      function beep(freq, dur, type, vol) {
+        if (!soundOn) return;
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === "suspended") audioCtx.resume();
+          var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = type || "sine"; o.frequency.value = freq;
+          g.gain.setValueAtTime(vol || 0.12, audioCtx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+          o.connect(g); g.connect(audioCtx.destination);
+          o.start(); o.stop(audioCtx.currentTime + dur);
+        } catch (e) { /* suara opsional */ }
+      }
+      function sndGood() { beep(660, 0.09, "sine", 0.12); setTimeout(function(){ beep(990, 0.1, "sine", 0.1); }, 55); }
+      function sndGold() { beep(880, 0.09, "triangle", 0.14); setTimeout(function(){ beep(1320, 0.14, "triangle", 0.12); }, 70); }
+      function sndBad() { beep(160, 0.22, "sawtooth", 0.1); }
+
+      function renderLives() {
+        var s = "";
+        for (var i = 0; i < 3; i++) s += i < lives ? "❤️" : '<span class="lost">❤️</span>';
+        livesEl.innerHTML = s;
+      }
+      function renderTimer() {
+        var pct = Math.max(0, timeLeft / GAME_TIME * 100);
+        timerBar.style.width = pct + "%";
+        timerBar.className = timeLeft <= 10 ? "low" : "";
+        timerBar.id = "timer-bar";
+        timerText.textContent = Math.ceil(Math.max(0, timeLeft)) + " detik";
+      }
+
+      function spawnItem() {
+        var roll = Math.random();
+        var kind = roll < 0.20 ? "expired" : (roll < 0.26 ? "gold" : "good");
+        var el = document.createElement("div");
+        el.className = "item " + (kind === "expired" ? "expired" : kind === "gold" ? "gold" : "");
+        var emoji, tag, pts = 0;
+        if (kind === "gold") { emoji = "🎁"; tag = "+50"; pts = 50; }
+        else if (kind === "expired") { emoji = GOODS[(Math.random() * GOODS.length) | 0]; tag = "KADALUARSA"; }
+        else {
+          emoji = GOODS[(Math.random() * GOODS.length) | 0];
+          var d = DISCOUNTS[(Math.random() * DISCOUNTS.length) | 0];
+          tag = "-" + d.pct + "%"; pts = d.pts;
+        }
+        el.innerHTML = '<span class="emoji">' + emoji + '</span><span class="tag">' + tag + '</span>';
+        stage.appendChild(el);
+        var speedRamp = Math.min(160, elapsed * 3.2);
+        items.push({
+          el: el, kind: kind, pts: pts,
+          x: 34 + Math.random() * (stageW() - 68),
+          y: -70,
+          speed: 150 + Math.random() * 110 + speedRamp,
+          spin: (Math.random() - 0.5) * 14
+        });
+      }
+
+      function popText(x, y, text, cls) {
+        var p = document.createElement("div");
+        p.className = "pop " + cls;
+        p.textContent = text;
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+        stage.appendChild(p);
+        setTimeout(function () { p.remove(); }, 820);
+      }
+
+      function removeItem(it) {
+        it.el.remove();
+        items.splice(items.indexOf(it), 1);
+      }
+
+      function catchItem(it) {
+        var basketTop = stage.clientHeight - 96;
+        if (it.kind === "good") {
+          score += it.pts; caught++;
+          popText(it.x, basketTop, "+" + it.pts, "plus");
+          sndGood();
+          basketEl.classList.remove("bump"); void basketEl.offsetWidth; basketEl.classList.add("bump");
+        } else if (it.kind === "gold") {
+          score += 50; caught++;
+          timeLeft = Math.min(GAME_TIME, timeLeft + 3);
+          popText(it.x, basketTop, "+50 ⏰+3", "plus");
+          sndGold();
+          basketEl.classList.remove("bump"); void basketEl.offsetWidth; basketEl.classList.add("bump");
+        } else {
+          score = Math.max(0, score - 25);
+          lives--; expiredCaught++;
+          popText(it.x, basketTop, "-25", "minus");
+          sndBad();
+          stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake");
+          basketEl.classList.remove("hurt"); void basketEl.offsetWidth; basketEl.classList.add("hurt");
+          renderLives();
+          if (lives <= 0) { removeItem(it); gameOver("Nyawa Habis!"); return; }
+        }
+        scoreEl.textContent = score;
+        removeItem(it);
+      }
+
+      function loop(ts) {
+        if (state !== "playing") return;
+        var dt = Math.min(0.05, (ts - lastTs) / 1000 || 0);
+        lastTs = ts;
+        elapsed += dt;
+        timeLeft -= dt;
+        if (timeLeft <= 0) { timeLeft = 0; renderTimer(); gameOver("Waktu Habis!"); return; }
+        renderTimer();
+
+        // Gerakan keranjang
+        var keySpeed = 560;
+        if (keys.left) basketTarget -= keySpeed * dt;
+        if (keys.right) basketTarget += keySpeed * dt;
+        basketTarget = clampBasket(basketTarget);
+        basketX += (basketTarget - basketX) * Math.min(1, dt * 18);
+        placeBasket();
+
+        // Spawn
+        spawnTimer -= dt;
+        var interval = Math.max(0.42, 0.92 - elapsed * 0.009);
+        if (spawnTimer <= 0) { spawnItem(); spawnTimer = interval * (0.7 + Math.random() * 0.6); }
+
+        // Jatuhkan barang
+        var basketTop = stage.clientHeight - 96;
+        var basketBottom = stage.clientHeight - 14;
+        for (var i = items.length - 1; i >= 0; i--) {
+          var it = items[i];
+          it.y += it.speed * dt;
+          it.el.style.transform = "translate(" + (it.x - 31) + "px," + it.y + "px) rotate(" + Math.sin(it.y / 60) * it.spin + "deg)";
+          if (it.y + 56 >= basketTop && it.y + 30 <= basketBottom && Math.abs(it.x - basketX) < 52) {
+            catchItem(it);
+            if (state !== "playing") return;
+          } else if (it.y > stage.clientHeight + 10) {
+            removeItem(it);
+          }
+        }
+        requestAnimationFrame(loop);
+      }
+
+      function startGame() {
+        startTime = Date.now();
+        items.forEach(function (it) { it.el.remove(); });
+        items = [];
+        score = 0; lives = 3; timeLeft = GAME_TIME; elapsed = 0;
+        caught = 0; expiredCaught = 0; spawnTimer = 0.3;
+        scoreEl.textContent = "0";
+        renderLives(); renderTimer();
+        basketX = basketTarget = stageW() / 2;
+        placeBasket();
+        startScreen.classList.add("hidden");
+        overScreen.classList.add("hidden");
+        pauseScreen.classList.add("hidden");
+        state = "playing";
+        lastTs = performance.now();
+        requestAnimationFrame(loop);
+      }
+
+      function gameOver(title) {
+        state = "over";
+        scoreEl.textContent = score;
+        document.getElementById("over-title").textContent = title;
+        document.getElementById("over-emoji").textContent = lives <= 0 ? "🤢" : "🏁";
+        document.getElementById("final-score").textContent = score;
+        document.getElementById("stat-caught").textContent = caught;
+        document.getElementById("stat-expired").textContent = expiredCaught;
+        var isRecord = score > best;
+        if (isRecord) best = score;
+        document.getElementById("record-badge").style.display = isRecord && score > 0 ? "" : "none";
+        document.getElementById("best-line").textContent = "Skor terbaik sesi ini: " + best;
+        document.getElementById("conv-line").textContent = "= " + Math.floor(score / 1000) + " koin (1000 poin = 1 koin)";
+        overScreen.classList.remove("hidden");
+        var durationMs = Date.now() - startTime;
+        try { parent.postMessage({ type: "buruDiskonScore", points: score, durationMs: durationMs }, "*"); } catch (e) {}
+        beep(520, 0.15, "sine", 0.1); setTimeout(function(){ beep(390, 0.2, "sine", 0.1); }, 150);
+      }
+
+      function setPaused(p) {
+        if (p && state === "playing") {
+          state = "paused";
+          pauseScreen.classList.remove("hidden");
+        } else if (!p && state === "paused") {
+          state = "playing";
+          pauseScreen.classList.add("hidden");
+          lastTs = performance.now();
+          requestAnimationFrame(loop);
+        }
+      }
+
+      // Kontrol sentuh / mouse: seret di mana saja di panggung
+      function pointerX(e) {
+        var r = stage.getBoundingClientRect();
+        return e.clientX - r.left;
+      }
+      stage.addEventListener("pointerdown", function (e) {
+        if (state === "playing") basketTarget = clampBasket(pointerX(e));
+      });
+      stage.addEventListener("pointermove", function (e) {
+        if (state === "playing" && (e.buttons > 0 || e.pointerType === "touch")) basketTarget = clampBasket(pointerX(e));
+      });
+
+      // Kontrol keyboard
+      window.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") { keys.left = true; e.preventDefault(); }
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") { keys.right = true; e.preventDefault(); }
+        if ((e.key === " " || e.key === "Enter") && state === "start") startGame();
+        if ((e.key === " " || e.key === "Enter") && state === "over") startGame();
+      });
+      window.addEventListener("keyup", function (e) {
+        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = false;
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = false;
+      });
+
+      document.getElementById("start-btn").addEventListener("click", startGame);
+      document.getElementById("again-btn").addEventListener("click", startGame);
+      document.getElementById("resume-btn").addEventListener("click", function () { setPaused(false); });
+      document.getElementById("pause-btn").addEventListener("click", function () {
+        if (state === "playing") setPaused(true);
+        else if (state === "paused") setPaused(false);
+      });
+      document.getElementById("sound-btn").addEventListener("click", function () {
+        soundOn = !soundOn;
+        this.textContent = soundOn ? "🔊" : "🔇";
+      });
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden && state === "playing") setPaused(true);
+      });
+      window.addEventListener("resize", function () {
+        basketX = clampBasket(basketX); basketTarget = clampBasket(basketTarget);
+        placeBasket();
+      });
+
+      basketX = basketTarget = stageW() / 2;
+      placeBasket();
+      renderLives(); renderTimer();
+    </script>
+  </body>
+</html>

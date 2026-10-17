@@ -122,7 +122,7 @@ Object.assign(Store, {
     /* Program koin: nyala/mati + event + hadiah (live) */
     if (typeof d.coinProgramEnabled === 'boolean') S.coinProgramEnabled = d.coinProgramEnabled;
     if (d.coinEvents && typeof d.coinEvents === 'object') {
-      ['checkin', 'mission', 'guess', 'spend', 'tangkapDiskon'].forEach(k => {
+      ['checkin', 'mission', 'guess', 'spend', 'tangkapDiskon', 'buruDiskon'].forEach(k => {
         if (typeof d.coinEvents[k] === 'boolean') S.coinEvents[k] = d.coinEvents[k];
       });
     }

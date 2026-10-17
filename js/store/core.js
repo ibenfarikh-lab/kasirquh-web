@@ -58,7 +58,7 @@ const S = {
   coinRule: '', // dari store_settings/main.coinRule (live)
   coinRedeemPercent: 50, // dari store_settings/main.coinRedeemLimit (live)
   coinRedeemEnabled: false,
-  coinEvents: {checkin:true,mission:true,guess:true,spend:true,tangkapDiskon:true},
+  coinEvents: {checkin:true,mission:true,guess:true,spend:true,tangkapDiskon:true,buruDiskon:true},
   coinRewards: {checkin:25,mission:250,guess:100},
   coinHistory: [], // koleksi `coin_ledger` milik pelanggan (live)
   flashProductId: null, // dari store_settings/main.flashProductId (live)

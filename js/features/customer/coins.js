@@ -65,6 +65,71 @@ window.addEventListener('message',function(e){
   var d=e.data;if(!d||d.type!=='tangkapDiskonScore')return;
   onTangkapDiskonScore(d);
 });
+
+/* --- Game Buru Diskon → Misi Koin (2026-10-17, dari artefak) ---
+ * Pola sama dengan Tangkap Diskon: tile → modal (iframe) → postMessage
+ * skor → aplikasi hitung koin (1000 poin = 1) → klaim via grantGameCoins
+ * (kuota 500/hari DIGABUNG dengan Tangkap Diskon). */
+function onBuruDiskonScore(d){
+  var points=Math.max(0,Math.floor(Number(d&&d.points)||0));
+  var durationMs=Math.max(0,Number(d&&d.durationMs)||0);
+  var panel=$('#buruClaimPanel');if(!panel)return;
+  var scoreEl=$('#buruScoreLabel'),coinEl=$('#buruCoinLabel'),claimBtn=$('#buruClaimBtn'),noteEl=$('#buruClaimNote');
+  var loggedIn=S.activeCustomerId&&!S.isGuest;
+  var coins=Math.floor(points/GAME_POINTS_PER_COIN);
+  var sane=points>0&&points<=GAME_SESSION_MAX_POINTS&&durationMs>=GAME_MIN_DURATION_MS;
+  S.buruPending=sane?{points:points,coins:coins}:null;
+  if(scoreEl)scoreEl.textContent=points.toLocaleString('id-ID')+' poin';
+  if(!sane){
+    if(coinEl)coinEl.textContent='Skor tidak wajar.';
+    if(claimBtn)claimBtn.hidden=true;
+    if(noteEl)noteEl.textContent='Mainkan gamenya sampai selesai ya.';
+  }else if(!loggedIn){
+    if(coinEl)coinEl.textContent='= '+coins+' koin';
+    if(claimBtn)claimBtn.hidden=true;
+    if(noteEl)noteEl.textContent='Login/daftar dulu untuk klaim koinmu.';
+  }else if(coins<=0){
+    if(coinEl)coinEl.textContent='Belum cukup untuk 1 koin (butuh 1000 poin).';
+    if(claimBtn)claimBtn.hidden=true;
+    if(noteEl)noteEl.textContent='Coba lagi — tangkap yang berlabel diskon.';
+  }else{
+    if(coinEl)coinEl.textContent='= '+coins+' koin';
+    if(claimBtn){claimBtn.hidden=false;claimBtn.textContent='Klaim +'+coins+' koin';}
+    if(noteEl)noteEl.textContent='Maksimal 500 koin/hari dari game.';
+  }
+  panel.hidden=false;
+}
+window.addEventListener('message',function(e){
+  if(e.origin!==location.origin)return;
+  var d=e.data;if(!d||d.type!=='buruDiskonScore')return;
+  onBuruDiskonScore(d);
+});
+function claimBuruDiskonCoins(){
+  var p=S.buruPending;if(!p||!p.coins)return;
+  if(!S.coinProgramEnabled){toast('Program koin sedang dimatikan admin');return;}
+  var btn=$('#buruClaimBtn');if(btn)btn.disabled=true;
+  Store.grantGameCoins(S.activeCustomerId,p.coins,{points:p.points,reason:'game_buru_diskon',label:'Buru Diskon'}).then(function(res){
+    if(btn)btn.disabled=false;
+    if(res&&res.granted>0){
+      S.buruPending=null;var panel=$('#buruClaimPanel');if(panel)panel.hidden=true;
+      updateCoinUI();renderMissions();celebrate('coin');
+      toast('+'+res.granted+' Koin Warga'+(res.capped?' (batas 500/hari tercapai)':''));
+    }else{toast('Batas 500 koin game hari ini sudah tercapai');}
+  }).catch(function(error){
+    if(btn)btn.disabled=false;
+    if(!error||error.code!=='OFFLINE')toast(error&&error.message?'Klaim gagal':error.message);
+  });
+}
+function renderBuruDiskonTile(){
+  var prog=$('#buruDayProgress'),doc=S.myCustomerDoc;
+  if(prog){var got=(doc&&doc.gameCoinsDate===S.todayKey)?Math.max(0,Math.floor(Number(doc.gameCoinsToday)||0)):0;
+    prog.textContent='Hari ini: '+got+'/'+GAME_MAX_COINS_DAY+' koin';}
+  var claimBtn=$('#buruClaimBtn');
+  if(claimBtn&&!claimBtn.dataset.bound){claimBtn.dataset.bound='1';claimBtn.onclick=claimBuruDiskonCoins;}
+  var replayBtn=$('#buruReplayBtn');
+  if(replayBtn&&!replayBtn.dataset.bound){replayBtn.dataset.bound='1';replayBtn.onclick=function(){
+    var p=$('#buruClaimPanel');if(p)p.hidden=true;var f=$('#buruGameFrame');if(f)f.src='games/buru-diskon.html?v=20261020ah';};}
+}
 function claimTangkapDiskonCoins(){
   var p=S.gamePending;if(!p||!p.coins)return;
   if(!S.coinProgramEnabled){toast('Program koin sedang dimatikan admin');return;}
