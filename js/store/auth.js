@@ -167,7 +167,7 @@ const StoreAuth = {
   /* Daftar pelanggan: Auth + customers/{uid} {approvalStatus:'pending'}.
    * Setelah daftar langsung signOut → kembali mode tamu dengan pesan
    * "menunggu persetujuan" (1:1 alur yang dikunci). */
-  async registerCustomer({ name, email, password, wa }) {
+  async registerCustomer({ name, email, password, wa, address }) {
     if (!this.needOnline()) throw __offlineError();
     let cred;
     try {
@@ -181,6 +181,7 @@ const StoreAuth = {
         name: name,
         email: email,
         wa: wa || '',
+        address: address || '',
         approvalStatus: 'pending',
         coins: 0,
         createdAt: FB.serverTimestamp(),
