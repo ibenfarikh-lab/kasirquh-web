@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Back Test</title></head>
+<body>
+<h1>Back Button Test</h1>
+<button id="openBtn">Buka Sheet</button>
+<div id="sheet" style="display:none;border:2px solid orange;padding:20px;margin:20px;">
+  <p>Sheet terbuka</p>
+  <button id="closeBtn">Tutup (×)</button>
+</div>
+<p id="log"></p>
+<script>
+var kqDepth = 0, kqIgnore = false;
+function log(m){ document.getElementById('log').innerHTML += m + '<br>'; }
+function push(){ kqDepth++; try { history.pushState({t:1}, ''); log('pushState OK, depth='+kqDepth); } catch(e){ log('pushState FAIL: '+e); } }
+function drop(){ if(kqDepth<=0) return; kqDepth--; kqIgnore=true; try{ history.back(); }catch(e){ kqIgnore=false; } setTimeout(function(){kqIgnore=false;},600); log('drop, depth='+kqDepth); }
+window.addEventListener('popstate', function(){
+  if(kqIgnore){ kqIgnore=false; log('popstate ignored'); return; }
+  if(kqDepth>0) kqDepth--;
+  log('popstate, depth='+kqDepth);
+  var s = document.getElementById('sheet');
+  if(s.style.display !== 'none'){ s.style.display='none'; log('sheet closed by back'); }
+});
+document.getElementById('openBtn').onclick = function(){
+  document.getElementById('sheet').style.display='block'; push();
+};
+document.getElementById('closeBtn').onclick = function(){
+  document.getElementById('sheet').style.display='none'; drop();
+};
+log('ready, history.length='+history.length);
+</script>
+</body></html>
