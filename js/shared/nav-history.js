@@ -64,7 +64,18 @@ function kqOnBack() {
   // 3. Mentok — biarkan browser kembali ke situs sebelumnya / keluar (default).
 }
 
-/* DEBUG SEMENTARA (2026-10-18) - hapus setelah tes */
-window.kqDebugStatus = function(){
-  return 'kqPushHist=' + (typeof kqPushHist) + ',kqFromPop=' + (typeof kqFromPop) + ',depth=' + kqHistDepth;
-};
+/* DEBUG VISUAL (2026-10-18) - hapus setelah tes lolos */
+(function(){
+  if (location.search.indexOf('dbg') === -1) return;
+  var d = document.createElement('div');
+  d.id = 'kqDbg';
+  d.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font:11px monospace;padding:8px;z-index:99999;white-space:pre-wrap;';
+  document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(d); kqDbgUpdate(); });
+  window.kqDbgUpdate = function(){
+    var el = document.getElementById('kqDbg');
+    if (el) el.textContent = 'kqPushHist=' + (typeof kqPushHist) + ' | kqFromPop=' + (typeof kqFromPop) + ' | depth=' + kqHistDepth + ' | sheet=' + (!!document.querySelector('.modal.open')) + ' | tabHist=' + JSON.stringify(kqTabHist);
+  };
+  var origPush = kqPushHist;
+  kqPushHist = function(){ origPush(); kqDbgUpdate(); };
+  setInterval(function(){ if(window.kqDbgUpdate) kqDbgUpdate(); }, 1000);
+})();
