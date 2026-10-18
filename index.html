@@ -9,7 +9,7 @@
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:,">
 <title>KasirQuh · Warunge Mimi</title>
-<link rel="stylesheet" href="css/app.css?v=20261020at">
+<link rel="stylesheet" href="css/app.css?v=20261020au">
 </head>
 <body>
 <div class="app">
@@ -176,8 +176,8 @@
 <div id="hajatanModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Belanja acara lebih tenang</small><h2>Paket Hajatan</h2></div><button class="sheet-close" data-close-sheet>×</button></div><div class="plan-grid"><button class="plan-card hajatan-plan active" data-hajatan="snack"><b>Paket suguhan 20 tamu</b><small>Snack &amp; minuman kemasan</small><strong>Ikut harga katalog</strong></button><button class="plan-card hajatan-plan" data-hajatan="dapur"><b>Paket dapur acara</b><small>Mi, minyak, minuman</small><strong>Ikut harga katalog</strong></button></div><button id="hajatanBtn" class="primary-wide">Masukkan paket ke keranjang</button><p class="service-note">Harga di keranjang dapat diperiksa dulu sebelum pesanan diteruskan.</p></section></div>
 <div id="priceAlertModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Harga yang kamu pantau</small><h2>Pantau Harga</h2></div><button class="sheet-close" data-close-sheet>×</button></div><div id="priceAlertList" class="service-list"><div class="empty-note">Belum ada barang dipantau.<br><small>Buka detail produk lalu pilih “Ingat harga”.</small></div></div><button class="secondary-wide" data-close-sheet>Lihat produk</button></section></div>
 <div id="missionsModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Misi 7 hari terakhir</small><h2>Misi koin</h2></div><button class="sheet-close" data-close-sheet>×</button></div><p class="coin-tagline">Koinnya bisa dicari sambil main, belanjanya jadi makin murah!</p><div class="coin-balance-inline">Saldo <span id="missionCoinBalance">Belum ada koin</span></div><article class="mission-card"><header><h3>Belanja 3 kali</h3><span class="notice-count" id="missionShopCount">0/3</span></header><p>Belanja dari 3 transaksi berbeda dalam 7 hari terakhir.</p><div class="progress-track"><span id="missionShopBar" style="width:0%"></span></div><button id="missionShopBtn" disabled>+300 koin</button></article><article class="mission-card" id="newProductMission"><header><h3>Coba produk baru</h3><span class="stock-pill" id="missionNewState">Belum ada</span></header><p>Sudah mencoba barang yang belum pernah dibeli.</p><div class="progress-track"><span style="width:100%"></span></div><button id="claimMissionBtn">Ambil +250 koin</button></article><p class="coin-section-title">Game Berhadiah</p><article class="mission-card" id="gameMission"><header><h3>Tangkap Diskon</h3><span class="stock-pill" id="gameDayProgress">Hari ini: 0/500 koin</span></header><p>Tangkap diskon 60 detik! 1000 poin = 1 koin, bebas main.</p><div class="progress-track"><span style="width:100%"></span></div><button id="playGameBtn" data-open-sheet="gameModal">Main Tangkap Diskon</button></article><article class="mission-card" id="buruDiskonMission"><header><h3>Buru Diskon</h3><span class="stock-pill" id="buruDayProgress">Hari ini: 0/500 koin</span></header><p>Tangkap barang diskon pakai keranjang! 1000 poin = 1 koin, bebas main.</p><div class="progress-track"><span style="width:100%"></span></div><button id="playBuruBtn" data-open-sheet="buruDiskonModal">Main Buru Diskon</button></article><article class="mission-card" id="guessMission"><header><h3>Tebak Harga</h3><span class="stock-pill">1x/hari</span></header><p>Tebak harga produk dari foto aslinya, dapat koin.</p><div class="progress-track"><span style="width:100%"></span></div><button data-open-sheet="priceGuessModal">Main Tebak Harga</button></article><p class="service-note">Koin yang diambil langsung masuk ke dompet Koin Warga.</p></section></div>
-<div id="buruDiskonModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Misi Koin · Game</small><h2>Buru Diskon</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup game">×</button></div><div class="game-wrap"><iframe id="buruGameFrame" class="game-frame" title="Game Buru Diskon" src="games/buru-diskon.html?v=20261020at" sandbox="allow-scripts allow-same-origin"></iframe><div id="buruClaimPanel" class="game-claim" hidden><b id="buruScoreLabel">0 poin</b><p id="buruCoinLabel">= 0 koin</p><p class="game-note" id="buruClaimNote"></p><div class="game-claim-actions"><button id="buruReplayBtn" class="ghost">Main lagi</button><button id="buruClaimBtn" class="primary">Klaim koin</button></div></div></div></section></div>
-<div id="gameModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Misi Koin · Game</small><h2>Tangkap Diskon</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup game">×</button></div><div class="game-wrap"><iframe id="gameFrame" class="game-frame" title="Game Tangkap Diskon" src="games/tangkap-diskon.html?v=20261020at" sandbox="allow-scripts allow-same-origin"></iframe><div id="gameClaimPanel" class="game-claim" hidden><b id="gameScoreLabel">0 poin</b><p id="gameCoinLabel">= 0 koin</p><p class="game-note" id="gameClaimNote"></p><div class="game-claim-actions"><button id="gameReplayBtn" class="ghost">Main lagi</button><button id="gameClaimBtn" class="primary">Klaim koin</button></div></div></div></section></div>
+<div id="buruDiskonModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Misi Koin · Game</small><h2>Buru Diskon</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup game">×</button></div><div class="game-wrap"><iframe id="buruGameFrame" class="game-frame" title="Game Buru Diskon" src="games/buru-diskon.html?v=20261020au" sandbox="allow-scripts allow-same-origin"></iframe><div id="buruClaimPanel" class="game-claim" hidden><b id="buruScoreLabel">0 poin</b><p id="buruCoinLabel">= 0 koin</p><p class="game-note" id="buruClaimNote"></p><div class="game-claim-actions"><button id="buruReplayBtn" class="ghost">Main lagi</button><button id="buruClaimBtn" class="primary">Klaim koin</button></div></div></div></section></div>
+<div id="gameModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Misi Koin · Game</small><h2>Tangkap Diskon</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup game">×</button></div><div class="game-wrap"><iframe id="gameFrame" class="game-frame" title="Game Tangkap Diskon" src="games/tangkap-diskon.html?v=20261020au" sandbox="allow-scripts allow-same-origin"></iframe><div id="gameClaimPanel" class="game-claim" hidden><b id="gameScoreLabel">0 poin</b><p id="gameCoinLabel">= 0 koin</p><p class="game-note" id="gameClaimNote"></p><div class="game-claim-actions"><button id="gameReplayBtn" class="ghost">Main lagi</button><button id="gameClaimBtn" class="primary">Klaim koin</button></div></div></div></section></div>
 <div id="priceGuessModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker" id="guessKicker">Tebak harga produk ini</small><h2>Tebak Harga</h2></div><button class="sheet-close" data-close-sheet>×</button></div><div class="guess-product"><img id="guessProductImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" alt="Produk tebak harga"><div><h3 id="guessProductName">Produk</h3><small id="guessProductUnit">pcs</small><span class="coin-balance-inline" id="guessRewardLabel">Hadiah koin</span></div></div><div id="guessOptions" class="guess-options"></div><p id="guessResult" class="service-note">Pilih satu jawaban.</p><button id="guessNewBtn" class="secondary-wide" hidden>Soal baru</button></section></div>
 <div id="settingsModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Sesuai caramu</small><h2>Pengaturan Pelanggan</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup">×</button></div><div class="settings-group"><label>Foto profil</label><div class="photo-edit-row"><span id="photoPreview" class="avatar photo-preview">M</span><span><button id="changePhotoBtn" class="secondary" type="button">Ganti foto</button><input id="photoFileInput" type="file" accept="image/*" hidden><small class="setting-help">Foto dikompres otomatis, tersimpan aman.</small></span></div></div><div class="settings-group"><label for="customerNameInput">Nama panggilan</label><input id="customerNameInput" class="setting-input" value="Mimi"></div><div class="settings-group"><label for="customerWaInput">Nomor WhatsApp</label><input id="customerWaInput" class="setting-input" type="tel" placeholder="08xxxxxxxxxx" maxlength="20"></div><div class="settings-group"><label for="customerAddressInput">Alamat</label><input id="customerAddressInput" class="setting-input" placeholder="Alamat lengkap" maxlength="120"></div><div class="settings-group"><label>Tema tampilan</label><div class="theme-picks theme-mode-picks"><button class="active" data-customer-theme="light">Terang<small>Bawaan pelanggan</small></button><button data-customer-theme="dark">Gelap<small>Nyaman malam</small></button><button data-customer-theme="system">Ikuti HP<small>Otomatis</small></button></div></div><div class="settings-group"><label>Tampilan produk</label><div class="density-picks"><button class="active" data-density-choice="compact">Ringkas</button><button data-density-choice="roomy">Lega</button><button data-density-choice="list">Daftar</button></div></div><div class="settings-group"><label>Dering notifikasi</label><div class="sound-presets"><button class="active" data-sound-preset="system">Bawaan HP<small>Nada umum perangkat</small></button><button data-sound-preset="mimi">Khas Mimi<small>Beda tiap kejadian</small></button><button data-sound-preset="silent">Hening<small>Getar tanpa suara</small></button></div><div class="sound-list"><div class="sound-row"><span><b>Pesanan siap</b><small>Kabar belanja</small></span><select data-sound-select="order" aria-label="Dering pesanan siap"><option value="system">Bawaan HP</option><option value="mimi">Khas Mimi</option><option value="silent">Hening</option></select><button class="sound-test" data-test-sound="order" aria-label="Tes bunyi pesanan"><svg class="icon"><use href="#speaker"/></svg></button></div><div class="sound-row"><span><b>Promo warung</b><small>Penawaran baru</small></span><select data-sound-select="promo" aria-label="Dering promo"><option value="system">Bawaan HP</option><option value="mimi">Khas Mimi</option><option value="silent">Hening</option></select><button class="sound-test" data-test-sound="promo" aria-label="Tes bunyi promo"><svg class="icon"><use href="#speaker"/></svg></button></div><div class="sound-row"><span><b>Chat masuk</b><small>Rumpi &amp; toko</small></span><select data-sound-select="chat" aria-label="Dering chat"><option value="system">Bawaan HP</option><option value="mimi">Khas Mimi</option><option value="silent">Hening</option></select><button class="sound-test" data-test-sound="chat" aria-label="Tes bunyi chat"><svg class="icon"><use href="#speaker"/></svg></button></div></div><button class="quiet-vibrate" data-vibrate-toggle aria-pressed="true">Getar saat mode hening · Aktif</button><small class="setting-help">Mode Khas Mimi memakai bunyi berbeda untuk pesanan, promo, dan chat.</small></div><div class="settings-group"><label>Tentang</label><div class="about-kasirquh"><img src="assets/img/img-005.png" alt="Logo KasirQuh"><span><b>KasirQuh V3</b><small>Versi 3.1 (20261020s)</small></span></div><p class="settings-note">Powered by KasirQuh</p></div><div class="settings-actions"><button class="test-all" data-test-all>Tes bunyi</button><button id="applySettings" class="primary">Terapkan pengaturan</button></div></section></div>
 <div id="adminSettingsModal" class="modal"><section class="sheet feature-sheet"><div class="sheet-handle"></div><div class="sheet-top"><div><small class="page-kicker">Mode Admin</small><h2>Pengaturan</h2></div><button class="sheet-close" data-close-sheet aria-label="Tutup">×</button></div><p class="tool-intro">Pengaturan global aplikasi, ringkas dalam lima kelompok.</p><div class="settings-sections">
@@ -278,60 +278,60 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
-<script defer src="js/config.js?v=20261020at"></script>
-<script defer src="js/fcm.js?v=20261020at"></script>
-<script defer src="js/firebase.js?v=20261020at"></script>
-<script defer src="js/store/core.js?v=20261020at"></script>
-<script defer src="js/store/derived.js?v=20261020at"></script>
-<script defer src="js/store/promo.js?v=20261020at"></script>
-<script defer src="js/store/notes.js?v=20261020at"></script>
-<script defer src="js/store/products.js?v=20261020at"></script>
-<script defer src="js/store/orders.js?v=20261020at"></script>
-<script defer src="js/store/ledger.js?v=20261020at"></script>
-<script defer src="js/store/customers.js?v=20261020at"></script>
-<script defer src="js/store/catalog.js?v=20261020at"></script>
-<script defer src="js/store/chat.js?v=20261020at"></script>
-<script defer src="js/store/checkout.js?v=20261020at"></script>
-<script defer src="js/store/auth.js?v=20261020at"></script>
-<script defer src="js/store.js?v=20261020at"></script>
-<script defer src="js/biometric.js?v=20261020at"></script>
-<script defer src="js/shared/nav-history.js?v=20261020at"></script>
-<script defer src="js/shared/dom.js?v=20261020at"></script>
-<script defer src="js/shared/format.js?v=20261020at"></script>
-<script defer src="js/shared/store-adapter.js?v=20261020at"></script>
-<script defer src="js/shared/audio.js?v=20261020at"></script>
-<script defer src="js/shared/theme.js?v=20261020at"></script>
-<script defer src="js/shared/fx.js?v=20261020at"></script>
-<script defer src="js/shared/photo.js?v=20261020at"></script>
-<script defer src="js/shared/recipe-form.js?v=20261020at"></script>
-<script defer src="js/shared/chat.js?v=20261020at"></script>
-<script defer src="js/shared/coin-program.js?v=20261020at"></script>
-<script defer src="js/init/gateway.js?v=20261020at"></script>
-<script defer src="js/init/auth.js?v=20261020at"></script>
-<script defer src="js/features/customer/home.js?v=20261020at"></script>
-<script defer src="js/features/customer/catalog.js?v=20261020at"></script>
-<script defer src="js/features/customer/cart.js?v=20261020at"></script>
-<script defer src="js/features/customer/checkout.js?v=20261020at"></script>
-<script defer src="js/features/customer/quiz.js?v=20261020at"></script>
-<script defer src="js/features/customer/recipes.js?v=20261020at"></script>
-<script defer src="js/features/customer/coins.js?v=20261020at"></script>
-<script defer src="js/features/customer/account.js?v=20261020at"></script>
-<script defer src="js/features/customer/services.js?v=20261020at"></script>
-<script defer src="js/features/admin/products.js?v=20261020at"></script>
-<script defer src="js/features/admin/orders.js?v=20261020at"></script>
-<script defer src="js/features/admin/finance.js?v=20261020at"></script>
-<script defer src="js/features/admin/stock.js?v=20261020at"></script>
-<script defer src="js/features/admin/pos.js?v=20261020at"></script>
-<script defer src="js/features/admin/notes.js?v=20261020at"></script>
-<script defer src="js/features/admin/inbox.js?v=20261020at"></script>
-<script defer src="js/features/admin/settings.js?v=20261020at"></script>
-<script defer src="js/features/admin/dashboard.js?v=20261020at"></script>
-<script defer src="js/features/admin/rutin.js?v=20261020at"></script>
-<script defer src="js/features/admin/hajatan.js?v=20261020at"></script>
-<script defer src="js/features/admin/ai.js?v=20261020at"></script>
-<script defer src="js/features/admin/scanner.js?v=20261020at"></script>
-<script defer src="js/features/admin/calc.js?v=20261020at"></script>
-<script defer src="js/app.js?v=20261020at"></script>
+<script defer src="js/config.js?v=20261020au"></script>
+<script defer src="js/fcm.js?v=20261020au"></script>
+<script defer src="js/firebase.js?v=20261020au"></script>
+<script defer src="js/store/core.js?v=20261020au"></script>
+<script defer src="js/store/derived.js?v=20261020au"></script>
+<script defer src="js/store/promo.js?v=20261020au"></script>
+<script defer src="js/store/notes.js?v=20261020au"></script>
+<script defer src="js/store/products.js?v=20261020au"></script>
+<script defer src="js/store/orders.js?v=20261020au"></script>
+<script defer src="js/store/ledger.js?v=20261020au"></script>
+<script defer src="js/store/customers.js?v=20261020au"></script>
+<script defer src="js/store/catalog.js?v=20261020au"></script>
+<script defer src="js/store/chat.js?v=20261020au"></script>
+<script defer src="js/store/checkout.js?v=20261020au"></script>
+<script defer src="js/store/auth.js?v=20261020au"></script>
+<script defer src="js/store.js?v=20261020au"></script>
+<script defer src="js/biometric.js?v=20261020au"></script>
+<script defer src="js/shared/nav-history.js?v=20261020au"></script>
+<script defer src="js/shared/dom.js?v=20261020au"></script>
+<script defer src="js/shared/format.js?v=20261020au"></script>
+<script defer src="js/shared/store-adapter.js?v=20261020au"></script>
+<script defer src="js/shared/audio.js?v=20261020au"></script>
+<script defer src="js/shared/theme.js?v=20261020au"></script>
+<script defer src="js/shared/fx.js?v=20261020au"></script>
+<script defer src="js/shared/photo.js?v=20261020au"></script>
+<script defer src="js/shared/recipe-form.js?v=20261020au"></script>
+<script defer src="js/shared/chat.js?v=20261020au"></script>
+<script defer src="js/shared/coin-program.js?v=20261020au"></script>
+<script defer src="js/init/gateway.js?v=20261020au"></script>
+<script defer src="js/init/auth.js?v=20261020au"></script>
+<script defer src="js/features/customer/home.js?v=20261020au"></script>
+<script defer src="js/features/customer/catalog.js?v=20261020au"></script>
+<script defer src="js/features/customer/cart.js?v=20261020au"></script>
+<script defer src="js/features/customer/checkout.js?v=20261020au"></script>
+<script defer src="js/features/customer/quiz.js?v=20261020au"></script>
+<script defer src="js/features/customer/recipes.js?v=20261020au"></script>
+<script defer src="js/features/customer/coins.js?v=20261020au"></script>
+<script defer src="js/features/customer/account.js?v=20261020au"></script>
+<script defer src="js/features/customer/services.js?v=20261020au"></script>
+<script defer src="js/features/admin/products.js?v=20261020au"></script>
+<script defer src="js/features/admin/orders.js?v=20261020au"></script>
+<script defer src="js/features/admin/finance.js?v=20261020au"></script>
+<script defer src="js/features/admin/stock.js?v=20261020au"></script>
+<script defer src="js/features/admin/pos.js?v=20261020au"></script>
+<script defer src="js/features/admin/notes.js?v=20261020au"></script>
+<script defer src="js/features/admin/inbox.js?v=20261020au"></script>
+<script defer src="js/features/admin/settings.js?v=20261020au"></script>
+<script defer src="js/features/admin/dashboard.js?v=20261020au"></script>
+<script defer src="js/features/admin/rutin.js?v=20261020au"></script>
+<script defer src="js/features/admin/hajatan.js?v=20261020au"></script>
+<script defer src="js/features/admin/ai.js?v=20261020au"></script>
+<script defer src="js/features/admin/scanner.js?v=20261020au"></script>
+<script defer src="js/features/admin/calc.js?v=20261020au"></script>
+<script defer src="js/app.js?v=20261020au"></script>
 
 <!-- Overlay loading login -->
 </body>
