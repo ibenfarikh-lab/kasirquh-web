@@ -49,10 +49,13 @@ window.addEventListener('popstate', function() {
 /* Inti perilaku tombol back. */
 function kqOnBack() {
   // 1. Ada sheet terbuka? Tutup saja, tetap di layar.
-  if (document.querySelector('.modal.open')) {
-    if (typeof closeSheets === 'function') closeSheets();
-    return;
-  }
+  try {
+    if (document.querySelector('.modal.open')) {
+      if (typeof closeSheets === 'function') { closeSheets(); window.kqLastBack='closed-sheet'; }
+      else { window.kqLastBack='no-closeSheets-fn'; }
+      return;
+    }
+  } catch(e) { window.kqLastBack='ERR:'+(e&&e.message); return; }
   // 2. Ada riwayat tab? Kembali ke tab sebelumnya (tanpa push baru).
   kqTabHist.pop(); // buang tab saat ini
   var prev = kqTabHist[kqTabHist.length - 1];
@@ -73,7 +76,7 @@ function kqOnBack() {
   document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(d); kqDbgUpdate(); });
   window.kqDbgUpdate = function(){
     var el = document.getElementById('kqDbg');
-    if (el) el.textContent = 'kqPushHist=' + (typeof kqPushHist) + ' | kqFromPop=' + (typeof kqFromPop) + ' | depth=' + kqHistDepth + ' | sheet=' + (!!document.querySelector('.modal.open')) + ' | tabHist=' + JSON.stringify(kqTabHist);
+    if (el) el.textContent = 'kqPushHist=' + (typeof kqPushHist) + ' | kqFromPop=' + (typeof kqFromPop) + ' | depth=' + kqHistDepth + ' | sheet=' + (!!document.querySelector('.modal.open')) + ' | tabHist=' + JSON.stringify(kqTabHist) + ' | lastBack=' + (window.kqLastBack||'-');
   };
   var origPush = kqPushHist;
   kqPushHist = function(){ origPush(); kqDbgUpdate(); };
