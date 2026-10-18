@@ -52,39 +52,22 @@ function kqOnBack() {
   try {
     var openModal = document.querySelector('.modal.open');
     if (openModal) {
-      if (window.kqCloseSheetsFn) { window.kqCloseSheetsFn(); window.kqLastBack='closed-fn'; }
+      if (window.kqCloseSheetsFn) { window.kqCloseSheetsFn(); }
       else {
         var mods = document.querySelectorAll('.modal.open');
         for (var mi=0; mi<mods.length; mi++) mods[mi].classList.remove('open');
-        window.kqLastBack='closed-dom';
       }
       return;
     }
-  } catch(e) { window.kqLastBack='ERR:'+(e&&e.message); return; }
+  } catch(e) { console.error('kqOnBack', e&&e.message); return; }
   // 2. Ada riwayat tab? Kembali ke tab sebelumnya (tanpa push baru).
   kqTabHist.pop(); // buang tab saat ini
   var prev = kqTabHist[kqTabHist.length - 1];
   if (prev) {
-    if (prev.scope === 'customer' && window.kqGoCustomerFn) { window.kqGoCustomerFn(prev.name); window.kqLastBack='tab-'+prev.name; }
-    else if (prev.scope === 'admin' && window.kqShowAdminViewFn) { window.kqShowAdminViewFn(prev.name); window.kqLastBack='tab-'+prev.name; }
-    else { window.kqLastBack='no-tab-fn'; }
+    if (prev.scope === 'customer' && window.kqGoCustomerFn) { window.kqGoCustomerFn(prev.name); }
+    else if (prev.scope === 'admin' && window.kqShowAdminViewFn) { window.kqShowAdminViewFn(prev.name); }
+    else { }
     return;
   }
   // 3. Mentok — biarkan browser kembali ke situs sebelumnya / keluar (default).
 }
-
-/* DEBUG VISUAL (2026-10-18) - hapus setelah tes lolos */
-(function(){
-  if (location.search.indexOf('dbg') === -1) return;
-  var d = document.createElement('div');
-  d.id = 'kqDbg';
-  d.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font:11px monospace;padding:8px;z-index:99999;white-space:pre-wrap;';
-  document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(d); kqDbgUpdate(); });
-  window.kqDbgUpdate = function(){
-    var el = document.getElementById('kqDbg');
-    if (el) el.textContent = 'kqPushHist=' + (typeof kqPushHist) + ' | kqFromPop=' + (typeof kqFromPop) + ' | depth=' + kqHistDepth + ' | sheet=' + (!!document.querySelector('.modal.open')) + ' | tabHist=' + JSON.stringify(kqTabHist) + ' | lastBack=' + (window.kqLastBack||'-');
-  };
-  var origPush = kqPushHist;
-  kqPushHist = function(){ origPush(); kqDbgUpdate(); };
-  setInterval(function(){ if(window.kqDbgUpdate) kqDbgUpdate(); }, 1000);
-})();
