@@ -63,3 +63,8 @@ function kqOnBack() {
   }
   // 3. Mentok — biarkan browser kembali ke situs sebelumnya / keluar (default).
 }
+
+/* DEBUG SEMENTARA (2026-10-18) - hapus setelah tes */
+window.kqDebugStatus = function(){
+  return 'kqPushHist=' + (typeof kqPushHist) + ',kqFromPop=' + (typeof kqFromPop) + ',depth=' + kqHistDepth;
+};

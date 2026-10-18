@@ -8,6 +8,23 @@
   <button id="closeBtn">Tutup (×)</button>
 </div>
 <p id="log"></p>
+<hr>
+<h2>Cek Integrasi Aplikasi</h2>
+<p>Buka <a href="/index.html" target="_blank">aplikasi utama</a>, buka console, ketik <code>kqDebugStatus()</code></p>
+<p>Atau: <button id="checkBtn">Cek via iframe</button></p>
+<iframe id="appframe" src="/index.html?fresh=dbg" style="width:1px;height:1px;border:0"></iframe>
+<p id="intlog"></p>
+<script>
+document.getElementById('checkBtn').onclick = function(){
+  var f = document.getElementById('appframe');
+  try {
+    var st = f.contentWindow.kqDebugStatus();
+    document.getElementById('intlog').textContent = 'Status integrasi: ' + st;
+  } catch(e) {
+    document.getElementById('intlog').textContent = 'Gagal cek: ' + e.message;
+  }
+};
+</script>
 <script>
 var kqDepth = 0, kqIgnore = false;
 function log(m){ document.getElementById('log').innerHTML += m + '<br>'; }
