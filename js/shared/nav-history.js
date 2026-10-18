@@ -50,9 +50,14 @@ window.addEventListener('popstate', function() {
 function kqOnBack() {
   // 1. Ada sheet terbuka? Tutup saja, tetap di layar.
   try {
-    if (document.querySelector('.modal.open')) {
-      if (typeof closeSheets === 'function') { closeSheets(); window.kqLastBack='closed-sheet'; }
-      else { window.kqLastBack='no-closeSheets-fn'; }
+    var openModal = document.querySelector('.modal.open');
+    if (openModal) {
+      if (window.kqCloseSheetsFn) { window.kqCloseSheetsFn(); window.kqLastBack='closed-fn'; }
+      else {
+        var mods = document.querySelectorAll('.modal.open');
+        for (var mi=0; mi<mods.length; mi++) mods[mi].classList.remove('open');
+        window.kqLastBack='closed-dom';
+      }
       return;
     }
   } catch(e) { window.kqLastBack='ERR:'+(e&&e.message); return; }
@@ -60,8 +65,9 @@ function kqOnBack() {
   kqTabHist.pop(); // buang tab saat ini
   var prev = kqTabHist[kqTabHist.length - 1];
   if (prev) {
-    if (prev.scope === 'customer' && typeof goCustomer === 'function') goCustomer(prev.name);
-    else if (prev.scope === 'admin' && typeof showAdminView === 'function') showAdminView(prev.name);
+    if (prev.scope === 'customer' && window.kqGoCustomerFn) { window.kqGoCustomerFn(prev.name); window.kqLastBack='tab-'+prev.name; }
+    else if (prev.scope === 'admin' && window.kqShowAdminViewFn) { window.kqShowAdminViewFn(prev.name); window.kqLastBack='tab-'+prev.name; }
+    else { window.kqLastBack='no-tab-fn'; }
     return;
   }
   // 3. Mentok — biarkan browser kembali ke situs sebelumnya / keluar (default).
