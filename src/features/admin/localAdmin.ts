@@ -83,6 +83,7 @@ export interface LastReceipt {
   change: number
   redeemCoins: number
   earnedCoins: number
+  coinValue: number
   member: { name: string; memberCode: string } | null
 }
 

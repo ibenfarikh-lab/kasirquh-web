@@ -163,8 +163,12 @@ interface PromoState {
   checkin: () => Promise<CheckinResult>
   /** Label status check-in untuk UI (cermin teks DOM kode lama). */
   checkinLabel: () => string
-  /** Klaim hadiah misi (sekali per claimKey). */
-  claimMission: (detailLabel: string, claimKey: string) => Promise<void>
+  /** Klaim hadiah misi/tebak-harga (sekali per claimKey). */
+  claimMission: (
+    detailLabel: string,
+    claimKey: string,
+    opts?: { amount?: number; reason?: string; label?: string },
+  ) => Promise<void>
 
   savePromo: (data: { title: string; copy?: string; badge?: string; isActive?: boolean }, id?: string) => Promise<void>
   setPromoActive: (id: string, isActive: boolean) => Promise<void>
@@ -249,25 +253,25 @@ export const usePromoStore = create<PromoState>()((set, get) => ({
       : 'Nonaktif'
   },
 
-  claimMission: async (detailLabel, claimKey) => {
+  claimMission: async (detailLabel, claimKey, opts) => {
     const settings = useSettingsStore.getState()
-    if (
-      !settings.coinProgramEnabled ||
-      !settings.coinEvents.mission ||
-      !settings.coinRewards.mission
-    ) {
-      toast('Event misi sedang dimatikan admin')
+    const reason = opts?.reason || 'misi'
+    const amount = Math.max(0, Math.round(Number(opts?.amount) || 0)) || settings.coinRewards.mission
+    const label = opts?.label || 'Hadiah misi'
+    const eventOn = reason === 'tebak_harga' ? settings.coinEvents.guess : settings.coinEvents.mission
+    if (!settings.coinProgramEnabled || !eventOn || !(amount > 0)) {
+      toast(reason === 'tebak_harga' ? 'Event tebak harga sedang dimatikan admin' : 'Event misi sedang dimatikan admin')
       return
     }
     const uid = requireCustomerId()
     try {
-      await useCustomersStore.getState().grantCoins(uid, settings.coinRewards.mission, {
-        reason: 'misi',
-        label: 'Hadiah misi',
+      await useCustomersStore.getState().grantCoins(uid, amount, {
+        reason: reason,
+        label: label,
         detail: detailLabel,
         claimKey: claimKey,
       })
-      toast(settings.coinRewards.mission + ' Koin Warga masuk')
+      toast(amount + ' Koin Warga masuk')
     } catch (error) {
       if (!error || (error as { code?: string }).code !== 'OFFLINE') {
         toast((error as { message?: string })?.message || 'Bonus gagal')

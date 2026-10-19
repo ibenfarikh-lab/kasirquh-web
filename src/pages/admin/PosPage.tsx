@@ -40,9 +40,11 @@ export default function PosPage() {
 
   const shown = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('id-ID')
-    const matches = products.filter((p) => p.name.toLocaleLowerCase('id-ID').includes(q))
-    const preferred = matches.filter((p) => p.cat === adminCat)
-    return [...preferred, ...matches.filter((p) => !preferred.includes(p))]
+    return products.filter((p) => {
+      const matchQ = p.name.toLocaleLowerCase('id-ID').includes(q)
+      const matchC = adminCat === 'Semua' || p.cat === adminCat
+      return matchQ && matchC
+    })
   }, [products, query, adminCat])
 
   const entries = useMemo(
@@ -339,7 +341,7 @@ function CashPaymentSheet({
 
   const received = numericValue(receivedText)
   const change = received - payable
-  const valid = payable > 0 && received >= payable
+  const valid = payable >= 0 && received >= payable
   const showRedeem = !!kasirMember && maxRedeem > 0
 
   const confirm = () => {
@@ -391,6 +393,7 @@ function CashPaymentSheet({
           change: received - payable,
           redeemCoins,
           earnedCoins,
+          coinValue: Math.max(1, Math.round(Number(coin.value) || 1)),
           member: kasirMember
             ? { name: kasirMember.name, memberCode: kasirMember.memberCode }
             : null,
@@ -451,11 +454,13 @@ function CashPaymentSheet({
         <b>{received ? money(Math.max(0, change)) : 'Belum dihitung'}</b>
       </div>
       <p className={'cash-payment-status' + (received && !valid ? ' error' : '')}>
-        {!received
-          ? 'Masukkan jumlah uang yang diterima.'
-          : valid
-            ? 'Uang cukup · transaksi siap diselesaikan.'
-            : 'Uang kurang ' + money(payable - received)}
+        {payable === 0
+          ? 'Lunas dengan koin · transaksi siap diselesaikan.'
+          : !received
+            ? 'Masukkan jumlah uang yang diterima.'
+            : valid
+              ? 'Uang cukup · transaksi siap diselesaikan.'
+              : 'Uang kurang ' + money(payable - received)}
       </p>
       <button className="primary-wide" disabled={!valid || busy} onClick={confirm}>
         {busy ? 'Menyimpan…' : 'Selesaikan & buka struk'}

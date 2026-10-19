@@ -346,8 +346,13 @@ export function useCoinLocal<T = CoinLocalState>(
     lastCheckin: docStr(myCustomerDoc, 'lastCheckin'),
     grant: (amount, entry) => {
       if (entry.claimKey) {
-        // Hadiah misi -> klaim resmi (transaksi Firestore, idempoten per claimKey).
-        void usePromoStore.getState().claimMission(entry.detail || entry.label, entry.claimKey)
+        // Hadiah misi/tebak-harga -> klaim resmi (idempoten per claimKey).
+        // Teruskan amount & reason agar tidak tertukar (mis. tebak harga pakai reward guess).
+        void usePromoStore.getState().claimMission(entry.detail || entry.label, entry.claimKey, {
+          amount: amount,
+          reason: entry.reason || 'misi',
+          label: entry.label,
+        })
         return
       }
       // Hadiah game -> grantGameCoins resmi (cap 500/hari).

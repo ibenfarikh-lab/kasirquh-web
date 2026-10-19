@@ -82,6 +82,7 @@ export default function QuizPage() {
         label: 'Hadiah tebak harga',
         detail: 'Jawaban benar ' + todayKeyJakarta(),
         claimKey: 'tebak_harga_' + todayKeyJakarta(),
+        reason: 'tebak_harga',
       })
       setResult('Benar! +' + reward + ' Koin Warga masuk ke dompetmu.')
       toast('+' + reward + ' Koin Warga')

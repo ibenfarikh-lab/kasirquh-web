@@ -82,7 +82,8 @@ export default function ReceiptPage() {
                 <div className="receipt-line">
                   <span>Koin dipakai</span>
                   <b>
-                    {receipt.redeemCoins.toLocaleString('id-ID')} ({money(receipt.redeemCoins)})
+                    {receipt.redeemCoins.toLocaleString('id-ID')} (
+                    {money(receipt.redeemCoins * (receipt.coinValue || 1))})
                   </b>
                 </div>
               ) : null}
