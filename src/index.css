@@ -628,7 +628,7 @@ body[data-ui-theme="dark"] .member-card-body strong{color:#ffffff}
 #rumpiView .admin-rumpi-feed{max-height:none;overflow:visible}
 #chatView .admin-rumpi-feed{max-height:none;overflow:visible}
 #rumpiView .rumpi-composer{position:fixed;left:0;right:0;bottom:calc(80px + env(safe-area-inset-bottom));width:100%;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:10}
-#chatView .rumpi-composer{position:fixed;left:0;right:0;bottom:calc(88px + env(safe-area-inset-bottom));width:100%;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:10}
+#chatView .rumpi-composer{position:fixed;left:0;right:0;bottom:calc(80px + env(safe-area-inset-bottom));width:100%;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:10}
 
 /* Halaman tanpa navbar: hapus padding-bottom ekstra */
 .app.no-nav .customer-view{padding-bottom:1rem}
