@@ -51,15 +51,17 @@ export default function AdminRumpiPage() {
             <h2>Rumpi Warga</h2>
           </span>
         </div>
-        <div className="rumpi-status">
-          <span>
-            <Icon name="users" />
-            Mode moderasi aktif
-          </span>
-          <small>Posting sebagai Mimi · Warung — bisa hapus postingan pelanggan</small>
-        </div>
-        <RumpiFeed messages={rumpiMessages} />
-        <RumpiComposer />
+        <main className="content">
+          <div className="rumpi-status">
+            <span>
+              <Icon name="users" />
+              Mode moderasi aktif
+            </span>
+            <small>Posting sebagai Mimi · Warung — bisa hapus postingan pelanggan</small>
+          </div>
+          <RumpiFeed messages={rumpiMessages} />
+          <RumpiComposer />
+        </main>
       </div>
       <AdminNav />
     </div>
