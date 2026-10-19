@@ -12,6 +12,8 @@ import AdminNav from '../../components/AdminNav'
 export default function AdminTokoPage() {
   useAdminBoot()
   const [threadOpen, setThreadOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<'all' | 'unread'>('all')
 
   const directThreads = useLocalAdminStore((s) => s.directThreads)
   const openThread = useLocalAdminStore((s) => s.openThread)
@@ -21,7 +23,17 @@ export default function AdminTokoPage() {
     setThreadOpen(true)
   }
 
-  const threads = Object.values(directThreads)
+  // Urutkan dari aktivitas terbaru agar chat penting tidak tenggelam.
+  const threads = Object.values(directThreads).sort(
+    (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0),
+  )
+  const unreadThreads = threads.filter((t) => (t.unread || 0) > 0).length
+  const q = query.trim().toLowerCase()
+  const visible = threads.filter(
+    (t) =>
+      (filter === 'all' || (t.unread || 0) > 0) &&
+      (!q || t.name.toLowerCase().includes(q)),
+  )
 
   return (
     <div className="admin-screen">
@@ -32,9 +44,38 @@ export default function AdminTokoPage() {
             <h2>Chat Toko</h2>
           </span>
         </div>
+        <div className="search" role="search">
+          <Icon name="search" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Cari nama pelanggan…"
+            aria-label="Cari pelanggan"
+          />
+        </div>
+        <div className="online-tabs" role="tablist" aria-label="Filter percakapan">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === 'all'}
+            className={'online-tab' + (filter === 'all' ? ' active' : '')}
+            onClick={() => setFilter('all')}
+          >
+            Semua
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === 'unread'}
+            className={'online-tab' + (filter === 'unread' ? ' active' : '')}
+            onClick={() => setFilter('unread')}
+          >
+            Belum dibaca{unreadThreads > 0 ? ` (${unreadThreads})` : ''}
+          </button>
+        </div>
         <div className="info-card">
-          {threads.length ? (
-            threads.map((thread) => {
+          {visible.length ? (
+            visible.map((thread) => {
               const latest = thread.messages[thread.messages.length - 1]
               const preview = latest ? latest.text : thread.lastMessage || 'Belum ada percakapan'
               return (
@@ -62,7 +103,11 @@ export default function AdminTokoPage() {
               )
             })
           ) : (
-            <div className="empty-note">Belum ada percakapan</div>
+            <div className="empty-note">
+              {threads.length
+                ? 'Tidak ada hasil yang cocok.'
+                : 'Belum ada percakapan'}
+            </div>
           )}
         </div>
       </div>

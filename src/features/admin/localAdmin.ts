@@ -95,6 +95,8 @@ export interface DirectThread {
   unread: number
   customerUnread: number
   lastMessage: string
+  /** Millis terakhir thread diperbarui (untuk urutan daftar). */
+  updatedAt: number
   loading: boolean
 }
 
@@ -862,6 +864,7 @@ function buildAdminState(): LocalAdminState {
       unread: t.unread,
       customerUnread: t.customerUnread,
       lastMessage: t.lastMessage ?? '',
+      updatedAt: t.updatedAt ?? 0,
       loading: !!t._loadingMessages,
     }
   }

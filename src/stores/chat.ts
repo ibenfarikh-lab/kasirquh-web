@@ -45,6 +45,8 @@ export interface ChatThread {
   unread: number
   customerUnread: number
   lastMessage?: string
+  /** Millis terakhir thread diperbarui (urutkan daftar admin dari yang terbaru). */
+  updatedAt: number
   _loadingMessages?: boolean
 }
 
@@ -62,6 +64,20 @@ function timeOf(ts: { toDate?: () => Date } | null | undefined): string {
   } catch {
     return ''
   }
+}
+
+/** Ambil millis dari Firestore Timestamp (abaikan bila tidak valid). */
+function millisOf(
+  ts: { toMillis?: () => number; toDate?: () => Date } | null | undefined,
+  fallback = 0,
+): number {
+  try {
+    if (ts && typeof ts.toMillis === 'function') return ts.toMillis()
+    if (ts && typeof ts.toDate === 'function') return ts.toDate().getTime()
+  } catch {
+    /* abaikan */
+  }
+  return fallback
 }
 
 function dateTimeOf(ts: { toDate?: () => Date } | null | undefined): string {
@@ -425,6 +441,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         messages: [],
         unread: 0,
         customerUnread: 0,
+        updatedAt: Date.now(),
       }
       set((s) => ({ threads: { ...s.threads, toko: thread } }))
     }
@@ -450,6 +467,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       unread: Number(d.unreadAdmin) || 0,
       customerUnread: prev ? prev.customerUnread : 0,
       lastMessage: String(d.lastMessage || ''),
+      updatedAt: millisOf(d.updatedAt, prev?.updatedAt ?? 0),
     }
     set((s) => ({ threads: { ...s.threads, [id]: thread } }))
     return thread
