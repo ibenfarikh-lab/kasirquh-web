@@ -3,7 +3,7 @@
  * Halaman Rumpi Warga mode admin (moderasi): posting sebagai Mimi,
  * hapus postingan pelanggan, suka. Diakses dari hub /admin/chat.
  */
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'
 import { Icon, toast } from '../../components/ui'
@@ -44,11 +44,7 @@ export default function AdminRumpiPage() {
 
   return (
     <div className="admin-screen admin-chat-screen">
-      <div
-        id="chatView"
-        className="subview admin-page active"
-        style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}
-      >
+      <div id="chatView" className="subview admin-page active">
         <div className="admin-task-head">
           <span>
             <small>Komunitas warga</small>
@@ -75,12 +71,19 @@ export default function AdminRumpiPage() {
 function RumpiFeed({ messages }: { messages: RumpiMessage[] }) {
   const deleteRumpi = useLocalAdminStore((s) => s.deleteRumpi)
   const likeRumpi = useLocalAdminStore((s) => s.likeRumpi)
+  const feedRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight
+    })
+  }, [messages.length])
 
   if (!messages.length) {
     return <div className="empty-note">Belum ada obrolan di Rumpi Warga.</div>
   }
   return (
-    <div className="admin-rumpi-feed" aria-live="polite">
+    <div className="admin-rumpi-feed" aria-live="polite" ref={feedRef}>
       {[...messages].reverse().map((message) => {
         const own = message.admin
         return (
