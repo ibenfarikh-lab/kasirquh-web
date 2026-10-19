@@ -44,7 +44,11 @@ export default function AdminRumpiPage() {
 
   return (
     <div className="admin-screen admin-chat-screen">
-      <div id="chatView" className="subview admin-page active">
+      <div
+        id="chatView"
+        className="subview admin-page active"
+        style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}
+      >
         <div className="admin-task-head">
           <span>
             <small>Komunitas warga</small>
