@@ -4,22 +4,19 @@
  * halaman penuh, bukan modal: fulfillment, payMethod, transfer ref, coin
  * redeem, ringkasan, confirmOrder.
  *
- * TODO(koordinator): checkoutCustomer() di bawah adalah port lokal dari
- * StoreCheckout.checkoutCustomer (js/store/checkout.js). Pindahkan ke store
- * checkout resmi saat worker terkait selesai.
+ * Checkout via implementasi resmi checkoutCustomer() di stores/checkout.ts.
  */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { doc, collection, runTransaction, serverTimestamp, increment } from 'firebase/firestore'
 import { useAuthStore } from '../../stores/auth'
+import { checkoutCustomer, type Fulfillment, type PayMethod } from '../../stores/checkout'
 import { useProductsStore } from '../../stores/products'
 import { useCartStore } from '../../stores/cart'
 import { money, stockText } from '../../lib/format'
-import { getDb, requireOnline } from '../../lib/firebase'
-import { withTimeout, WRITE_TIMEOUT_MS, todayKeyJakarta } from '../../lib/firestore'
+import { todayKeyJakarta } from '../../lib/firestore'
 import { toast } from '../../components/ui'
 import { playNotification } from '../../lib/audio'
-import type { CartMap, Order } from '../../types'
+import type { Order } from '../../types'
 import {
   useSessionLocal,
   useSettingsLocal,
@@ -27,184 +24,11 @@ import {
   useOrdersLocal,
   cartTotals,
   cartStockIssue,
-  customerUnitPrice,
 } from '../../features/customer/local'
 
 const DELIVERY_FEE = 5000
 const SLOTS = ['Secepatnya · 15–30 menit', '12.00–13.00', '16.00–17.00', '19.00–20.00']
 
-type Fulfillment = 'pickup' | 'delivery'
-type PayMethod = 'cod' | 'transfer'
-
-interface CheckoutResult {
-  code: string
-  total: number
-  fullTotal: number
-  redeemCoins: number
-  redeemValue: number
-  earned: number
-  method: string
-  itemCount: number
-}
-
-/**
- * Port StoreCheckout.checkoutCustomer (js/store/checkout.js) ke modular SDK.
- */
-async function checkoutCustomer(args: {
-  cart: CartMap
-  fulfillment: Fulfillment
-  address: string
-  slot: string
-  name: string
-  payMethod: PayMethod
-  transferReference: string
-  customerId: string
-  coinProgramEnabled: boolean
-  coinRedeemEnabled: boolean
-  coinValue: number
-  coinRedeemPercent: number
-  coinEventsSpend: boolean
-  coinSpendReward: number
-  coinSpendRule: number
-  promoUnitPrice: Record<string, number>
-  flashProductId: string | null
-  flashRule: string
-}): Promise<CheckoutResult> {
-  requireOnline()
-  const db = getDb()
-  const entries = Object.entries(args.cart).filter(([, q]) => q > 0)
-  if (!entries.length) throw new Error('Keranjang masih kosong')
-
-  return withTimeout(
-    runTransaction(db, async (t) => {
-      // 1. nomor urut
-      const counterRef = doc(db, 'counters', 'orders')
-      const counterSnap = await t.get(counterRef)
-      const seq = ((counterSnap.exists() ? (counterSnap.data().seq as number) : 0) || 0) + 1
-
-      // 2. pelanggan: wajib approved; ambil saldo koin terkini
-      const custRef = doc(db, 'customers', args.customerId)
-      const custSnap = await t.get(custRef)
-      if (!custSnap.exists() || custSnap.data().approvalStatus !== 'approved') {
-        throw new Error('Akun belum disetujui warung')
-      }
-      const coins = Math.max(0, Math.round(Number(custSnap.data().coins) || 0))
-
-      // 3. validasi stok per item (baca ulang) + harga
-      const items: { productId: string; name: string; price: number; qty: number; subtotal: number; ref: ReturnType<typeof doc> }[] = []
-      let total = 0
-      for (const [pid, qty] of entries) {
-        const pRef = doc(db, 'products', pid)
-        const pSnap = await t.get(pRef)
-        if (!pSnap.exists()) throw new Error('Ada produk yang sudah tidak tersedia')
-        const pd = pSnap.data() || {}
-        const stock = Math.max(0, Number(pd.stock) || 0)
-        if (stock < qty) {
-          throw new Error('Stok ' + (pd.name || 'produk') + ' tidak cukup · tersedia ' + stock + ', diminta ' + qty)
-        }
-        if (args.flashProductId && pid === args.flashProductId) {
-          const capMatch = String(args.flashRule || '').match(/\d+/)
-          const cap = capMatch ? Math.max(1, parseInt(capMatch[0], 10)) : 5
-          if (qty > cap) throw new Error('Promo kilat maksimal ' + cap + ' per pesanan · kurangi jumlah ' + (pd.name || 'produk'))
-        }
-        const unit = customerUnitPrice(
-          {
-            id: pid,
-            price: Math.max(0, Math.round(Number(pd.price) || 0)),
-            wholesaleQty: Math.max(0, Number(pd.wholesaleQty) || 0),
-            wholesalePrice: Math.max(0, Math.round(Number(pd.wholesalePrice) || 0)),
-          } as never,
-          qty,
-          args.promoUnitPrice,
-        )
-        const subtotal = unit * qty
-        total += subtotal
-        items.push({ productId: pid, name: String(pd.name || 'Produk'), price: unit, qty, subtotal, ref: pRef })
-      }
-
-      // 4. koin: penukaran (batas admin) + bonus belanja
-      const fee = args.fulfillment === 'delivery' ? DELIVERY_FEE : 0
-      const fullTotal = total + fee
-      let redeemCoins = 0
-      let redeemValue = 0
-      if (args.coinProgramEnabled && args.coinRedeemEnabled && args.coinValue > 0 && args.coinRedeemPercent > 0) {
-        const maxValue = Math.floor((total * args.coinRedeemPercent) / 100)
-        redeemCoins = Math.max(0, Math.min(coins, Math.floor(maxValue / args.coinValue)))
-        redeemValue = redeemCoins * args.coinValue
-      }
-      if (redeemCoins > coins) throw new Error('Saldo koin tidak cukup')
-      const paidTotal = Math.max(0, fullTotal - redeemValue)
-      let earned = 0
-      if (args.coinProgramEnabled && args.coinEventsSpend && args.coinSpendReward > 0 && args.coinSpendRule > 0) {
-        earned = Math.floor(total / args.coinSpendRule) * args.coinSpendReward
-      }
-
-      // 5. tulis atomik
-      const code = 'WM-' + String(seq).padStart(6, '0')
-      const ts = serverTimestamp()
-      t.set(counterRef, { seq }, { merge: true })
-      items.forEach((it) => {
-        t.update(it.ref, { stock: increment(-it.qty), updatedAt: ts })
-      })
-      const coinDelta = earned - redeemCoins
-      if (coinDelta !== 0) t.update(custRef, { coins: increment(coinDelta) })
-      const orderRef = doc(collection(db, 'orders'))
-      t.set(orderRef, {
-        code,
-        customerId: args.customerId,
-        customerName: args.name,
-        items: items.map((it) => ({ productId: it.productId, name: it.name, price: it.price, qty: it.qty, subtotal: it.subtotal })),
-        total: paidTotal,
-        fullTotal,
-        paymentMethod: args.payMethod === 'transfer' ? 'transfer' : 'cod',
-        transferReference: args.payMethod === 'transfer' ? String(args.transferReference || '').slice(0, 80) : '',
-        fulfillment: args.fulfillment,
-        status: 'menunggu',
-        note: args.fulfillment === 'delivery' ? 'Diantar · ' + args.address : 'Ambil di warung',
-        coinUsed: redeemCoins,
-        coinValue: redeemValue,
-        earnedCoins: earned,
-        createdAt: ts,
-        updatedAt: ts,
-      })
-      if (redeemCoins > 0) {
-        t.set(doc(collection(db, 'coin_ledger')), {
-          customerId: args.customerId,
-          amount: -redeemCoins,
-          reason: 'tukar',
-          label: 'Ditukar pada #' + code,
-          detail: 'Potongan Rp' + redeemValue.toLocaleString('id-ID'),
-          orderId: orderRef.id,
-          createdAt: ts,
-        })
-      }
-      if (earned > 0) {
-        t.set(doc(collection(db, 'coin_ledger')), {
-          customerId: args.customerId,
-          amount: earned,
-          reason: 'belanja',
-          label: 'Bonus belanja #' + code,
-          detail: 'Rp' + total.toLocaleString('id-ID') + ' belanja',
-          orderId: orderRef.id,
-          createdAt: ts,
-        })
-      }
-
-      return {
-        code,
-        total: paidTotal,
-        fullTotal,
-        redeemCoins,
-        redeemValue,
-        earned,
-        method: args.payMethod === 'transfer' ? 'Transfer' : args.fulfillment === 'delivery' ? 'COD' : 'Bayar di warung',
-        itemCount: entries.reduce((a, [, q]) => a + q, 0),
-      }
-    }),
-    WRITE_TIMEOUT_MS,
-    'Checkout',
-  )
-}
 
 export default function DeliveryPage() {
   const navigate = useNavigate()

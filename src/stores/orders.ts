@@ -2,8 +2,8 @@
  * KasirQuh React — src/stores/orders.ts
  * Pesanan online. Pengganti js/store/orders.js (settleOrder, rejectTransfer,
  * setOrderStatus, cancelOrder, deleteOrder) + mapOrder dari js/store/core.js
- * + langganan pesanan dari js/store/chat.js + transaksi checkoutCustomer
- * dari js/store/checkout.js (dipakai sebagai placeOrder).
+ * + langganan pesanan dari js/store/chat.js. (Checkout pelanggan resmi
+ * ada di stores/checkout.ts — checkoutCustomer.)
  *
  * Pola: zustand create() dengan state + actions; subscribe() pasang
  * onSnapshot modular dan return unsub; tulis requireOnline() dulu +
@@ -29,11 +29,10 @@ import {
 } from 'firebase/firestore'
 import { getDb, requireOnline } from '../lib/firebase'
 import { withTimeout, WRITE_TIMEOUT_MS } from '../lib/firestore'
-import { assertAdmin, requireCustomerId } from './auth'
+import { assertAdmin } from './auth'
 import { rebuildPopular, rebuildRiwayat, useSettingsStore, type PopularItem, type RiwayatItem } from './settings'
 import { useCustomersStore } from './customers'
 import { useProductsStore } from './products'
-import { calcEarnedCoins } from './promo'
 
 /** Bentuk UI pesanan — port setia mapOrder (items tetap tuple warisan). */
 export interface OrderRecord {
@@ -69,28 +68,6 @@ export interface ActiveOrderInfo {
   detail: string
   method: string
   step: number
-}
-
-export interface PlaceOrderInput {
-  cart: Record<string, number>
-  fulfillment: 'pickup' | 'delivery'
-  address: string
-  slot?: string
-  name: string
-  payMethod: 'cod' | 'transfer'
-  transferReference?: string
-  coinRedeemEnabled: boolean
-}
-
-export interface PlaceOrderResult {
-  code: string
-  total: number
-  fullTotal: number
-  redeemCoins: number
-  redeemValue: number
-  earned: number
-  method: string
-  itemCount: number
 }
 
 function pad2(n: number): string {
@@ -214,8 +191,6 @@ interface OrdersState {
   subscribeAdminOrders: () => () => void
   clearRole: () => void
 
-  /** Buat pesanan: transaksi nomor urut + validasi stok + koin (port checkoutCustomer). */
-  placeOrder: (input: PlaceOrderInput) => Promise<PlaceOrderResult>
   /** Ubah status: menunggu → dikemas → dikirim (admin). */
   updateStatus: (orderId: string, status: string) => Promise<void>
   /** Selesaikan pesanan: status selesai + jurnal penjualan + jurnal beban koin (admin). */
@@ -328,181 +303,6 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
 
   clearRole: () => {
     set({ onlineOrders: [], activeOrder: null, riwayat: [], popular: [], loading: true })
-  },
-
-  placeOrder: async (input) => {
-    requireOnline()
-    const uid = requireCustomerId()
-    const entries = Object.entries(input.cart || {}).filter(([, q]) => q > 0)
-    if (!entries.length) throw new Error('Keranjang masih kosong')
-    const settings = useSettingsStore.getState()
-    const db = getDb()
-
-    return withTimeout(
-      runTransaction(db, async (t) => {
-        /* 1. nomor urut */
-        const counterRef = doc(db, 'counters', 'orders')
-        const counterSnap = await t.get(counterRef)
-        const seq = ((counterSnap.exists() ? counterSnap.data().seq : 0) || 0) + 1
-
-        /* 2. pelanggan: wajib approved; ambil saldo koin terkini */
-        const custRef = doc(db, 'customers', uid)
-        const custSnap = await t.get(custRef)
-        if (!custSnap.exists() || custSnap.data().approvalStatus !== 'approved') {
-          throw new Error('Akun belum disetujui warung')
-        }
-        const coins = Math.max(0, Math.round(Number(custSnap.data().coins) || 0))
-
-        /* 3. validasi stok per item (baca ulang dokumen produk) + harga */
-        const items: {
-          productId: string
-          name: string
-          price: number
-          qty: number
-          subtotal: number
-          _ref: ReturnType<typeof doc>
-        }[] = []
-        let total = 0
-        for (const [pid, qty] of entries) {
-          const pRef = doc(db, 'products', pid)
-          const pSnap = await t.get(pRef)
-          if (!pSnap.exists()) throw new Error('Ada produk yang sudah tidak tersedia')
-          const pd = pSnap.data() || {}
-          const stock = Math.max(0, Number(pd.stock) || 0)
-          if (stock < qty) {
-            throw new Error(
-              'Stok ' + (pd.name || 'produk') + ' tidak cukup · tersedia ' + stock + ', diminta ' + qty,
-            )
-          }
-          /* Promo kilat: tegakkan batas per pesanan.
-           * Angka diambil dari teks aturan admin bila ada, default 5. */
-          if (settings.flashProductId && pid === settings.flashProductId) {
-            const capMatch = String(settings.flashRule || '').match(/\d+/)
-            const cap = capMatch ? Math.max(1, parseInt(capMatch[0], 10)) : 5
-            if (qty > cap) {
-              throw new Error(
-                'Promo kilat maksimal ' + cap + ' per pesanan · kurangi jumlah ' + (pd.name || 'produk'),
-              )
-            }
-          }
-          const unit = customerUnitPrice(
-            {
-              id: pid,
-              price: Math.max(0, Math.round(Number(pd.price) || 0)),
-              wholesaleQty: pd.wholesaleQty,
-              wholesalePrice: pd.wholesalePrice,
-            },
-            qty,
-          )
-          const subtotal = unit * qty
-          total += subtotal
-          items.push({
-            productId: pid,
-            name: String(pd.name || 'Produk'),
-            price: unit,
-            qty: qty,
-            subtotal: subtotal,
-            _ref: pRef,
-          })
-        }
-
-        /* 4. koin: penukaran (batas admin) + bonus belanja */
-        const fee = input.fulfillment === 'delivery' ? 5000 : 0
-        const fullTotal = total + fee
-        let redeemCoins = 0
-        let redeemValue = 0
-        if (
-          input.coinRedeemEnabled &&
-          settings.coinProgramEnabled &&
-          settings.coinRate > 0 &&
-          settings.coinRedeemLimit > 0
-        ) {
-          const maxValue = Math.floor((total * settings.coinRedeemLimit) / 100)
-          redeemCoins = Math.max(0, Math.min(coins, Math.floor(maxValue / settings.coinRate)))
-          redeemValue = redeemCoins * settings.coinRate
-        }
-        if (redeemCoins > coins) throw new Error('Saldo koin tidak cukup')
-        const paidTotal = Math.max(0, fullTotal - redeemValue)
-        const earned = calcEarnedCoins(total)
-
-        /* 5. tulis atomik */
-        const code = 'WM-' + String(seq).padStart(6, '0')
-        const ts = serverTimestamp()
-        const orderRef = doc(collection(db, 'orders'))
-        t.set(counterRef, { seq: seq }, { merge: true })
-        items.forEach((it) => {
-          t.update(it._ref, { stock: increment(-it.qty), updatedAt: ts })
-        })
-        const coinDelta = earned - redeemCoins
-        if (coinDelta !== 0) t.update(custRef, { coins: increment(coinDelta) })
-        t.set(orderRef, {
-          code: code,
-          customerId: uid,
-          customerName: input.name,
-          items: items.map((it) => ({
-            productId: it.productId,
-            name: it.name,
-            price: it.price,
-            qty: it.qty,
-            subtotal: it.subtotal,
-          })),
-          total: paidTotal,
-          fullTotal: fullTotal,
-          paymentMethod: input.payMethod === 'transfer' ? 'transfer' : 'cod',
-          transferReference:
-            input.payMethod === 'transfer' ? String(input.transferReference || '').slice(0, 80) : '',
-          fulfillment: input.fulfillment,
-          status: 'menunggu',
-          note:
-            input.fulfillment === 'delivery' ? 'Diantar · ' + input.address : 'Ambil di warung',
-          coinUsed: redeemCoins,
-          coinValue: redeemValue,
-          earnedCoins: earned,
-          createdAt: ts,
-          updatedAt: ts,
-        })
-        if (redeemCoins > 0) {
-          t.set(doc(collection(db, 'coin_ledger')), {
-            customerId: uid,
-            amount: -redeemCoins,
-            reason: 'tukar',
-            label: 'Ditukar pada #' + code,
-            detail: 'Potongan Rp' + redeemValue.toLocaleString('id-ID'),
-            orderId: orderRef.id,
-            createdAt: ts,
-          })
-        }
-        if (earned > 0) {
-          t.set(doc(collection(db, 'coin_ledger')), {
-            customerId: uid,
-            amount: earned,
-            reason: 'belanja',
-            label: 'Bonus belanja #' + code,
-            detail: 'Rp' + total.toLocaleString('id-ID') + ' belanja',
-            orderId: orderRef.id,
-            createdAt: ts,
-          })
-        }
-
-        return {
-          code: code,
-          total: paidTotal,
-          fullTotal: fullTotal,
-          redeemCoins: redeemCoins,
-          redeemValue: redeemValue,
-          earned: earned,
-          method:
-            input.payMethod === 'transfer'
-              ? 'Transfer'
-              : input.fulfillment === 'delivery'
-                ? 'COD'
-                : 'Bayar di warung',
-          itemCount: entries.reduce((a, [, q]) => a + q, 0),
-        }
-      }),
-      WRITE_TIMEOUT_MS,
-      'Checkout',
-    )
   },
 
   updateStatus: async (orderId, status) => {
