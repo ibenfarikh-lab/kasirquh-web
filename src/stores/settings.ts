@@ -97,6 +97,8 @@ interface SettingsState {
   carouselSlots: Record<string, string>
   dashboardShortcutIds: string[]
   inboxReadIds: string[]
+  /** ID thread chat yang di-pin admin (urutan = prioritas, paling baru di depan). */
+  pinnedChatIds: string[]
   storeName: string
   runningText: string
   openTime: string
@@ -129,6 +131,11 @@ function applySettingsData(d: StoreSettings): Partial<SettingsState> {
     patch.inboxReadIds = d.inboxReadIds
       .filter((id): id is string => typeof id === 'string')
       .slice(0, 200)
+  }
+  if (Array.isArray(d.pinnedChatIds)) {
+    patch.pinnedChatIds = d.pinnedChatIds
+      .filter((id): id is string => typeof id === 'string')
+      .slice(0, 50)
   }
   if (typeof d.coinRate === 'number') patch.coinRate = Math.max(1, Math.round(d.coinRate))
   if (typeof d.coinRedeemLimit === 'number') {
@@ -266,6 +273,7 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
   carouselSlots: {},
   dashboardShortcutIds: ['kasir', 'inbox', 'bookkeeping'],
   inboxReadIds: [],
+  pinnedChatIds: [],
   storeName: 'Warunge Mimi',
   settingsLoaded: false,
   runningText: '',

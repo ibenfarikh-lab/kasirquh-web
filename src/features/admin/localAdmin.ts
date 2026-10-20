@@ -98,6 +98,8 @@ export interface DirectThread {
   lastMessage: string
   /** Millis terakhir thread diperbarui (untuk urutan daftar). */
   updatedAt: number
+  /** true bila thread di-pin admin (selalu di urutan teratas). */
+  pinned: boolean
   loading: boolean
 }
 
@@ -535,6 +537,10 @@ interface LocalAdminState {
   titipRequests: TitipRequest[]
   inboxItems: InboxItem[]
   inboxReadIds: string[]
+  /** ID thread chat yang di-pin (urutan = prioritas). */
+  pinnedChatIds: string[]
+  /** Pin/unpin thread chat pelanggan. */
+  togglePinChat: (id: string) => void
   shortcutIds: string[]
   shortcutEdit: boolean
   kasirMember: KasirMember | null
@@ -682,6 +688,7 @@ interface LocalAdminState {
 
 const INBOX_READ_KEY = 'kqh_inbox_read'
 const SHORTCUT_KEY = 'kqh_dashboard_shortcut_ids'
+const PINNED_CHAT_KEY = 'kqh_pinned_chats'
 
 
 /* ---------- state UI lokal admin (bukan data Firestore) ---------- */
@@ -854,6 +861,8 @@ function buildAdminState(): LocalAdminState {
   const products = useProductsStore.getState().products
   const gs = st.gatewaySlides
 
+  const pinnedChatIds = Array.isArray(st.pinnedChatIds) ? st.pinnedChatIds : []
+  const pinnedSet = new Set(pinnedChatIds)
   const directThreads: Record<string, DirectThread> = {}
   for (const [id, t] of Object.entries(threads)) {
     directThreads[id] = {
@@ -866,6 +875,7 @@ function buildAdminState(): LocalAdminState {
       customerUnread: t.customerUnread,
       lastMessage: t.lastMessage ?? '',
       updatedAt: t.updatedAt ?? 0,
+      pinned: pinnedSet.has(id),
       loading: !!t._loadingMessages,
     }
   }
@@ -905,6 +915,17 @@ function buildAdminState(): LocalAdminState {
     titipRequests: titipRequests as unknown as TitipRequest[],
     inboxItems,
     inboxReadIds: st.inboxReadIds,
+    pinnedChatIds,
+    togglePinChat: (id) => {
+      const cur = useSettingsStore.getState().pinnedChatIds
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [id, ...cur].slice(0, 50)
+      try {
+        localStorage.setItem(PINNED_CHAT_KEY, JSON.stringify(next))
+      } catch {
+        /* abaikan */
+      }
+      void useSettingsStore.getState().saveStoreSettings({ pinnedChatIds: next }).catch(() => {})
+    },
     shortcutIds: st.dashboardShortcutIds,
     shortcutEdit: ui.shortcutEdit,
     kasirMember: ui.kasirMember,
@@ -1121,6 +1142,7 @@ export function useLocalAdminStore<T = LocalAdminState>(
   useProductsStore((s) => s.products)
   useSettingsStore((s) => s.storeSettings)
   useSettingsStore((s) => s.inboxReadIds)
+  useSettingsStore((s) => s.pinnedChatIds)
   useSettingsStore((s) => s.dashboardShortcutIds)
   useSettingsStore((s) => s.lowStockDefault)
   useAdminUIStore()

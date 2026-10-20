@@ -17,16 +17,22 @@ export default function AdminTokoPage() {
 
   const directThreads = useLocalAdminStore((s) => s.directThreads)
   const openThread = useLocalAdminStore((s) => s.openThread)
+  const pinnedChatIds = useLocalAdminStore((s) => s.pinnedChatIds)
+  const togglePinChat = useLocalAdminStore((s) => s.togglePinChat)
 
   const openChat = (id: string) => {
     openThread(id)
     setThreadOpen(true)
   }
 
-  // Urutkan dari aktivitas terbaru agar chat penting tidak tenggelam.
-  const threads = Object.values(directThreads).sort(
-    (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0),
-  )
+  // Urutkan: yang di-pin selalu di atas (urutan pin), lalu aktivitas terbaru.
+  const pinRank = new Map(pinnedChatIds.map((id, i) => [id, i]))
+  const threads = Object.values(directThreads).sort((a, b) => {
+    const pa = a.pinned ? (pinRank.get(a.id) ?? 999) : 999
+    const pb = b.pinned ? (pinRank.get(b.id) ?? 999) : 999
+    if (pa !== pb) return pa - pb
+    return (b.updatedAt || 0) - (a.updatedAt || 0)
+  })
   const unreadThreads = threads.filter((t) => (t.unread || 0) > 0).length
   const q = query.trim().toLowerCase()
   const visible = threads.filter(
@@ -94,11 +100,33 @@ export default function AdminTokoPage() {
                     <br />
                     <small className="chat-preview">{preview}</small>
                   </span>
-                  {thread.unread ? (
-                    <span className="chat-unread">{thread.unread}</span>
-                  ) : latest ? (
-                    <small className="chat-time">{latest.time}</small>
-                  ) : null}
+                  <span className="chat-side">
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      className={'chat-pin-btn' + (thread.pinned ? ' active' : '')}
+                      aria-label={thread.pinned ? 'Lepas pin ' + thread.name : 'Pin ' + thread.name + ' ke atas'}
+                      aria-pressed={thread.pinned}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        togglePinChat(thread.id)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          togglePinChat(thread.id)
+                        }
+                      }}
+                    >
+                      <Icon name="bookmark" />
+                    </span>
+                    {thread.unread ? (
+                      <span className="chat-unread">{thread.unread}</span>
+                    ) : latest ? (
+                      <small className="chat-time">{latest.time}</small>
+                    ) : null}
+                  </span>
                 </button>
               )
             })
