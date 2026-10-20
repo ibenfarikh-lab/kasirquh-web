@@ -293,7 +293,7 @@ export default function PosPage() {
                 </button>
               </div>
             ) : null}
-            <div>
+            <div id="adminCart">
               {entries.length ? (
                 entries.map((e) => (
                   <div className="line-item" key={e.id}>
