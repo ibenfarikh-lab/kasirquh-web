@@ -73,7 +73,7 @@ export default function DashboardPage() {
     <div className="admin-screen">
       <header className="admin-top" aria-label="Warunge Mimi" style={{margin:'0',borderRadius:'0',padding:'16px 18px'}}>
         <Icon name="warunge-logo" className="store-mini icon" label="Logo Warunge Mimi" />
-        <h2 style={{color:'#fff'}}>Warunge Mimi</h2>
+        <h2 style={{color:'#24170f'}}>Warunge Mimi</h2>
       </header>
       <div id="dashboardView" className="subview dashboard-view active">
         <div className="dashboard-lead">
