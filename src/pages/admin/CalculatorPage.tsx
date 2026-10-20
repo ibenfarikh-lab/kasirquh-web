@@ -2,6 +2,12 @@
  * KasirQuh React — src/pages/admin/CalculatorPage.tsx
  * Pengganti CalculatorSheet (dulu #calculatorModal + js/features/admin/calc.js):
  * halaman penuh, bukan modal. Data/logika sama persis, tanpa wrapper Sheet.
+ *
+ * 2026-10-20: display panel diperbarui —
+ *  1. kolom data lebar (panel penuh, min-height besar),
+ *  2. kalkulasi otomatis: hasil sementara tampil live di bawah ekspresi,
+ *  3. ekspresi panjang wrap multi-baris dan menumpuk ke atas
+ *     (bukan overflow ke samping/ellipsis).
  */
 import { useState } from 'react'
 import { calcDisplayValue, calcResult } from '../../features/admin/localAdmin'
@@ -28,6 +34,28 @@ const KEYS = [
   { key: '000', label: '000', cls: 'zero-pack' },
 ]
 
+/** Batas panjang ekspresi (dulu 28; dinaikkan karena display kini wrap multi-baris). */
+const MAX_EXPR = 120
+
+/**
+ * Hasil live dari ekspresi yang sedang diketik (operator buntut diabaikan).
+ * Null bila belum ada operasi lengkap (angka-operator-angka).
+ */
+function liveResultValue(expression: string): number | null {
+  const trimmed = expression.replace(/[+\-*/]+$/, '')
+  if (!/\d[+\-*/]/.test(trimmed)) return null
+  try {
+    const v = calcResult(trimmed)
+    return Number.isFinite(v) ? v : null
+  } catch {
+    return null
+  }
+}
+
+function formatNum(n: number): string {
+  return n.toLocaleString('id-ID', { maximumFractionDigits: 2 })
+}
+
 export default function CalculatorPage() {
   const [expression, setExpression] = useState('')
 
@@ -42,10 +70,14 @@ export default function CalculatorPage() {
       const isOp = /[+\-*/]/.test(key)
       const last = next.slice(-1)
       if (isOp && (!next || /[+\-*/]/.test(last))) return
-      next = (next + key).slice(0, 28)
+      next = (next + key).slice(0, MAX_EXPR)
     }
     setExpression(next)
   }
+
+  const live = liveResultValue(expression)
+  const exprText = calcDisplayValue(expression)
+  const showLive = live !== null && String(live) !== expression
 
   return (
     <div className="admin-screen">
@@ -56,12 +88,16 @@ export default function CalculatorPage() {
             <h2>Kalkulator Kasir</h2>
           </span>
         </div>
-        <input
-          className="calc-display"
-          value={calcDisplayValue(expression)}
-          readOnly
-          aria-label="Hasil kalkulator"
-        />
+        <div className="calc-display" role="status" aria-label="Layar kalkulator">
+          <div className="calc-expr" aria-label={'Ekspresi: ' + exprText}>
+            {exprText}
+          </div>
+          {showLive && (
+            <div className="calc-live" aria-label={'Hasil sementara: ' + formatNum(live)}>
+              = {formatNum(live)}
+            </div>
+          )}
+        </div>
         <div className="calc-grid">
           {KEYS.map((k) => (
             <button
