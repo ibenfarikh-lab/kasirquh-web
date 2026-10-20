@@ -5,14 +5,25 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  collection,
+  getDocs,
+  limit,
+  query as fsQuery,
+  where,
+  type DocumentData,
+} from 'firebase/firestore'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useProductsStore } from '../../stores/products'
 import { useCartStore } from '../../stores/cart'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'
+import { getDb, requireOnline } from '../../lib/firebase'
+import { withTimeout, WRITE_TIMEOUT_MS } from '../../lib/firestore'
 import { money, numericValue, stockText } from '../../lib/format'
 import { Icon, toast } from '../../components/ui'
 import AdminNav from '../../components/AdminNav'
 import { Sheet, SheetHeader } from '../../components/ui'
+import ScannerModal from '../../components/ScannerModal'
 
 export default function PosPage() {
   useAdminBoot()
@@ -32,6 +43,7 @@ export default function PosPage() {
 
   const [query, setQuery] = useState('')
   const [cashOpen, setCashOpen] = useState(false)
+  const [scanOpen, setScanOpen] = useState(false)
 
   const cats = useMemo(
     () => [...new Set(products.map((p) => p.cat).filter(Boolean))],
@@ -88,6 +100,64 @@ export default function PosPage() {
     setCashOpen(true)
   }
 
+  /* Port identifyKasirMember() vanilla: lookup member by memberCode KQ-XXXXXXXX. */
+  const identifyKasirMember = async (code: string) => {
+    if (!/^KQ-[A-Z0-9]{8}$/i.test(code)) {
+      toast('Kode member tidak valid')
+      return
+    }
+    try {
+      requireOnline()
+      const db = getDb()
+      const q = fsQuery(collection(db, 'customers'), where('memberCode', '==', code), limit(2))
+      const snap = await withTimeout(getDocs(q), WRITE_TIMEOUT_MS, 'Cari member')
+      if (snap.empty) {
+        toast('Member tidak ditemukan')
+        return
+      }
+      if (snap.size > 1) {
+        toast('Data member ganda — hubungi admin')
+        return
+      }
+      const d = snap.docs[0]
+      const data: DocumentData = d.data() || {}
+      if (data.approvalStatus !== 'approved') {
+        toast('Member belum disetujui')
+        return
+      }
+      const name = String(data.name || 'Member')
+      setKasirMember({
+        uid: d.id,
+        name,
+        memberCode: code,
+        coins: Math.max(0, Math.round(Number(data.coins) || 0)),
+      })
+      setKasirRedeem(false)
+      toast('Member: ' + name)
+    } catch (error) {
+      const e = error as { code?: string; message?: string }
+      if (!e || e.code !== 'OFFLINE') toast(e && e.message ? e.message : 'Gagal cari member')
+    }
+  }
+
+  /* Port handleBarcodeCode() vanilla: KQ- → member, selain itu → cari produk. */
+  const handleScan = (rawCode: string) => {
+    setScanOpen(false)
+    const code = String(rawCode || '').trim()
+    if (!code) return
+    if (/^KQ-/i.test(code)) {
+      void identifyKasirMember(code.toUpperCase())
+      return
+    }
+    const product = products.find((p) => String(p.barcode || '').trim() === code)
+    if (!product) {
+      toast('Barcode tidak dikenali · produk belum terdaftar')
+      return
+    }
+    addAdminItem(product.id, 1)
+    toast(product.short + ' masuk keranjang')
+  }
+
   return (
     <div className="admin-screen">
       <div id="kasirView" className="subview active">
@@ -104,6 +174,15 @@ export default function PosPage() {
               onChange={(e) => setQuery(e.target.value)}
             />
           </label>
+          <button
+            className="pos-header-scan"
+            type="button"
+            onClick={() => setScanOpen(true)}
+            aria-label="Buka pemindai barcode"
+          >
+            <Icon name="barcode" />
+            <span>Pindai</span>
+          </button>
         </header>
         <div className="admin-body">
           <section
@@ -264,6 +343,7 @@ export default function PosPage() {
         </div>
       </div>
       <AdminNav />
+      <ScannerModal open={scanOpen} onClose={() => setScanOpen(false)} onScan={handleScan} />
       <CashPaymentSheet
         open={cashOpen}
         onClose={() => setCashOpen(false)}
