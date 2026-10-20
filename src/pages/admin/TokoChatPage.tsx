@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'
 import { Icon, toast } from '../../components/ui'
+import { useSheetRoute } from '../../lib/sheetRoute'
 import AdminNav from '../../components/AdminNav'
 
 export default function AdminTokoPage() {
@@ -14,6 +15,8 @@ export default function AdminTokoPage() {
   const [threadOpen, setThreadOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  // Back browser menutup overlay percakapan (route-based, sama seperti Sheet).
+  useSheetRoute('chat-thread', threadOpen, () => setThreadOpen(false))
 
   const directThreads = useLocalAdminStore((s) => s.directThreads)
   const openThread = useLocalAdminStore((s) => s.openThread)

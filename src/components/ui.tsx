@@ -3,8 +3,9 @@
  * Primitif UI bersama. Class CSS dipakai apa adanya dari app.css lama
  * agar tampilan 1:1 — JANGAN rename class.
  */
-import { useEffect, type ReactNode, type MouseEvent } from 'react'
+import { useEffect, useId, type ReactNode, type MouseEvent } from 'react'
 import { create } from 'zustand'
+import { useSheetRoute } from '../lib/sheetRoute'
 
 /* ---------- Icon: sprite SVG inline (SvgSprite, 39 simbol — port vanilla) ---------- */
 export function Icon({
@@ -24,26 +25,28 @@ export function Icon({
 }
 
 /* ---------- Sheet: pengganti openSheet()/closeSheets() + .modal/.sheet ---------- */
+
 export function Sheet({
   open,
   onClose,
   children,
   sheetClassName = 'sheet feature-sheet',
   labelledBy,
+  sheetId,
 }: {
   open: boolean
   onClose: () => void
   children: ReactNode
   sheetClassName?: string
   labelledBy?: string
+  /** Id unik untuk back-button route-based. Default: useId (tanpa ubah pemakai). */
+  sheetId?: string
 }) {
-  // KNOWN LIMITATION (T9, 2026-10-19): tombol back Android tidak menutup sheet/modal
-  // (regresi UX dibanding vanilla). Pendekatan lama berbasis history (src/lib/sheetHistory.ts)
-  // dinonaktifkan 2026-10-18 karena justru membuat sheet tidak terbuka di beberapa browser,
-  // lalu modulnya dihapus (commit 371c5f2). Implementasi ulang yang benar butuh integrasi
-  // dengan React Router + penanganan sheet bertumpuk + uji perangkat Android/PWA nyata —
-  // sengaja TIDAK dikerjakan buta di sini. Penutup sheet yang tetap berfungsi: tombol ×,
-  // tap backdrop, dan tombol Escape (desktop).
+  const autoId = useId().replace(/[^a-zA-Z0-9_-]/g, '')
+  const id = sheetId || `sheet-${autoId}`
+  // Back browser menutup sheet via search param (Opsi A). Semua 15 pemakai
+  // otomatis dapat perilaku ini tanpa perubahan.
+  useSheetRoute(id, open, onClose)
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
