@@ -113,7 +113,7 @@ export default function CatalogPage() {
             return (
               <article
                 key={p.id}
-                className="product-card"
+                className={`product-card${out ? ' out' : ''}`}
                 tabIndex={0}
                 role="button"
                 aria-label={`Lihat detail ${p.name}`}
@@ -127,7 +127,7 @@ export default function CatalogPage() {
               >
                 {p.promo ? <span className="promo-flag">PROMO</span> : null}
                 {out ? (
-                  <span className="promo-flag" style={{ background: '#999' }}>
+                  <span className="out-ribbon" aria-hidden="true">
                     HABIS
                   </span>
                 ) : null}

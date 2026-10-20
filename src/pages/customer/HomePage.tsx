@@ -70,7 +70,7 @@ function ProductMini({
   const out = (p.stock || 0) <= 0
   return (
     <article
-      className={`${kind}-card`}
+      className={`${kind}-card${out ? ' out' : ''}`}
       tabIndex={0}
       role="button"
       aria-label={`Lihat detail ${p.name}`}
@@ -84,7 +84,7 @@ function ProductMini({
     >
       {p.promo ? <span className="promo-flag">PROMO</span> : null}
       {out ? (
-        <span className="promo-flag" style={{ background: 'var(--muted)' }}>
+        <span className="out-ribbon" aria-hidden="true">
           HABIS
         </span>
       ) : null}
