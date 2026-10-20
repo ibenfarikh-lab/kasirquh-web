@@ -285,10 +285,14 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
     }
   }
 
+  function pickTheme(v: ThemeChoice) {
+    setTheme(v)
+    setCustomerTheme(v)
+  }
+
   function apply() {
     const safe = name.trim() || 'Pelanggan'
     session.setSession({ name: safe, wa: wa.trim(), address: address.trim() })
-    setCustomerTheme(theme)
     try { localStorage.setItem('kasirquh-admin-sounds', JSON.stringify(sounds)) } catch { /* abaikan */ }
     toast('Pengaturan diterapkan')
     onClose()
@@ -336,7 +340,7 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
               ['system', 'Ikuti HP', 'Otomatis'],
             ] as const
           ).map(([v, b, s]) => (
-            <button key={v} className={theme === v ? 'active' : ''} onClick={() => setTheme(v)}>
+            <button key={v} className={theme === v ? 'active' : ''} onClick={() => pickTheme(v)}>
               {b}
               <small>{s}</small>
             </button>
