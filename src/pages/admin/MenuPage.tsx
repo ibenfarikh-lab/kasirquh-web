@@ -25,7 +25,8 @@ const MANAGE: MenuItem[] = [
   { icon: 'home', title: 'Pusat Kendali Beranda', desc: 'Konten, tampilan & urutan bagian', jump: 'kendali-beranda' },
   { icon: 'coin', title: 'Koin Warga', desc: 'Nilai, event & batas penukaran', jump: 'pengaturan-koin' },
   { icon: 'receipt', title: 'Kasir Online', desc: 'Pesanan berlangsung & selesai', jump: 'online' },
-  { icon: 'users', title: 'Data', desc: 'Pelanggan, persetujuan & laporan', jump: 'data' },
+  { icon: 'users', title: 'Data Pelanggan', desc: 'Pelanggan & persetujuan', jump: 'data' },
+  { icon: 'bars', title: 'Laporan', desc: 'Omset, laba & transaksi', jump: 'laporan' },
   { icon: 'chat', title: 'Chat', desc: 'Pelanggan & moderasi Rumpi', jump: 'chat' },
 ]
 

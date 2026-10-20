@@ -49,6 +49,7 @@ import PosPage from './pages/admin/PosPage'
 import InboxPage from './pages/admin/InboxPage'
 import OnlinePage from './pages/admin/OnlinePage'
 import DataPage from './pages/admin/DataPage'
+import ReportsPage from './pages/admin/ReportsPage'
 import NotesPage from './pages/admin/NotesPage'
 import BookkeepingPage from './pages/admin/BookkeepingPage'
 import MenuPage from './pages/admin/MenuPage'
@@ -228,6 +229,7 @@ export default function App() {
           <Route path="pesanan" element={<InboxPage />} />
           <Route path="online" element={<OnlinePage />} />
           <Route path="data" element={<DataPage />} />
+          <Route path="laporan" element={<ReportsPage />} />
           <Route path="catatan" element={<NotesPage />} />
           <Route path="pembukuan" element={<BookkeepingPage />} />
           <Route path="menu" element={<MenuPage />} />

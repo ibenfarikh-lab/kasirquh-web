@@ -1,11 +1,12 @@
 /**
  * KasirQuh React — src/pages/admin/DataPage.tsx
- * Pengganti #dataView: tab Data Pelanggan, Persetujuan, dan Laporan
- * (renderCustomerData, setDataTab, renderFinance bagian laporan).
+ * Pengganti #dataView: tab Data Pelanggan dan Persetujuan
+ * (renderCustomerData, setDataTab).
  * Termasuk detail pelanggan + catatan/tagihan (kasbon) via sheet.
+ * Tab Laporan dipindah ke halaman tersendiri (ReportsPage).
  */
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'
 import { money, numericValue } from '../../lib/format'
@@ -13,13 +14,11 @@ import { Icon, Sheet, SheetHeader, toast } from '../../components/ui'
 import AdminNav from '../../components/AdminNav'
 import type { Customer } from '../../types'
 
-type DataTab = 'customers' | 'approvals' | 'reports'
+type DataTab = 'customers' | 'approvals'
 
 export default function DataPage() {
   useAdminBoot()
-  const navigate = useNavigate()
   const [params] = useSearchParams()
-  const journalEntries = useLocalAdminStore((s) => s.journalEntries)
   const customerData = useLocalAdminStore((s) => s.customerData)
   const pendingCustomers = useLocalAdminStore((s) => s.pendingCustomers)
   const approveCustomer = useLocalAdminStore((s) => s.approveCustomer)
@@ -30,17 +29,8 @@ export default function DataPage() {
 
   useEffect(() => {
     const t = params.get('tab')
-    if (t === 'approvals' || t === 'reports' || t === 'customers') setTab(t)
+    if (t === 'approvals' || t === 'customers') setTab(t)
   }, [params])
-
-  const sales = useMemo(
-    () => journalEntries.filter((x) => x.type === 'Penjualan'),
-    [journalEntries],
-  )
-  const revenue = sales.reduce((s, x) => s + x.amount, 0)
-  const profit = sales.reduce((s, x) => s + (x.profit || 0), 0)
-  const items = sales.reduce((s, x) => s + (x.itemCount || 0), 0)
-  const hasSales = sales.length > 0
 
   const spendTotal = customerData.reduce((s, c) => s + c.spend, 0)
 
@@ -55,7 +45,7 @@ export default function DataPage() {
         <div className="admin-task-head">
           <span>
             <small>Warga &amp; transaksi</small>
-            <h2>Data</h2>
+            <h2>Data Pelanggan</h2>
           </span>
         </div>
         <div className="data-tabs" role="tablist" aria-label="Bagian data">
@@ -76,15 +66,6 @@ export default function DataPage() {
           >
             <Icon name="clock" />
             <span>Persetujuan</span>
-          </button>
-          <button
-            className={'data-tab' + (tab === 'reports' ? ' active' : '')}
-            role="tab"
-            aria-selected={tab === 'reports'}
-            onClick={() => setTab('reports')}
-          >
-            <Icon name="bars" />
-            <span>Laporan</span>
           </button>
         </div>
 
@@ -199,67 +180,6 @@ export default function DataPage() {
           </div>
         </section>
 
-        <section className={'data-panel' + (tab === 'reports' ? ' active' : '')}>
-          <div className="report-metrics">
-            <article className="report-metric">
-              <small>TOTAL OMSET</small>
-              <b className={hasSales ? undefined : 'empty-value'}>
-                {hasSales ? money(revenue) : 'Belum ada data'}
-              </b>
-            </article>
-            <article className="report-metric profit">
-              <small>LABA</small>
-              <b className={hasSales ? undefined : 'empty-value'}>
-                {hasSales ? money(profit) : 'Belum ada data'}
-              </b>
-            </article>
-            <article className="report-metric">
-              <small>TRANSAKSI SUKSES</small>
-              <b className={hasSales ? undefined : 'empty-value'}>
-                {hasSales ? sales.length : 'Belum ada data'}
-              </b>
-            </article>
-            <article className="report-metric">
-              <small>TOTAL ITEM BARANG</small>
-              <b className={hasSales ? undefined : 'empty-value'}>
-                {hasSales ? items : 'Belum ada data'}
-              </b>
-            </article>
-          </div>
-          {hasSales ? (
-            <table className="transaction-table">
-              <thead>
-                <tr>
-                  <th>Waktu</th>
-                  <th>Metode</th>
-                  <th>Qty</th>
-                  <th>Omset</th>
-                  <th>Laba</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sales.map((entry) => (
-                  <tr key={entry.id}>
-                    <td data-label="Waktu">{entry.time}</td>
-                    <td data-label="Metode">{entry.method || entry.source}</td>
-                    <td data-label="Qty">{entry.itemCount || 0}</td>
-                    <td data-label="Omset">{money(entry.amount)}</td>
-                    <td data-label="Laba">{money(entry.profit || 0)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="report-empty">
-              <span className="empty-state-icon">
-                <Icon name="receipt" />
-              </span>
-              <h3>Belum ada transaksi pada periode ini</h3>
-              <p>Lakukan penjualan di Kasir agar omzet, laba, dan jumlah barang tercatat di sini.</p>
-              <button onClick={() => navigate('/admin/kasir')}>Buka Kasir</button>
-            </div>
-          )}
-        </section>
       </div>
       <AdminNav />
       <CustomerDetailSheet customerId={detailId} onClose={() => setDetailId(null)} />

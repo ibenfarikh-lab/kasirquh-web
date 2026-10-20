@@ -34,6 +34,7 @@ export function adminRoute(view: string): string {
     menu: '/admin/menu',
     online: '/admin/online',
     data: '/admin/data',
+    laporan: '/admin/laporan',
     produk: '/admin/produk',
     chat: '/admin/chat',
     bookkeeping: '/admin/pembukuan',

@@ -512,7 +512,7 @@ export const DASHBOARD_SHORTCUT_CATALOG: DashboardShortcut[] = [
   { id: 'online', group: 'Kelola warung', label: 'Kasir Online', detail: 'Pesanan pelanggan', icon: 'receipt', action: { kind: 'view', value: 'online' } },
   { id: 'customers', group: 'Kelola warung', label: 'Data Pelanggan', detail: 'Warga dan riwayat', icon: 'users', action: { kind: 'tab', value: 'customers' } },
   { id: 'approvals', group: 'Kelola warung', label: 'Persetujuan', detail: 'Pelanggan baru', icon: 'clock', action: { kind: 'tab', value: 'approvals' } },
-  { id: 'reports', group: 'Kelola warung', label: 'Laporan', detail: 'Omzet dan laba', icon: 'bars', action: { kind: 'tab', value: 'reports' } },
+  { id: 'reports', group: 'Kelola warung', label: 'Laporan', detail: 'Omzet dan laba', icon: 'bars', action: { kind: 'route', value: '/admin/laporan' } },
   { id: 'chat', group: 'Kelola warung', label: 'Chat & Rumpi', detail: 'Pelanggan dan warga', icon: 'chat', action: { kind: 'view', value: 'chat' } },
   { id: 'purchase-notes', group: 'Kelola warung', label: 'Catatan Belanja', detail: 'Arsip kulakan', icon: 'note', action: { kind: 'view', value: 'note' } },
   { id: 'calculator', group: 'Laci alat', label: 'Kalkulator', detail: 'Hitung cepat', icon: 'calculator', action: { kind: 'route', value: '/admin/kalkulator' } },
