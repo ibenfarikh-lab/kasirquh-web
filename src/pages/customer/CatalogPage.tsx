@@ -145,6 +145,13 @@ export default function CatalogPage() {
                   onClick={(e) => {
                     e.stopPropagation()
                     addCustomerItem(p.id)
+                    toast(p.name + ' masuk keranjang', {
+                      type: 'success',
+                      action: {
+                        label: 'Lihat',
+                        onClick: () => navigate('/beranda/keranjang'),
+                      },
+                    })
                   }}
                 >
                   <Icon name="cart" />
@@ -262,12 +269,12 @@ function ProductDetailSheet({
                   if (weight) {
                     const max = Math.max(0.1, stock || 99)
                     const q = Math.min(max, +(v + 0.1).toFixed(1))
-                    if (q === v) toast('Stok tersisa ' + String(max).replace('.', ',') + ' ' + product.unit)
+                    if (q === v) toast('Stok tersisa ' + String(max).replace('.', ',') + ' ' + product.unit, { type: 'warning' })
                     return q
                   }
                   const max2 = Math.max(1, Math.floor(stock) || 1)
                   const q2 = Math.min(max2, v + 1)
-                  if (q2 === v) toast('Stok tersisa ' + max2)
+                  if (q2 === v) toast('Stok tersisa ' + max2, { type: 'warning' })
                   return q2
                 })
               }
@@ -299,7 +306,7 @@ function ProductDetailSheet({
                 priceAtWatch: product.price,
                 watchedAt: new Date().toISOString(),
               })
-              toast(now ? 'Harga dipantau' : 'Pantauan harga dilepas')
+              toast(now ? 'Harga dipantau' : 'Pantauan harga dilepas', { type: now ? 'success' : 'info' })
             }}
           >
             {watching ? 'Harga dipantau' : 'Pantau Harga'}

@@ -650,3 +650,24 @@ body[data-ui-theme="dark"] .member-card-body strong{color:#ffffff}
 /* Composer chat: turun ke bawah saat navbar sembunyi */
 .app.no-nav #rumpiView .rumpi-composer{bottom:env(safe-area-inset-bottom)}
 .app.no-nav #tokoChatView .thread-composer{bottom:env(safe-area-inset-bottom)}
+
+/* ===== Toast interaktif (React Toaster — components/ui.tsx) ===== */
+.toast-stack{position:fixed;z-index:60;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;width:min(92vw,420px);pointer-events:none}
+.toast-item{pointer-events:auto;position:relative;display:flex;align-items:center;gap:10px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:11px 14px;box-shadow:var(--shadow);font-weight:700;font-size:13px;line-height:1.35;cursor:pointer;overflow:hidden;animation:toast-in .22s ease}
+.toast-item:active{transform:scale(.98)}
+.toast-item:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.toast-icon{flex:none;width:20px;height:20px}
+.toast-msg{flex:1;min-width:0}
+.toast-action{flex:none;border:0;border-radius:10px;background:var(--orange);color:#24170f;font-weight:800;font-size:12px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+.toast-action:active{transform:scale(.95)}
+.toast-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left center;animation-name:toast-bar-shrink;animation-timing-function:linear;animation-fill-mode:forwards}
+.toast-success .toast-icon{color:#2e9e5b}
+.toast-success .toast-bar{background:#2e9e5b}
+.toast-warning .toast-icon{color:#c98a0a}
+.toast-warning .toast-bar{background:#c98a0a}
+.toast-error .toast-icon{color:#d33f3f}
+.toast-error .toast-bar{background:#d33f3f}
+.toast-info .toast-icon{color:var(--orange)}
+.toast-info .toast-bar{background:var(--orange)}
+@keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes toast-bar-shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
