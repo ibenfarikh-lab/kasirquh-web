@@ -9,8 +9,10 @@
  *  3. ekspresi panjang wrap multi-baris dan menumpuk ke atas
  *     (bukan overflow ke samping/ellipsis).
  * 2026-10-20: batas panjang ekspresi dihapus (permintaan user).
+ * 2026-10-20: display punya scrollbar sendiri (max-height + auto-scroll ke
+ *  hasil terbaru) agar tombol tidak tenggelam saat ekspresi panjang.
  */
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { calcDisplayValue, calcResult } from '../../features/admin/localAdmin'
 
 const KEYS = [
@@ -62,6 +64,14 @@ function formatNum(n: number): string {
 
 export default function CalculatorPage() {
   const [expression, setExpression] = useState('')
+  const displayRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll display ke bagian terbaru: ekspresi akhir + hasil live
+  // selalu terlihat tanpa scroll manual (saat scrollbar aktif).
+  useEffect(() => {
+    const el = displayRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [expression])
 
   const press = (key: string) => {
     let next = expression
@@ -92,7 +102,7 @@ export default function CalculatorPage() {
             <h2>Kalkulator Kasir</h2>
           </span>
         </div>
-        <div className="calc-display" role="status" aria-label="Layar kalkulator">
+        <div ref={displayRef} className="calc-display" role="status" aria-label="Layar kalkulator">
           <div className="calc-expr" aria-label={'Ekspresi: ' + exprText}>
             {exprText}
           </div>

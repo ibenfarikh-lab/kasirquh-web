@@ -261,6 +261,10 @@ html{font-size:clamp(15px,.35vw + 13.75px,17px);overflow-x:hidden}body{overflow-
 @media(max-height:42rem){.gateway{padding-top:max(1.25rem,env(safe-area-inset-top));padding-bottom:max(1rem,env(safe-area-inset-bottom))}.store-mark{width:4rem;height:4rem;margin-top:0}.gateway h1{font-size:clamp(1.8rem,8vw,2.4rem);margin:.75rem 0 .35rem}.powered{padding-top:1rem}.sheet,.feature-sheet{max-height:94dvh}}
 /* AI Admin berbasis data sesi, kalkulator warung, dan input angka terformat */
 .calc-display{font-size:clamp(26px,7.5vw,38px);font-variant-numeric:tabular-nums;letter-spacing:-.02em}.calc-expr{white-space:normal;overflow-wrap:anywhere;word-break:break-word;text-align:right;line-height:1.3}.calc-live{text-align:right;font-size:17px;font-weight:800;color:var(--orange);line-height:1.25}
+/* Kalkulator: display punya scrollbar sendiri (2026-10-20) — panel berhenti tumbuh di max-height, sisanya scroll di dalam display; tombol tetap di tempat. Auto-scroll ke bawah diurus CalculatorPage (ref), hasil live selalu terlihat. */
+.calc-display{max-height:min(220px,32dvh);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.calc-display::-webkit-scrollbar{width:6px}
+.calc-display::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .calc-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:52px;gap:8px}
 .calc-grid button{height:52px;font-size:15px;touch-action:manipulation}
 .calc-grid .zero-pack{background:color-mix(in srgb,var(--orange) 10%,var(--card));color:#b6650d;border-color:color-mix(in srgb,var(--orange) 36%,var(--line))}
