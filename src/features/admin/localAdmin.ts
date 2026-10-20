@@ -420,12 +420,19 @@ export function adminAiResponse(
 
 /* ================= Kalkulator murni (1:1 js/features/admin/calc.js) ================= */
 
+/**
+ * Satu instance NumberFormat dipakai ulang untuk semua token.
+ * Dulu tiap token memanggil Number(v).toLocaleString('id-ID', {...}) yang
+ * mengkonstruksi Intl baru per token per render — O(n) konstruksi Intl tiap
+ * ketukan tombol bikin main thread jenuh saat ekspresi panjang (freeze di HP).
+ * Hasil format identik (terverifikasi).
+ */
+const idNumberFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 })
+
 export function calcDisplayValue(expression: string): string {
   if (!expression) return '0'
   return expression
-    .replace(/\d+(?:\.\d+)?/g, (value) =>
-      Number(value).toLocaleString('id-ID', { maximumFractionDigits: 2 }),
-    )
+    .replace(/\d+(?:\.\d+)?/g, (value) => idNumberFormat.format(Number(value)))
     .replace(/\*/g, ' × ')
     .replace(/\//g, ' ÷ ')
     .replace(/\+/g, ' + ')
