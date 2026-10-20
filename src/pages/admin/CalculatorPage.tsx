@@ -8,6 +8,7 @@
  *  2. kalkulasi otomatis: hasil sementara tampil live di bawah ekspresi,
  *  3. ekspresi panjang wrap multi-baris dan menumpuk ke atas
  *     (bukan overflow ke samping/ellipsis).
+ * 2026-10-20: batas panjang ekspresi dihapus (permintaan user).
  */
 import { useState } from 'react'
 import { calcDisplayValue, calcResult } from '../../features/admin/localAdmin'
@@ -34,8 +35,11 @@ const KEYS = [
   { key: '000', label: '000', cls: 'zero-pack' },
 ]
 
-/** Batas panjang ekspresi (dulu 28; dinaikkan karena display kini wrap multi-baris). */
-const MAX_EXPR = 120
+/**
+ * Tidak ada batas panjang ekspresi: kalkulator menerima input sebanyak apa pun
+ * (permintaan user — "kalkulator bisa banyak hitungan"). Evaluasi hasil dan
+ * format tampilan berjalan O(n), jadi ekspresi sangat panjang tetap ringan.
+ */
 
 /**
  * Hasil live dari ekspresi yang sedang diketik (operator buntut diabaikan).
@@ -70,7 +74,7 @@ export default function CalculatorPage() {
       const isOp = /[+\-*/]/.test(key)
       const last = next.slice(-1)
       if (isOp && (!next || /[+\-*/]/.test(last))) return
-      next = (next + key).slice(0, MAX_EXPR)
+      next = next + key
     }
     setExpression(next)
   }
