@@ -30,6 +30,12 @@ export function useSheetRoute(sheetId: string, open: boolean, onClose: () => voi
   // Entry history milik sheet ini sudah didorong (guard anti double-push,
   // termasuk double-invoke StrictMode di dev).
   const pushedRef = useRef(false)
+  // Param ?sheet=<id> milik sheet ini SUDAH PERNAH TERLIHAT di lokasi.
+  // Wajib sebelum ketiadaan param boleh diartikan "user tekan back" — tanpa
+  // guard ini, effect deteksi-back menembak di commit pembuka (lokasi di
+  // closure masih yang lama, navigate() belum berlaku) dan sheet yang baru
+  // dibuka langsung tertutup lagi ("muncul sebentar lalu hilang").
+  const sawParamRef = useRef(false)
 
   // Buka → dorong entry.
   useEffect(() => {
@@ -43,12 +49,18 @@ export function useSheetRoute(sheetId: string, open: boolean, onClose: () => voi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, sheetId, navigate])
 
-  // Lokasi berubah saat sheet terbuka & entry milik kita → user tekan back → tutup.
+  // Konfirmasi + deteksi back. Param harus TERLIHAT dulu di lokasi sebelum
+  // ketiadaannya boleh diartikan user tekan back.
   useEffect(() => {
     if (!open || !pushedRef.current) return
     const sp = new URLSearchParams(location.search)
-    if (sp.get('sheet') !== sheetId) {
+    if (sp.get('sheet') === sheetId) {
+      sawParamRef.current = true
+      return
+    }
+    if (sawParamRef.current) {
       pushedRef.current = false
+      sawParamRef.current = false
       onCloseRef.current()
     }
   }, [location, open, sheetId])
@@ -59,6 +71,7 @@ export function useSheetRoute(sheetId: string, open: boolean, onClose: () => voi
   useEffect(() => {
     if (!open && pushedRef.current) {
       pushedRef.current = false
+      sawParamRef.current = false
       const sp = new URLSearchParams(location.search)
       if (sp.get('sheet') === sheetId) {
         sp.delete('sheet')

@@ -139,7 +139,7 @@ export default function CatalogPage() {
                 </div>
                 <button
                   className="add"
-                  aria-label={`Tambah ${p.name}`}
+                  aria-label={`Tambah ${p.name} ke keranjang`}
                   disabled={out}
                   style={out ? { opacity: 0.4 } : undefined}
                   onClick={(e) => {
@@ -147,7 +147,7 @@ export default function CatalogPage() {
                     addCustomerItem(p.id)
                   }}
                 >
-                  +
+                  <Icon name="cart" />
                 </button>
               </article>
             )
