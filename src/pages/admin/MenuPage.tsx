@@ -1,6 +1,6 @@
 /**
  * KasirQuh React — src/pages/admin/MenuPage.tsx
- * Pengganti #menuView: grid Kelola Warung / Laci Alat / Pengaturan.
+ * Pengganti #menuView: grid Kelola Warung / Kelola Pelanggan / Pengaturan.
  * Tombol data-admin-jump -> rute admin; data-open-sheet -> sheet lokal.
  */
 import { useNavigate } from 'react-router-dom'
@@ -22,25 +22,25 @@ interface MenuItem {
 const MANAGE: MenuItem[] = [
   { icon: 'box', title: 'Produk', desc: 'Stok, foto, modal & harga jual', jump: 'produk' },
   { icon: 'store', title: 'Profil Toko', desc: 'Identitas, jam, alamat & telepon', jump: 'profil-toko' },
-  { icon: 'home', title: 'Pusat Kendali Beranda', desc: 'Konten, tampilan & urutan bagian', jump: 'kendali-beranda' },
-  { icon: 'coin', title: 'Koin Warga', desc: 'Nilai, event & batas penukaran', jump: 'pengaturan-koin' },
   { icon: 'receipt', title: 'Kasir Online', desc: 'Pesanan berlangsung & selesai', jump: 'online' },
-  { icon: 'users', title: 'Data Pelanggan', desc: 'Pelanggan & persetujuan', jump: 'data' },
+  { icon: 'book', title: 'Pembukuan', desc: 'Ringkasan kas & jurnal transaksi', jump: 'bookkeeping' },
   { icon: 'bars', title: 'Laporan', desc: 'Omset, laba & transaksi', jump: 'laporan' },
-  { icon: 'chat', title: 'Chat', desc: 'Pelanggan & moderasi Rumpi', jump: 'chat' },
-]
-
-const TOOLS: MenuItem[] = [
+  { icon: 'bank', title: 'Konfirmasi Transfer', desc: 'Verifikasi pembayaran', route: '/admin/transfer' },
+  { icon: 'cart', title: 'Belanja Stok', desc: 'Daftar kulakan', jump: 'belanja-stok' },
+  { icon: 'receipt', title: 'Struk 58mm', desc: 'Transaksi terakhir', route: '/admin/struk/terakhir' },
   { icon: 'calculator', title: 'Kalkulator', desc: 'Hitung cepat', route: '/admin/kalkulator' },
   { icon: 'note', title: 'Catatan Toko', desc: 'Pengingat internal', jump: 'catatan-toko' },
-  { icon: 'cart', title: 'Belanja Stok', desc: 'Daftar kulakan', jump: 'belanja-stok' },
   { icon: 'spark', title: 'AI Admin', desc: 'Ringkas & saran', jump: 'ai-admin' },
-  { icon: 'book', title: 'Pembukuan', desc: 'Ringkasan kas & jurnal transaksi', jump: 'bookkeeping' },
-  { icon: 'bank', title: 'Konfirmasi Transfer', desc: 'Verifikasi pembayaran', route: '/admin/transfer' },
+]
+
+const CUSTOMERS: MenuItem[] = [
+  { icon: 'home', title: 'Pusat Kendali Beranda', desc: 'Konten, tampilan & urutan bagian', jump: 'kendali-beranda' },
+  { icon: 'users', title: 'Data Pelanggan', desc: 'Pelanggan & persetujuan', jump: 'data' },
+  { icon: 'chat', title: 'Chat', desc: 'Pelanggan & moderasi Rumpi', jump: 'chat' },
+  { icon: 'coin', title: 'Koin Warga', desc: 'Nilai, event & batas penukaran', jump: 'pengaturan-koin' },
   { icon: 'box', title: 'Paket Rutin', desc: 'Buat & kelola paket', jump: 'rutin' },
   { icon: 'box', title: 'Paket Hajatan', desc: 'Buat & kelola paket', jump: 'hajatan' },
   { icon: 'users', title: 'Patungan Warga', desc: 'Buat & kelola patungan', jump: 'patungan' },
-  { icon: 'receipt', title: 'Struk 58mm', desc: 'Transaksi terakhir', route: '/admin/struk/terakhir' },
 ]
 
 export default function MenuPage() {
@@ -80,8 +80,8 @@ export default function MenuPage() {
           {renderGrid(MANAGE)}
         </section>
         <section className="admin-menu-section">
-          <h3>LACI ALAT</h3>
-          {renderGrid(TOOLS)}
+          <h3>KELOLA PELANGGAN</h3>
+          {renderGrid(CUSTOMERS)}
         </section>
         <section className="admin-menu-section">
           <h3>PENGATURAN</h3>
