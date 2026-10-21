@@ -720,11 +720,25 @@ interface AdminUIState {
   clearErrorLog: () => void
 }
 
+/* Struk terakhir PERSISTEN (localStorage, seperti Native SharedPreferences):
+ * reload halaman tidak menghilangkan struk terakhir. */
+const LAST_RECEIPT_KEY = 'kasirquh-admin-last-receipt'
+
+function loadLastReceipt(): LastReceipt | null {
+  try {
+    const raw = localStorage.getItem(LAST_RECEIPT_KEY)
+    if (raw) return JSON.parse(raw) as LastReceipt
+  } catch {
+    /* abaikan */
+  }
+  return null
+}
+
 const useAdminUIStore = create<AdminUIState>()((set) => ({
   adminCat: 'Semua',
   kasirMember: null,
   kasirRedeem: false,
-  lastReceipt: null,
+  lastReceipt: loadLastReceipt(),
   journalPeriod: 'day',
   activePurchaseDate: todayKeyJakarta(),
   shortcutEdit: false,
@@ -732,7 +746,15 @@ const useAdminUIStore = create<AdminUIState>()((set) => ({
   setAdminCat: (c) => set({ adminCat: c }),
   setKasirMember: (m) => set({ kasirMember: m }),
   setKasirRedeem: (v) => set({ kasirRedeem: v }),
-  setLastReceipt: (r) => set({ lastReceipt: r }),
+  setLastReceipt: (r) => {
+    try {
+      if (r) localStorage.setItem(LAST_RECEIPT_KEY, JSON.stringify(r))
+      else localStorage.removeItem(LAST_RECEIPT_KEY)
+    } catch {
+      /* abaikan */
+    }
+    set({ lastReceipt: r })
+  },
   setJournalPeriod: (p) => set({ journalPeriod: p }),
   setActivePurchaseDate: (d) => set({ activePurchaseDate: d }),
   setShortcutEdit: (v) => set({ shortcutEdit: v }),

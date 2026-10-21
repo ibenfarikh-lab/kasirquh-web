@@ -4,17 +4,96 @@
  * js/features/admin/pos.js): halaman penuh struk 58mm dari transaksi
  * terakhir + unduh .txt. Logika sama persis, tanpa wrapper Sheet.
  *
- * Param :id dibaca dari route; data struk tetap dari transaksi terakhir
- * (useLocalAdminStore.lastReceipt) seperti sheet sebelumnya.
+ * Param :id DIPAKAI: id 'terakhir' (atau tanpa id) → struk terakhir yang
+ * persisten (useLocalAdminStore.lastReceipt, tersimpan di localStorage).
+ * Id lain → transaksi dibaca dari dokumen orders/{id} (sumber data struk
+ * yang punya rincian item) lalu dipetakan ke bentuk struk.
  */
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { doc, getDoc, type DocumentData } from 'firebase/firestore'
 import { Icon, toast } from '../../components/ui'
-import { useLocalAdminStore } from '../../features/admin/localAdmin'
+import { useLocalAdminStore, type LastReceipt } from '../../features/admin/localAdmin'
+import { getDb } from '../../lib/firebase'
 import { money } from '../../lib/format'
 
+/** Petakan dokumen orders/{id} ke bentuk struk 58mm. */
+function orderToReceipt(d: DocumentData): LastReceipt {
+  const items = ((d.items || []) as DocumentData[]).map((it) => ({
+    name: String(it.name || 'Produk'),
+    qty: Number(it.qty) || 0,
+    total: Math.round(Number(it.subtotal) || (Number(it.price) || 0) * (Number(it.qty) || 0)),
+  }))
+  const redeemCoins = Math.round(Number(d.coinUsed) || 0)
+  const ts = d.createdAt as { toDate?: () => Date } | undefined
+  const at =
+    ts && typeof ts.toDate === 'function'
+      ? new Intl.DateTimeFormat('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(ts.toDate())
+      : ''
+  return {
+    at,
+    items,
+    total: Math.round(Number(d.total) || 0),
+    rawTotal: Math.round(Number(d.fullTotal != null ? d.fullTotal : d.total) || 0),
+    cashReceived: 0,
+    change: 0,
+    redeemCoins,
+    earnedCoins: Math.round(Number(d.earnedCoins) || 0),
+    // Nilai Rp per koin efektif dari dokumen order (coinValue = total Rp).
+    coinValue: redeemCoins > 0 ? Math.round((Number(d.coinValue) || 0) / redeemCoins) : 1,
+    member: d.customerName
+      ? { name: String(d.customerName), memberCode: '' }
+      : null,
+  }
+}
+
 export default function ReceiptPage() {
-  useParams<{ id: string }>()
-  const receipt = useLocalAdminStore((s) => s.lastReceipt)
+  const { id } = useParams<{ id: string }>()
+  const lastReceipt = useLocalAdminStore((s) => s.lastReceipt)
+  const [byId, setById] = useState<LastReceipt | null>(null)
+  const [byIdState, setByIdState] = useState<'idle' | 'loading' | 'found' | 'missing'>('idle')
+
+  useEffect(() => {
+    if (!id || id === 'terakhir') {
+      setById(null)
+      setByIdState('idle')
+      return
+    }
+    let alive = true
+    setByIdState('loading')
+    getDoc(doc(getDb(), 'orders', id))
+      .then((snap) => {
+        if (!alive) return
+        if (!snap.exists()) {
+          setByIdState('missing')
+          return
+        }
+        setById(orderToReceipt(snap.data()))
+        setByIdState('found')
+      })
+      .catch(() => {
+        if (alive) setByIdState('missing')
+      })
+    return () => {
+      alive = false
+    }
+  }, [id])
+
+  const receipt =
+    byIdState === 'found' ? byId : byIdState === 'idle' ? lastReceipt : null
+  const emptyNote =
+    byIdState === 'loading'
+      ? 'Memuat transaksi…'
+      : byIdState === 'missing'
+        ? 'Transaksi tidak ditemukan.'
+        : 'Belum ada transaksi.'
 
   const download = () => {
     if (!receipt) {
@@ -53,7 +132,7 @@ export default function ReceiptPage() {
         </div>
         <div className="receipt-paper">
           {!receipt ? (
-            <div className="empty-note">Belum ada transaksi.</div>
+            <div className="empty-note">{emptyNote}</div>
           ) : (
             <>
               <h3>WARUNGE MIMI</h3>
@@ -61,7 +140,8 @@ export default function ReceiptPage() {
               <p>{receipt.at}</p>
               {receipt.member ? (
                 <p>
-                  Member: {receipt.member.name} ({receipt.member.memberCode})
+                  Member: {receipt.member.name}
+                  {receipt.member.memberCode ? ` (${receipt.member.memberCode})` : ''}
                 </p>
               ) : null}
               <hr />
