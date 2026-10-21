@@ -20,6 +20,8 @@ export const GUEST_GATES = {
   coin: { action: 'coin', message: 'Masuk dulu untuk lihat dompet koinmu' },
   missions: { action: 'missions', message: 'Masuk dulu untuk ikut misi koin' },
   quiz: { action: 'quiz', message: 'Masuk dulu untuk main Tebak Harga' },
+  gameTangkap: { action: 'game-tangkap', message: 'Masuk dulu untuk main Tangkap Diskon' },
+  gameBuru: { action: 'game-buru', message: 'Masuk dulu untuk main Buru Diskon' },
   chat: { action: 'chat', message: 'Masuk dulu untuk membuka Chat' },
   account: { action: 'account', message: 'Masuk dulu untuk membuka Akunmu' },
 } as const satisfies Record<string, GuestGate>
@@ -29,11 +31,18 @@ export const GUEST_GATES = {
  * sub-halamannya (Rumpi, Chat Toko, Riwayat, Catatan & Tagihan, Detail
  * Pesanan) adalah isi tab itu. Koin/Misi/Tebak Harga adalah fitur koin —
  * tamu tidak punya dompet, jadi isinya tidak pernah ditampilkan ke tamu.
+ * Game Tangkap/Buru Diskon juga digerbang sejak pintu masuk (selaras
+ * Native): tamu tidak bisa membuka game sama sekali. Jenis game mengikuti
+ * semantik GamePage — kind 'buru-diskon' = Buru Diskon, selain itu
+ * Tangkap Diskon.
  */
 export function guestGateForPath(pathname: string): GuestGate | null {
   if (pathname === '/beranda/koin') return GUEST_GATES.coin
   if (pathname === '/beranda/misi') return GUEST_GATES.missions
   if (pathname === '/beranda/kuis') return GUEST_GATES.quiz
+  if (pathname.startsWith('/beranda/game/')) {
+    return pathname.endsWith('/buru-diskon') ? GUEST_GATES.gameBuru : GUEST_GATES.gameTangkap
+  }
   if (pathname === '/beranda/chat' || pathname.startsWith('/beranda/chat/')) return GUEST_GATES.chat
   if (
     pathname === '/beranda/akun' ||
@@ -51,6 +60,8 @@ export const PENDING_GUEST_ROUTES: Record<string, string> = {
   coin: '/beranda/koin',
   missions: '/beranda/misi',
   quiz: '/beranda/kuis',
+  'game-tangkap': '/beranda/game/tangkap-diskon',
+  'game-buru': '/beranda/game/buru-diskon',
   recipe: '/beranda/resep-baru',
   titip: '/beranda/titip',
   patungan: '/beranda/patungan',
