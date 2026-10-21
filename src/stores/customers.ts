@@ -132,7 +132,11 @@ interface CustomersState {
 
   approveCustomer: (uid: string) => Promise<void>
   rejectCustomer: (uid: string) => Promise<void>
-  grantCoins: (uid: string, amount: number, meta?: GrantCoinsMeta) => Promise<void>
+  /** Grant koin transaksional: cek klaim ganda di dalam transaksi.
+   *  Return true bila koin benar-benar dikreditkan, false bila klaim
+   *  ditolak karena penanda (lastCheckin/lastGuessDate/missionClaims)
+   *  sudah tercatat — dua perangkat tidak bisa klaim bersamaan. */
+  grantCoins: (uid: string, amount: number, meta?: GrantCoinsMeta) => Promise<boolean>
   grantGameCoins: (
     uid: string,
     requestedCoins: number,
@@ -255,29 +259,50 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
 
   grantCoins: async (uid, amount, meta) => {
     amount = Math.round(Number(amount) || 0)
-    if (!uid || !amount) return
+    if (!uid || !amount) return false
     requireOnline()
     meta = meta || {}
     const db = getDb()
     const ts = serverTimestamp()
-    const update: DocumentData = { coins: increment(amount) }
     const todayKey = todayKeyJakarta()
-    if (meta.reason === 'harian') update.lastCheckin = todayKey
-    if (meta.reason === 'tebak_harga') update.lastGuessDate = todayKey
-    if (meta.reason === 'misi' && meta.claimKey) {
-      update['missionClaims.' + String(meta.claimKey).replace(/[./]/g, '_')] = true
-    }
-    const batch = writeBatch(db)
-    batch.update(doc(db, 'customers', uid), update)
-    batch.set(doc(collection(db, 'coin_ledger')), {
-      customerId: uid,
-      amount: amount,
-      reason: meta.reason || 'harian',
-      label: meta.label || 'Koin masuk',
-      detail: meta.detail || '',
-      createdAt: ts,
-    })
-    await withTimeout(batch.commit(), WRITE_TIMEOUT_MS, 'Klaim koin')
+    const claimKey =
+      meta.reason === 'misi' && meta.claimKey
+        ? String(meta.claimKey).replace(/[./]/g, '_')
+        : null
+    /* Transaksional (pola Native grantCoins di admin_repository.dart):
+     * penanda klaim DIBACA di dalam runTransaction dari dokumen yang sama
+     * yang ditulis — cek + tulis saldo + ledger + penanda atomik dalam satu
+     * transaksi, jadi klaim bersamaan dari dua perangkat tidak bisa lolos
+     * dua-duanya. Anti-klaim-ganda tidak lagi bertumpu pada guard UI. */
+    return withTimeout(
+      runTransaction(db, async (tx) => {
+        const ref = doc(db, 'customers', uid)
+        const snap = await tx.get(ref)
+        const data = snap.exists() ? snap.data() : {}
+        if (meta.reason === 'harian' && data.lastCheckin === todayKey) return false
+        if (meta.reason === 'tebak_harga' && data.lastGuessDate === todayKey) return false
+        if (claimKey) {
+          const claims = (data.missionClaims || {}) as Record<string, unknown>
+          if (claims[claimKey] === true) return false
+        }
+        const update: DocumentData = { coins: increment(amount) }
+        if (meta.reason === 'harian') update.lastCheckin = todayKey
+        if (meta.reason === 'tebak_harga') update.lastGuessDate = todayKey
+        if (claimKey) update['missionClaims.' + claimKey] = true
+        tx.update(ref, update)
+        tx.set(doc(collection(db, 'coin_ledger')), {
+          customerId: uid,
+          amount: amount,
+          reason: meta.reason || 'harian',
+          label: meta.label || 'Koin masuk',
+          detail: meta.detail || '',
+          createdAt: ts,
+        })
+        return true
+      }),
+      WRITE_TIMEOUT_MS,
+      'Klaim koin',
+    )
   },
 
   grantGameCoins: async (uid, requestedCoins, meta) => {

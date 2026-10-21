@@ -81,8 +81,9 @@ export type CheckinResult = 'claimed' | 'sudah' | 'nonaktif' | 'tamu'
 
 /** Janji check-in yang sedang berjalan. Re-run konkuren (effect double-fire,
  *  tombol manual ditekan saat auto-checkin jalan, dsb.) memakai janji yang
- *  SAMA sehingga grant tidak dobel — grantCoins memakai writeBatch (bukan
- *  transaksi), jadi tanpa ini dua panggilan bersamaan bisa mengkredit 2x. */
+ *  SAMA agar UI sesi ini tidak memproses dua kali. Anti-klaim-ganda antar
+ *  perangkat ditegakkan server-side: grantCoins mengecek lastCheckin di
+ *  dalam runTransaction — janji ini bukan lagi penegaknya. */
 let checkinInflight: Promise<CheckinResult> | null = null
 
 /**
@@ -113,7 +114,7 @@ async function runCheckinOnce(
     return 'nonaktif'
   }
   try {
-    await useCustomersStore
+    const granted = await useCustomersStore
       .getState()
       .grantCoins(customerId, settings.coinRewards.checkin, {
         reason: 'harian',
@@ -121,6 +122,7 @@ async function runCheckinOnce(
         detail: 'Bonus hari ini',
       })
     markDone()
+    if (!granted) return 'sudah' // transaksi menolak: sudah diklaim (perangkat lain)
     setTimeout(() => {
       toast('Bonus harian · +' + settings.coinRewards.checkin + ' Koin Warga')
     }, 180)
@@ -265,13 +267,13 @@ export const usePromoStore = create<PromoState>()((set, get) => ({
     }
     const uid = requireCustomerId()
     try {
-      await useCustomersStore.getState().grantCoins(uid, amount, {
+      const granted = await useCustomersStore.getState().grantCoins(uid, amount, {
         reason: reason,
         label: label,
         detail: detailLabel,
         claimKey: claimKey,
       })
-      toast(amount + ' Koin Warga masuk')
+      toast(granted ? amount + ' Koin Warga masuk' : 'Hadiah ini sudah pernah diklaim')
     } catch (error) {
       if (!error || (error as { code?: string }).code !== 'OFFLINE') {
         toast((error as { message?: string })?.message || 'Bonus gagal')
