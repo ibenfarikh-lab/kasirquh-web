@@ -222,6 +222,7 @@ export interface GatewaySlides {
 }
 
 export interface StoreSettings {
+  storeName?: string
   coinRate?: number
   coinRule?: string
   coinRedeemLimit?: number

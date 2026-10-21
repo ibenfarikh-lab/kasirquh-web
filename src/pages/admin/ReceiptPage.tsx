@@ -103,7 +103,7 @@ export default function ReceiptPage() {
       return
     }
     const lines = [
-      'WARUNGE MIMI',
+      storeName.toUpperCase(),
       'Warung kelontong warga',
       receipt.at,
       '----------------------------',
@@ -138,7 +138,7 @@ export default function ReceiptPage() {
             <div className="empty-note">{emptyNote}</div>
           ) : (
             <>
-              <h3>WARUNGE MIMI</h3>
+              <h3>{storeName.toUpperCase()}</h3>
               <p>Warung kelontong warga</p>
               <p>{receipt.at}</p>
               {receipt.member ? (
