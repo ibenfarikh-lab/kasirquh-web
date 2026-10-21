@@ -299,6 +299,7 @@ export function useSettingsLocal<T = SettingsLocalState>(
     flashProductId: st.flashProductId,
     flashRule: st.flashRule,
     flashEndsAt: st.flashEndsAt,
+    storeName: st.storeName,
     promoUnitPrice: st.promoUnitPrice,
     kabarStatus: st.kabarStatus,
     kabarMood: st.kabarMood,

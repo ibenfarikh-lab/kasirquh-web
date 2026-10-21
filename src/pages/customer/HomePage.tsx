@@ -326,7 +326,7 @@ export default function HomePage() {
             <p className="greeting" id="timeGreeting">
               {greeting}
             </p>
-            <h1>Warunge Mimi</h1>
+            <h1>{settings.storeName || 'Warunge Mimi'}</h1>
           </div>
         </div>
         <span id="storeStatusBadge" className={`store-status${open ? '' : ' closed'}`}>

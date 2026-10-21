@@ -15,6 +15,7 @@ import { useAuthStore } from '../../stores/auth'
 import { bioIsSupported, bioIsEnrolled, bioRemove } from '../../lib/biometric'
 import { clearGatewaySeen } from '../../lib/gateway'
 import { getAdminTheme, setAdminTheme, type ThemeChoice } from '../../lib/theme'
+import { APP_VERSION } from '../../lib/version'
 
 type SoundKind = 'order' | 'promo' | 'chat'
 type SoundPreset = 'system' | 'mimi' | 'silent'
@@ -347,7 +348,7 @@ export default function SettingsPage() {
               <img src="assets/img/img-005.png" alt="Logo KasirQuh" />
               <span>
                 <b>KasirQuh V3</b>
-                <small>Versi 3.1 (20261020s)</small>
+                <small>Versi {APP_VERSION}</small>
               </span>
             </div>
             <p className="settings-note">Powered by KasirQuh</p>

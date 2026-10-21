@@ -14,6 +14,7 @@ import { useParams } from 'react-router-dom'
 import { doc, getDoc, type DocumentData } from 'firebase/firestore'
 import { Icon, toast } from '../../components/ui'
 import { useLocalAdminStore, type LastReceipt } from '../../features/admin/localAdmin'
+import { useSettingsStore } from '../../stores/settings'
 import { getDb } from '../../lib/firebase'
 import { money } from '../../lib/format'
 
@@ -86,6 +87,7 @@ export default function ReceiptPage() {
     }
   }, [id])
 
+  const storeName = useSettingsStore((s) => s.storeName) || 'Warunge Mimi'
   const receipt =
     byIdState === 'found' ? byId : byIdState === 'idle' ? lastReceipt : null
   const emptyNote =
@@ -115,7 +117,8 @@ export default function ReceiptPage() {
     const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain' }))
     const a = document.createElement('a')
     a.href = url
-    a.download = 'struk-warunge-mimi.txt'
+    a.download =
+      'struk-' + (storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'warung') + '.txt'
     a.click()
     setTimeout(() => URL.revokeObjectURL(url), 500)
     toast('Struk 58mm diunduh')

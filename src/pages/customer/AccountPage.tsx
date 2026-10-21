@@ -18,6 +18,7 @@ import { usePromoStore } from '../../stores/promo'
 import { useAuthStore } from '../../stores/auth'
 import { todayKeyJakarta } from '../../lib/firestore'
 import { clearGatewaySeen } from '../../lib/gateway'
+import { APP_VERSION } from '../../lib/version'
 import { getCustomerTheme, setCustomerTheme, type ThemeChoice } from '../../lib/theme'
 
 /* ============ Barcode Code39 (port S.code39 dari js/store/core.js) ============
@@ -395,7 +396,7 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
           <img src="/assets/img/img-005.png" alt="Logo KasirQuh" />
           <span>
             <b>KasirQuh V3</b>
-            <small>Versi 3.1 (20261020s)</small>
+            <small>Versi {APP_VERSION}</small>
           </span>
         </div>
         <p className="settings-note">Powered by KasirQuh</p>
