@@ -308,7 +308,7 @@ export const useAuthStore = create<AuthState>()((set, get) => {
           startAdminSubs()
           // FCM: daftarkan token push (non-blocking, abaikan gagal)
           void initFcm().then((ok) => {
-            if (ok) void registerFcmToken().catch(() => {})
+            if (ok) void registerFcmToken('admin').catch(() => {})
           }).catch(() => {})
           return
         }
@@ -345,7 +345,7 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         startCustomerSubs(uid)
         // FCM: daftarkan token push (non-blocking, abaikan gagal)
         void initFcm().then((ok) => {
-          if (ok) void registerFcmToken().catch(() => {})
+          if (ok) void registerFcmToken('customer').catch(() => {})
         }).catch(() => {})
       } finally {
         endSession()

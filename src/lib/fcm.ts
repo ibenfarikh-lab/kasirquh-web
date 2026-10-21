@@ -6,7 +6,7 @@
  * VAPID key publik (aman di client-side) dari Firebase Console.
  */
 import { deleteToken, getToken, isSupported, onMessage } from 'firebase/messaging'
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { arrayUnion, doc, setDoc } from 'firebase/firestore'
 import { getDb, getFirebaseAuth, getFirebaseMessaging } from './firebase'
 
 const FCM_VAPID_KEY =
@@ -43,8 +43,14 @@ export async function initFcm(): Promise<boolean> {
   }
 }
 
-/** Minta izin + ambil token + simpan ke fcm_tokens. Dipanggil setelah login. */
-export async function registerFcmToken(): Promise<string | null> {
+/**
+ * Minta izin + ambil token + simpan mengikuti skema terkunci (sama dengan
+ * Native): pelanggan login → `customers/{uid}.fcmToken`; admin →
+ * `store_settings/main.adminFcmTokens` (array, tanpa duplikat).
+ * Koleksi lama `fcm_tokens` TIDAK ditulis lagi (data lama dibiarkan).
+ * Dipanggil setelah login dengan peran sesi yang aktif.
+ */
+export async function registerFcmToken(role: 'customer' | 'admin'): Promise<string | null> {
   if (!(await initFcm())) return null
   try {
     if ((await Notification.requestPermission()) !== 'granted') return null
@@ -57,13 +63,18 @@ export async function registerFcmToken(): Promise<string | null> {
     })
     if (!token) return null
     currentToken = token
-    const uid = getFirebaseAuth().currentUser?.uid || 'anon'
+    const uid = getFirebaseAuth().currentUser?.uid
+    if (!uid) return token
     try {
-      await setDoc(
-        doc(getDb(), 'fcm_tokens', uid + '_' + token.slice(-12)),
-        { uid, token, platform: 'web', updatedAt: serverTimestamp() },
-        { merge: true },
-      )
+      if (role === 'admin') {
+        await setDoc(
+          doc(getDb(), 'store_settings', 'main'),
+          { adminFcmTokens: arrayUnion(token) },
+          { merge: true },
+        )
+      } else {
+        await setDoc(doc(getDb(), 'customers', uid), { fcmToken: token }, { merge: true })
+      }
     } catch {
       try {
         localStorage.setItem('fcm_token_pending', token)
