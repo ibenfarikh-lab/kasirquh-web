@@ -9,8 +9,23 @@
 export type SoundKind = 'order' | 'promo' | 'chat'
 export type SoundMode = 'system' | 'mimi' | 'silent'
 
-const SOUND_KEY = 'kasirquh-admin-sounds'
+const ADMIN_SOUND_KEY = 'kasirquh-admin-sounds'
+/** Kunci preferensi dering khusus pelanggan (terpisah dari admin agar di
+ *  perangkat bersama preferensi dua peran tidak saling menimpa). */
+export const CUSTOMER_SOUND_KEY = 'kasirquh-customer-sounds'
 const VIBRATE_KEY = 'kasirquh-vibrate-silent'
+
+/** Peran sesi aktif (diatur auth store lewat setSoundRole). */
+let soundRole: 'admin' | 'customer' | null = null
+
+/** Dipanggil auth store setiap peran sesi berubah. */
+export function setSoundRole(role: 'admin' | 'customer' | null): void {
+  soundRole = role
+}
+
+function soundKey(): string {
+  return soundRole === 'customer' ? CUSTOMER_SOUND_KEY : ADMIN_SOUND_KEY
+}
 
 let audioCtx: AudioContext | null = null
 
@@ -59,7 +74,7 @@ function ensureAudio(): AudioContext | null {
 
 function getSoundMode(kind: SoundKind): SoundMode {
   try {
-    const raw = localStorage.getItem(SOUND_KEY)
+    const raw = localStorage.getItem(soundKey())
     if (raw) {
       const parsed = JSON.parse(raw) as Record<SoundKind, SoundMode>
       return parsed[kind] || 'system'

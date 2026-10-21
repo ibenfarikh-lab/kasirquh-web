@@ -25,6 +25,7 @@ import {
 } from '../lib/firebase'
 import { withTimeout, WRITE_TIMEOUT_MS } from '../lib/firestore'
 import { initFcm, registerFcmToken, unregisterFcmToken } from '../lib/fcm'
+import { setSoundRole } from '../lib/audio'
 import { toast } from '../components/ui'
 import type { Session, SessionRole } from '../types'
 import { useOrdersStore } from './orders'
@@ -508,6 +509,11 @@ export const useAuthStore = create<AuthState>()((set, get) => {
     },
   }
 })
+
+/* Kunci preferensi dering mengikuti peran sesi (lib/audio): pelanggan dan
+ * admin punya kunci localStorage terpisah agar tidak saling menimpa. */
+setSoundRole(useAuthStore.getState().session.role)
+useAuthStore.subscribe((s) => setSoundRole(s.session.role))
 
 /** Pesan error auth berbahasa Indonesia yang jujur (verbatim dari kode lama). */
 export function authErrorMessage(error: unknown): string {

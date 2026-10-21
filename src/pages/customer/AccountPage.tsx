@@ -4,7 +4,7 @@
  * profil, kartu member (barcode Code39), bonus harian, tile akun, pengaturan.
  */
 import { useRef, useState } from 'react'
-import { playNotification, type SoundKind, type SoundMode } from '../../lib/audio'
+import { CUSTOMER_SOUND_KEY, playNotification, type SoundKind, type SoundMode } from '../../lib/audio'
 import { useNavigate } from 'react-router-dom'
 import { Icon, Sheet, SheetHeader, toast } from '../../components/ui'
 import {
@@ -257,7 +257,16 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
   const [theme, setTheme] = useState<ThemeChoice>(() => getCustomerTheme())
   const [sounds, setSounds] = useState<Record<SoundKind, SoundMode>>(() => {
     try {
-      const raw = localStorage.getItem('kasirquh-admin-sounds')
+      let raw = localStorage.getItem(CUSTOMER_SOUND_KEY)
+      if (!raw) {
+        /* Migrasi: kunci lama bersama admin — salin nilainya sekali ke kunci
+         * khusus pelanggan agar preferensi yang sudah diatur tidak hilang. */
+        const legacy = localStorage.getItem('kasirquh-admin-sounds')
+        if (legacy) {
+          localStorage.setItem(CUSTOMER_SOUND_KEY, legacy)
+          raw = legacy
+        }
+      }
       if (raw) return { order: 'system', promo: 'system', chat: 'system', ...JSON.parse(raw) }
     } catch { /* abaikan */ }
     return { order: 'system', promo: 'system', chat: 'system' }
@@ -292,7 +301,7 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
   function apply() {
     const safe = name.trim() || 'Pelanggan'
     session.setSession({ name: safe, wa: wa.trim(), address: address.trim() })
-    try { localStorage.setItem('kasirquh-admin-sounds', JSON.stringify(sounds)) } catch { /* abaikan */ }
+    try { localStorage.setItem(CUSTOMER_SOUND_KEY, JSON.stringify(sounds)) } catch { /* abaikan */ }
     onClose()
   }
 
