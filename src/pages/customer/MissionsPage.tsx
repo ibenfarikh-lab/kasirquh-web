@@ -59,7 +59,7 @@ export default function MissionsPage() {
       return
     }
     if (isGuest || !customerId) {
-      toast('Masuk dulu untuk klaim koin')
+      useAuthStore.getState().openLoginSheet('missions', 'Masuk dulu untuk klaim koin')
       return
     }
     // Hadiah misi via klaim resmi (transaksi Firestore, idempoten per claimKey).

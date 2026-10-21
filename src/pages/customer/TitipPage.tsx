@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { toast } from '../../components/ui'
 import { useSessionLocal } from '../../features/customer/local'
 import { useNotesStore } from '../../stores/notes'
+import { useAuthStore } from '../../stores/auth'
 
 type TitipMethod = 'Ambil di warung' | 'Diantar ke rumah'
 
@@ -20,7 +21,7 @@ export default function TitipPage() {
 
   function submit() {
     if (isGuest) {
-      toast('Masuk dulu untuk titip belanja')
+      useAuthStore.getState().openLoginSheet('titip', 'Masuk dulu untuk titip belanja')
       return
     }
     const value = item.trim()

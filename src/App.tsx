@@ -2,8 +2,8 @@
  * KasirQuh React — src/App.tsx
  * Shell + router + boot langganan publik.
  */
-import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useEffect, type ReactNode } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useSWUpdate } from './lib/swUpdate'
 import BootLoading from './components/BootLoading'
 import { Toaster } from './components/ui'
@@ -12,6 +12,7 @@ import { AuthSheet } from './components/AuthSheet'
 import { AdminLoginSheet } from './components/AdminLoginSheet'
 import { SvgSprite } from './components/SvgSprite'
 import { activateRoleTheme, watchSystemTheme } from './lib/theme'
+import { guestGateForPath } from './lib/guestGate'
 import { authPersistenceReady } from './lib/firebase'
 import { useAuthStore } from './stores/auth'
 import { usePromoStore } from './stores/promo'
@@ -116,14 +117,57 @@ function Boot() {
   return null
 }
 
+/**
+ * Gerbang ISI mode tamu (selaras Native): ketukan tab sudah digerbangi
+ * CustomerNav, tetapi tamu juga bisa mendarat langsung di URL konten
+ * terkunci (tombol back, riwayat, tautan). Sama seperti Native — tamu
+ * melihat ISI BERANDA dan alur login dibuka dengan kalimat gerbangnya;
+ * isi terkunci tidak pernah dirender untuk tamu (tidak ada akun/dompet
+ * versi tamu). URL dipindah ke /beranda oleh CustomerLayout saat sheet
+ * login ditutup (lihat handleLoginSheetClose) — bukan di sini: navigasi
+ * yang berjalan bersamaan dengan sheet membuka akan ditimpa push/cleanup
+ * param ?sheet= dari useSheetRoute (navigasi dibangun dari lokasi
+ * pra-redirect); navigasi sinkron di handler tutup adalah pola yang
+ * dirancang aman oleh sheetRoute (sama seperti navigasi pasca-login
+ * AuthSheet). Login berhasil diteruskan AuthSheet sendiri ke aksi
+ * tertunda setelah onClose, jadi pindahan di handler tutup selalu kalah
+ * urutan dari tujuan login — yang menang tetap aksi tertunda.
+ */
+function GuestGate({ children }: { children: ReactNode }) {
+  const isGuest = useAuthStore((s) => s.session.isGuest)
+  const openLoginSheet = useAuthStore((s) => s.openLoginSheet)
+  const { pathname } = useLocation()
+  const gate = isGuest ? guestGateForPath(pathname) : null
+  useEffect(() => {
+    if (gate) openLoginSheet(gate.action, gate.message)
+  }, [gate, openLoginSheet])
+  return <>{gate ? <HomePage /> : children}</>
+}
+
 function CustomerLayout() {
   const loginSheetOpen = useAuthStore((s) => s.loginSheetOpen)
   const closeLoginSheet = useAuthStore((s) => s.closeLoginSheet)
   const adminSheetOpen = useAuthStore((s) => s.adminSheetOpen)
   const closeAdminSheet = useAuthStore((s) => s.closeAdminSheet)
+  const isGuest = useAuthStore((s) => s.session.isGuest)
+  const navigate = useNavigate()
   const { pathname } = useLocation()
   const MAIN_TABS = ['/beranda', '/beranda/produk', '/beranda/keranjang', '/beranda/chat', '/beranda/akun']
   const showNav = MAIN_TABS.includes(pathname)
+
+  /**
+   * Sheet login ditutup saat tamu berada di URL gerbang (GuestGate):
+   * sekalian pindah ke /beranda, sinkron di handler — pola yang aman dari
+   * balapan param ?sheet= (cleanup sheetRoute jadi no-op di lokasi baru).
+   * Setelah login berhasil AuthSheet menavigasi lagi ke aksi tertunda
+   * sesudah onClose ini, jadi tujuan akhir tetap aksi tertunda.
+   */
+  function handleLoginSheetClose() {
+    closeLoginSheet()
+    if (isGuest && guestGateForPath(pathname)) {
+      navigate('/beranda', { replace: true })
+    }
+  }
 
   /* Check-in koin harian OTOMATIS — port runDailyCheckin() vanilla
    * (dulu dipicu go('customer') + Store.renderers.checkin saat dokumen
@@ -145,8 +189,10 @@ function CustomerLayout() {
   return (
     <>
       <div className={`app customer-app${showNav ? '' : ' no-nav'}`}>
-        <Outlet />
-        <AuthSheet open={loginSheetOpen} onClose={closeLoginSheet} />
+        <GuestGate>
+          <Outlet />
+        </GuestGate>
+        <AuthSheet open={loginSheetOpen} onClose={handleLoginSheetClose} />
         <AdminLoginSheet open={adminSheetOpen} onClose={closeAdminSheet} />
       </div>
       {showNav && <CustomerNav />}

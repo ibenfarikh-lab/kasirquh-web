@@ -129,8 +129,13 @@ interface AuthState {
   setPendingGuestAction: (action: string | null) => void
   /** Sheet login global (dipakai nav/tab saat tamu menyentuh fitur terkunci). */
   loginSheetOpen: boolean
-  /** Buka sheet login; action opsional dicatat sebagai pendingGuestAction. */
-  openLoginSheet: (action?: string | null) => void
+  /**
+   * Kalimat ajakan kontekstual di sheet login — pola Native
+   * "Masuk dulu untuk ..." sesuai aksi tamu. null = kalimat bawaan sheet.
+   */
+  loginSheetMessage: string | null
+  /** Buka sheet login; action opsional dicatat sebagai pendingGuestAction, message = kalimat ajakan kontekstual. */
+  openLoginSheet: (action?: string | null, message?: string | null) => void
   closeLoginSheet: () => void
   /** Sheet login admin global (dibuka dari logo toko / hotspot). */
   adminSheetOpen: boolean
@@ -211,9 +216,10 @@ export const useAuthStore = create<AuthState>()((set, get) => {
     pendingGuestAction: null,
     setPendingGuestAction: (action) => set({ pendingGuestAction: action }),
     loginSheetOpen: false,
-    openLoginSheet: (action) =>
-      set({ loginSheetOpen: true, pendingGuestAction: action ?? null }),
-    closeLoginSheet: () => set({ loginSheetOpen: false }),
+    loginSheetMessage: null,
+    openLoginSheet: (action, message) =>
+      set({ loginSheetOpen: true, pendingGuestAction: action ?? null, loginSheetMessage: message ?? null }),
+    closeLoginSheet: () => set({ loginSheetOpen: false, loginSheetMessage: null }),
     adminSheetOpen: false,
     openAdminSheet: () => set({ adminSheetOpen: true }),
     closeAdminSheet: () => set({ adminSheetOpen: false }),

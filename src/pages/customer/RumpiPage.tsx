@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Icon, toast } from '../../components/ui'
 import { useChatLocal, useSessionLocal, compressPhoto } from '../../features/customer/local'
+import { useAuthStore } from '../../stores/auth'
 import type { RumpiMessage } from '../../types'
 
 export default function RumpiPage() {
@@ -47,7 +48,7 @@ export default function RumpiPage() {
       return
     }
     if (isGuest) {
-      toast('Masuk dulu untuk ikut Rumpi')
+      useAuthStore.getState().openLoginSheet('rumpi', 'Masuk dulu untuk ikut Rumpi')
       return
     }
     sendRumpi(t, photo, sessionName || 'Pelanggan', photoURL)

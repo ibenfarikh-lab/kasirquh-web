@@ -9,14 +9,15 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
+import { GUEST_GATES } from '../lib/guestGate'
 import { Icon } from './ui'
 
 const TABS = [
   { to: '/beranda', label: 'Beranda', icon: 'home', end: true },
   { to: '/beranda/produk', label: 'Produk', icon: 'box', end: true },
   { to: '/beranda/keranjang', label: 'Keranjang', icon: 'cart', end: true },
-  { to: '/beranda/chat', label: 'Chat', icon: 'chat', end: true, lock: true, action: 'chat' },
-  { to: '/beranda/akun', label: 'Akun', icon: 'user', end: true, lock: true, action: 'account' },
+  { to: '/beranda/chat', label: 'Chat', icon: 'chat', end: true, lock: true, gate: GUEST_GATES.chat },
+  { to: '/beranda/akun', label: 'Akun', icon: 'user', end: true, lock: true, gate: GUEST_GATES.account },
 ] as const
 
 export default function CustomerNav() {
@@ -34,11 +35,11 @@ export default function CustomerNav() {
     prevCount.current = count
   }, [count])
 
-  /** Tamu menyentuh tab terkunci → modal login, bukan halamannya. */
+  /** Tamu menyentuh tab terkunci → modal login + kalimat gerbangnya, bukan halamannya. */
   function guardTab(e: React.MouseEvent, t: (typeof TABS)[number]) {
     if (isGuest && 'lock' in t && t.lock) {
       e.preventDefault()
-      openLoginSheet('action' in t ? t.action : null)
+      openLoginSheet(t.gate.action, t.gate.message)
     }
   }
 

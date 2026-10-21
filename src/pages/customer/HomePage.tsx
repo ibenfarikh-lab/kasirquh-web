@@ -11,6 +11,7 @@ import { useProductsStore } from '../../stores/products'
 import { useCartStore } from '../../stores/cart'
 import { useAlertsStore } from '../../stores/alerts'
 import { money } from '../../lib/format'
+import { GUEST_GATES } from '../../lib/guestGate'
 import { todayKeyJakarta } from '../../lib/firestore'
 import { Icon, Sheet, SheetHeader, toast } from '../../components/ui'
 import type { Product, Recipe } from '../../types'
@@ -110,6 +111,7 @@ function ProductMini({
 
 export default function HomePage() {
   const openAdminSheet = useAuthStore((s) => s.openAdminSheet)
+  const openLoginSheet = useAuthStore((s) => s.openLoginSheet)
   const navigate = useNavigate()
   const products = useProductsStore((s) => s.products)
   const settings = useSettingsLocal((s) => s.settings)
@@ -173,6 +175,16 @@ export default function HomePage() {
 
   const allRecipes = recipes
 
+  /** Pintu koin/misi untuk tamu → sheet login (selaras Native: tamu tidak punya dompet). */
+  function goCoin() {
+    if (isGuest) openLoginSheet(GUEST_GATES.coin.action, GUEST_GATES.coin.message)
+    else navigate('/beranda/koin')
+  }
+  function goMissions() {
+    if (isGuest) openLoginSheet(GUEST_GATES.missions.action, GUEST_GATES.missions.message)
+    else navigate('/beranda/misi')
+  }
+
   function promoGo(action: string) {
     if (action === 'scroll-flash') {
       if (flashRef.current) flashRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -181,18 +193,18 @@ export default function HomePage() {
       recipeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     } else if (action === 'scroll-popular') {
       popularRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    } else if (action === 'coinModal') navigate('/beranda/koin')
+    } else if (action === 'coinModal') goCoin()
     else if (action === 'budgetModal') navigate('/beranda/anggaran')
     else if (action === 'hajatanModal') navigate('/beranda/hajatan')
     else if (action === 'patunganModal') navigate('/beranda/patungan')
     else if (action === 'grosirModal') navigate('/beranda/grosir')
     else if (action === 'rutinModal') navigate('/beranda/rutin')
     else if (action === 'titipModal') navigate('/beranda/titip')
-    else if (action === 'missionsModal') navigate('/beranda/misi')
+    else if (action === 'missionsModal') goMissions()
     else if (action === 'priceAlertModal') setSheet('priceAlert')
     else if (action === 'go-produk') navigate('/beranda/produk')
     else if (action === 'go-produk-ongkir') navigate('/beranda/produk')
-    else navigate('/beranda/koin')
+    else goCoin()
   }
 
   function addRecipeToCart(recipe: Recipe) {
@@ -201,7 +213,7 @@ export default function HomePage() {
 
   function shareRecipe(recipe: Recipe) {
     if (isGuest) {
-      toast('Masuk dulu untuk berbagi ke Rumpi')
+      openLoginSheet('rumpi', 'Masuk dulu untuk berbagi ke Rumpi')
       return
     }
     const name = sessionName || 'Pelanggan'
@@ -259,7 +271,15 @@ export default function HomePage() {
           <div className="empty-note">Belum ada ide masak.</div>
         )}
       </div>
-      <button id="createMyRecipeBtn" className="create-recipe-btn" onClick={() => navigate('/beranda/resep-baru')}>
+      <button
+        id="createMyRecipeBtn"
+        className="create-recipe-btn"
+        onClick={() => {
+          // Selaras Native: tamu mengetuk ini → prompt "Masuk dulu untuk buat Ide Masakku".
+          if (isGuest) openLoginSheet('recipe', 'Masuk dulu untuk buat Ide Masakku')
+          else navigate('/beranda/resep-baru')
+        }}
+      >
         + Buat Ide Masakku
       </button>
     </section>
@@ -332,7 +352,7 @@ export default function HomePage() {
         <span id="storeStatusBadge" className={`store-status${open ? '' : ' closed'}`}>
           {open ? '● BUKA' : '● TUTUP'}
         </span>
-        <button className="coin-chip head-coin" onClick={() => navigate('/beranda/koin')} aria-label="Koin Warga">
+        <button className="coin-chip head-coin" onClick={goCoin} aria-label="Koin Warga">
           <Icon name="coin" />
           <span id="headCoinText">{coinText}</span>
         </button>

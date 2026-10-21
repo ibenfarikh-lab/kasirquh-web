@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { money } from '../../lib/format'
 import { toast } from '../../components/ui'
 import { usePatunganLocal, useSessionLocal } from '../../features/customer/local'
+import { useAuthStore } from '../../stores/auth'
 import type { Patungan } from '../../types'
 
 export default function PatunganPage() {
@@ -89,7 +90,7 @@ function JoinPatunganView({
 
   function confirm() {
     if (isGuest) {
-      toast('Masuk dulu untuk ikut patungan')
+      useAuthStore.getState().openLoginSheet('patungan', 'Masuk dulu untuk ikut patungan')
       return
     }
     // TODO: tulis keikutsertaan ke Firestore (store patungan resmi).

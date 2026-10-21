@@ -8,6 +8,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
+import { useAuthStore } from '../../stores/auth'
 import { money, groupedNumber, parseDecimalInput } from '../../lib/format'
 import { Icon, toast } from '../../components/ui'
 import { useSessionLocal, useRecipesLocal, compressPhoto } from '../../features/customer/local'
@@ -77,7 +78,7 @@ export default function RecipeFormPage() {
 
   function save() {
     if (isGuest) {
-      toast('Masuk dulu untuk buat Ide Masakku')
+      useAuthStore.getState().openLoginSheet('recipe', 'Masuk dulu untuk buat Ide Masakku')
       return
     }
     const nama = name.trim()

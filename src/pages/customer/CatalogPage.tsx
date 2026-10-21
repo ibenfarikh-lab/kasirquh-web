@@ -16,6 +16,7 @@ import { useProductsStore } from '../../stores/products'
 import { useCartStore } from '../../stores/cart'
 import { useAlertsStore } from '../../stores/alerts'
 import { useSettingsStore } from '../../stores/settings'
+import { useAuthStore } from '../../stores/auth'
 import { money, stockText, isWeightUnit } from '../../lib/format'
 import { Icon, Sheet, EmptyNote, toast } from '../../components/ui'
 import type { Product } from '../../types'
@@ -166,6 +167,11 @@ export default function CatalogPage() {
         onClose={() => setDetailId(null)}
         onAsk={(p) => {
           setDetailId(null)
+          // Chat adalah tab bergembok: tamu → sheet login, bukan halaman chat.
+          if (useAuthStore.getState().session.isGuest) {
+            useAuthStore.getState().openLoginSheet('chat', 'Masuk dulu untuk chat dengan warung')
+            return
+          }
           navigate('/beranda/chat', { state: { askAbout: p.name } })
         }}
       />

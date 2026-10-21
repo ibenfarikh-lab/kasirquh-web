@@ -8,10 +8,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/auth'
 import { bioAuthenticate, bioIsEnrolled, bioIsSupported, bioRegister } from '../lib/biometric'
+import { PENDING_GUEST_ROUTES } from '../lib/guestGate'
 import { Icon, Sheet, toast } from './ui'
 
 export function AuthSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
+  // Kalimat ajakan kontekstual pola Native "Masuk dulu untuk ..." (bila
+  // sheet dibuka dari gerbang tamu); null = kalimat bawaan.
+  const loginMessage = useAuthStore((s) => s.loginSheetMessage)
   const [tab, setTab] = useState<'login' | 'register'>('login')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -94,6 +98,8 @@ export function AuthSheet({ open, onClose }: { open: boolean; onClose: () => voi
         navigate('/beranda/chat', { replace: true })
       } else if (pending === 'account') {
         navigate('/beranda/akun', { replace: true })
+      } else if (pending && PENDING_GUEST_ROUTES[pending]) {
+        navigate(PENDING_GUEST_ROUTES[pending], { replace: true })
       } else {
         navigate('/beranda', { replace: true })
       }
@@ -144,7 +150,7 @@ export function AuthSheet({ open, onClose }: { open: boolean; onClose: () => voi
           ×
         </button>
       </div>
-      <p id="guestLockCopy">Mau lanjut? Login atau daftar dulu ya...</p>
+      <p id="guestLockCopy">{loginMessage || 'Mau lanjut? Login atau daftar dulu ya...'}</p>
       <div className="auth-note">
         <Icon name="alert" />
         <span>Masuk dengan email yang sudah disetujui warung. Pendaftar baru menunggu persetujuan admin.</span>

@@ -86,8 +86,7 @@ export default function DeliveryPage() {
     if (session.isGuest || !session.customerId) {
       // Tamu → simpan aksi, buka sheet login; setelah login dilanjutkan otomatis
       // (AuthSheet mengarah ke /beranda/keranjang?delivery=1 → halaman checkout ini).
-      useAuthStore.getState().openLoginSheet('checkout')
-      toast('Masuk / daftar dulu ya...')
+      useAuthStore.getState().openLoginSheet('checkout', 'Masuk dulu untuk menyelesaikan pesananmu')
       return
     }
     if (!Object.keys(customerCart).length) {

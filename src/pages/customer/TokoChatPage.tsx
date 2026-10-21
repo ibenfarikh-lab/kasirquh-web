@@ -6,9 +6,11 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { Icon, EmptyNote, toast } from '../../components/ui'
-import { useChatLocal, compressPhoto } from '../../features/customer/local'
+import { useChatLocal, useSessionLocal, compressPhoto } from '../../features/customer/local'
+import { useAuthStore } from '../../stores/auth'
 
 export default function TokoChatPage() {
+  const isGuest = useSessionLocal((s) => s.isGuest)
   const thread = useChatLocal((s) => s.thread)
   const sendThreadMessage = useChatLocal((s) => s.sendThreadMessage)
   const markThreadSeen = useChatLocal((s) => s.markThreadSeen)
@@ -40,6 +42,10 @@ export default function TokoChatPage() {
     const t = text.trim()
     if (!t && !photo) {
       toast('Tulis pesan atau tambah foto dulu')
+      return
+    }
+    if (isGuest) {
+      useAuthStore.getState().openLoginSheet('chat', 'Masuk dulu untuk chat dengan warung')
       return
     }
     setText('')
