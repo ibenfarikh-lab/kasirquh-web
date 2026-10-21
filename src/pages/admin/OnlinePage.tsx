@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/OnlinePage.tsx
- * Pengganti #onlineView + js/features/admin/orders.js (orderCard,
- * renderOnlineOrders, setOnlineTab). Tab Sedang Berlangsung / Selesai dengan
- * aksi: WA, dikemas, dikirim, batal (tap 2x), selesai, hapus.
- */
 import { useState } from 'react'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'

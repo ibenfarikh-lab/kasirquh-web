@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/AdminAiPage.tsx
- * Halaman AI Admin (dulu AdminAiSheet): #adminAiModal +
- * js/features/admin/ai.js.
- * Jawaban hanya memakai data sesi ini (produk, jurnal, pelanggan).
- */
 import { useState } from 'react'
 import { toast } from '../../components/ui'
 import AdminNav from '../../components/AdminNav'

@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/components/CustomerNav.tsx
- * Nav bawah pelanggan (5 tombol: Beranda, Produk, Keranjang, Chat, Akun).
- *
- * Chat & Akun terkunci untuk tamu: diklik → sheet login langsung
- * (tidak pindah halaman), sesuai perilaku vanilla.
- */
 import { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuthStore } from '../stores/auth'
@@ -25,9 +18,6 @@ export default function CustomerNav() {
   const isGuest = useAuthStore((s) => s.session.isGuest)
   const openLoginSheet = useAuthStore((s) => s.openLoginSheet)
 
-  // Badge berdenyut tiap jumlah keranjang BERTAMBAH (pengganti toast
-  // tambah-keranjang — Opsi B user, 2026-10-21). popKey naik → badge
-  // di-remount → animasi CSS .cart-badge-pop jalan lagi dari awal.
   const prevCount = useRef(count)
   const [popKey, setPopKey] = useState(0)
   useEffect(() => {
@@ -35,7 +25,6 @@ export default function CustomerNav() {
     prevCount.current = count
   }, [count])
 
-  /** Tamu menyentuh tab terkunci → modal login + kalimat gerbangnya, bukan halamannya. */
   function guardTab(e: React.MouseEvent, t: (typeof TABS)[number]) {
     if (isGuest && 'lock' in t && t.lock) {
       e.preventDefault()

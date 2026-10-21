@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/DashboardPage.tsx
- * Pengganti #dashboardView + js/features/admin/dashboard.js + renderFinance()
- * bagian dashboard. Metrik omzet/pesanan/stok kritis, shortcut kerja, dan
- * peringatan operasional.
- */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot, adminRoute } from '../../features/admin/useAdminBoot'
@@ -190,7 +184,6 @@ export default function DashboardPage() {
   )
 }
 
-/* ---------- Pemilih shortcut (pengganti #shortcutPickerModal) ---------- */
 
 function ShortcutPickerSheet({
   open,

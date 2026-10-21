@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/RutinAdminPage.tsx
- * Halaman (dulu RutinAdminSheet): kelola paket rutin.
- * Pengganti #rutinAdminModal + js/features/admin/rutin.js.
- * Kelola paket rutin (nama, deskripsi, daftar produk + qty).
- */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'

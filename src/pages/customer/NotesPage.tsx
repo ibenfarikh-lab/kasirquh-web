@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/NotesPage.tsx
- * Pengganti NotesSheet (port renderCustomerNotes) — halaman penuh, bukan modal.
- *
- * TODO(koordinator): catatan masih lokal — gantikan dengan store catatan resmi
- * (catatan/tagihan dari admin untuk pelanggan) saat worker admin selesai.
- */
 
 import { money } from '../../lib/format'
 import { useNotesLocal } from '../../features/customer/local'

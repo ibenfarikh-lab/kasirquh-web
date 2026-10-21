@@ -1,12 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/ProductFormPage.tsx
- * Pengganti ProductFormSheet (dulu #productFormModal + openProductForm() +
- * updateProductMarginPreview() + setProductPhoto() + resizeProductPhoto()
- * di js/features/admin/products.js): halaman penuh, bukan modal.
- *
- * Route /admin/produk/baru → tambah produk; /admin/produk/:id/edit → ubah produk.
- * Logika form/simpan sama persis; setelah simpan kembali ke halaman sebelumnya.
- */
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from '../../components/ui'
@@ -84,11 +75,6 @@ export default function ProductFormPage() {
   const [saving, setSaving] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  /* Pengaman form (pola yang sama di semua form pengaturan): pada mode
-   * ubah, field yang belum disentuh user mengikuti snapshot produk terbaru;
-   * selama katalog masih dimuat (productsLoading) form TIDAK diisi kosong —
-   * dulu form kosong karena produk belum termuat bisa tersimpan menimpa
-   * produk live. Mode tambah memang mulai kosong (dokumen baru). */
   const dirtyRef = useRef<Set<string>>(new Set())
   useEffect(() => {
     dirtyRef.current = new Set()
@@ -171,7 +157,6 @@ export default function ProductFormPage() {
       return
     }
     if (isEdit && dirtyRef.current.size === 0) {
-      /* Simpan tanpa perubahan: tidak menulis apa pun ke Firestore. */
       navigate(-1)
       toast('Tidak ada perubahan')
       return

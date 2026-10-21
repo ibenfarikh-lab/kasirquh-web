@@ -1,14 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/ReceiptPage.tsx
- * Pengganti ReceiptSheet (dulu #receiptModal + renderReceipt() di
- * js/features/admin/pos.js): halaman penuh struk 58mm dari transaksi
- * terakhir + unduh .txt. Logika sama persis, tanpa wrapper Sheet.
- *
- * Param :id DIPAKAI: id 'terakhir' (atau tanpa id) → struk terakhir yang
- * persisten (useLocalAdminStore.lastReceipt, tersimpan di localStorage).
- * Id lain → transaksi dibaca dari dokumen orders/{id} (sumber data struk
- * yang punya rincian item) lalu dipetakan ke bentuk struk.
- */
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { doc, getDoc, type DocumentData } from 'firebase/firestore'
@@ -18,7 +7,6 @@ import { useSettingsStore } from '../../stores/settings'
 import { getDb } from '../../lib/firebase'
 import { money } from '../../lib/format'
 
-/** Petakan dokumen orders/{id} ke bentuk struk 58mm. */
 function orderToReceipt(d: DocumentData): LastReceipt {
   const items = ((d.items || []) as DocumentData[]).map((it) => ({
     name: String(it.name || 'Produk'),
@@ -47,7 +35,6 @@ function orderToReceipt(d: DocumentData): LastReceipt {
     change: 0,
     redeemCoins,
     earnedCoins: Math.round(Number(d.earnedCoins) || 0),
-    // Nilai Rp per koin efektif dari dokumen order (coinValue = total Rp).
     coinValue: redeemCoins > 0 ? Math.round((Number(d.coinValue) || 0) / redeemCoins) : 1,
     member: d.customerName
       ? { name: String(d.customerName), memberCode: '' }

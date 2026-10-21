@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/ChatPage.tsx
- * Pengganti #chatCustomerView (Rumpi Warga + Chat Toko).
- * Rumpi Warga -> /beranda/chat/rumpi, Chat Toko -> /beranda/chat/toko (halaman penuh).
- */
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/ui'
 import { useChatLocal } from '../../features/customer/local'

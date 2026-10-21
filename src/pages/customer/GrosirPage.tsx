@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/GrosirPage.tsx
- * Pengganti GrosirSheet (#grosirModal) — halaman penuh, bukan modal.
- */
 import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
 import { useCartStore } from '../../stores/cart'
@@ -19,7 +15,6 @@ export default function GrosirPage() {
       toast('Harga grosir belum tersedia')
       return
     }
-    // Port: S.customerCart[id] = max(sekarang, wholesaleQty)
     useCartStore.setState((s) => ({
       customerCart: { ...s.customerCart, [id]: Math.max(s.customerCart[id] || 0, p.wholesaleQty) },
     }))

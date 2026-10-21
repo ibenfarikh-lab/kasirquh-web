@@ -1,13 +1,3 @@
-/**
- * KasirQuh React — src/stores/settings.ts
- * Pengaturan toko + fungsi turunan. Pengganti:
- * - applyStoreSettings / saveStoreSettings / startPublicSubs(promos) dari js/store.js
- * - rebuildRiwayat / rebuildPopular / rebuildInbox dari js/store/derived.js
- *
- * Pola: zustand create() dengan state + actions; subscribe() pasang
- * onSnapshot modular dan return unsub; tulis requireOnline() dulu +
- * timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   collection,
@@ -68,11 +58,8 @@ const DEFAULT_COIN_REWARDS: CoinRewards = { checkin: 25, mission: 250, guess: 10
 
 interface SettingsState {
   storeSettings: StoreSettings
-  /** Nilai tukar koin (Rp per koin) — dari store_settings/main.coinRate */
   coinRate: number
-  /** Batas persen penukaran koin — dari store_settings/main.coinRedeemLimit */
   coinRedeemLimit: number
-  /** Ambang stok menipis — dari store_settings/main.lowStockDefault */
   lowStockDefault: number
   coinProgramEnabled: boolean
   coinEvents: CoinEvents
@@ -85,7 +72,6 @@ interface SettingsState {
   flashRule: string
   flashEndsAt: Timestamp | null
   flashPrice: number
-  /** Peta harga promo kilat: productId -> harga promo */
   promoUnitPrice: Record<string, number>
   promoTitle: string
   promoProductId: string | null
@@ -97,26 +83,19 @@ interface SettingsState {
   carouselSlots: Record<string, string>
   dashboardShortcutIds: string[]
   inboxReadIds: string[]
-  /** ID thread chat yang di-pin admin (urutan = prioritas, paling baru di depan). */
   pinnedChatIds: string[]
   storeName: string
   runningText: string
   openTime: string
   closeTime: string
-  /** Alamat & telepon toko — dari store_settings/main (ditulis Profil Toko). */
   storeAddress: string
   storePhone: string
   adminTheme: string
-  /** Promo aktif (publik, tarik manual hemat kuota — bukan real-time) */
   promos: Promo[]
 
-  /** Langganan live dokumen store_settings/main. Panggil sekali saat boot. Return unsub. */
   subscribe: () => () => void
-  /** true setelah snapshot store_settings/main pertama diterima (settings siap dipakai). */
   settingsLoaded: boolean
-  /** Tarik ulang promo aktif (manual, hemat kuota). */
   refreshPromos: () => Promise<void>
-  /** Simpan pengaturan toko (admin). Snapshot menerapkan balik otomatis. */
   saveStoreSettings: (patch: DocumentData) => Promise<void>
 }
 
@@ -147,7 +126,6 @@ function applySettingsData(d: StoreSettings): Partial<SettingsState> {
   if (typeof d.lowStockDefault === 'number') {
     patch.lowStockDefault = Math.min(99, Math.max(1, Math.round(d.lowStockDefault)))
   }
-  /* Program koin: nyala/mati + event + hadiah (live) */
   if (typeof d.coinProgramEnabled === 'boolean') patch.coinProgramEnabled = d.coinProgramEnabled
   const events = d.coinEvents
   if (events && typeof events === 'object') {
@@ -176,13 +154,11 @@ function applySettingsData(d: StoreSettings): Partial<SettingsState> {
     patch.coinSpendRule = Math.max(1, Math.round(d.coinSpendRule))
   }
   if (typeof d.coinRule === 'string') patch.coinRule = d.coinRule
-  /* Promo kilat: produk + harga → peta harga promo (live) */
   const endsAt =
     d.flashEndsAt && typeof (d.flashEndsAt as Timestamp).toDate === 'function'
       ? (d.flashEndsAt as Timestamp)
       : null
   patch.flashEndsAt = endsAt
-  /* Auto-off: jika waktu habis, promo mati otomatis */
   const flashExpired =
     endsAt && typeof endsAt.toMillis === 'function' && endsAt.toMillis() <= Date.now()
   const flashId =
@@ -197,7 +173,6 @@ function applySettingsData(d: StoreSettings): Partial<SettingsState> {
   if (typeof (d as DocumentData).flashProductName === 'string') {
     patch.flashProductName = (d as DocumentData).flashProductName as string
   }
-  /* Promo utama + slide gateway + kabar (live) */
   if (typeof d.promoTitle === 'string') patch.promoTitle = d.promoTitle
   if (typeof d.promoProductId === 'string') patch.promoProductId = d.promoProductId || null
   if (typeof d.promoCopy === 'string') patch.promoCopy = d.promoCopy
@@ -213,7 +188,6 @@ function applySettingsData(d: StoreSettings): Partial<SettingsState> {
   }
   if (typeof d.kabarStatus === 'string') patch.kabarStatus = d.kabarStatus
   if (typeof d.kabarMood === 'string') patch.kabarMood = d.kabarMood
-  /* Bagian Beranda (live) */
   const homeSections: HomeSections = {
     restock: { ...(patch.homeSections?.restock ?? DEFAULT_HOME_SECTIONS.restock) },
     popular: { ...(patch.homeSections?.popular ?? DEFAULT_HOME_SECTIONS.popular) },
@@ -230,23 +204,15 @@ function applySettingsData(d: StoreSettings): Partial<SettingsState> {
     }
   })
   patch.homeSections = homeSections
-  /* Jam operasional (live, format HH:MM). Nilai EFEKTIF diselesaikan di sini,
-   * satu sumber untuk semua konsumen: dokumen yang belum menyimpan jam
-   * berarti jam bawaan aplikasi 06:00–21:00 (konvensi yang sama seperti
-   * fallback storeName di bawah dan `|| '06:00'` di Beranda pelanggan).
-   * Tanpa ini form Profil Toko menampilkan '' ("--:--") untuk nilai yang
-   * sebenarnya efektif berlaku. */
   const hhmm = (v: unknown) =>
     typeof v === 'string' && /^\d{2}:\d{2}$/.test(v.trim()) ? v.trim() : ''
   patch.openTime = hhmm((d as DocumentData).openTime) || '06:00'
   patch.closeTime = hhmm((d as DocumentData).closeTime) || '21:00'
-  /* Nama warung + running text (satu sumber) */
   const raw = d as DocumentData
   patch.storeName = (String(raw.storeName || 'Warunge Mimi')).trim() || 'Warunge Mimi'
   if (typeof raw.runningText === 'string') patch.runningText = raw.runningText
   if (typeof raw.storeAddress === 'string') patch.storeAddress = raw.storeAddress
   if (typeof raw.storePhone === 'string') patch.storePhone = raw.storePhone
-  /* Preferensi admin (persist): tema, dering, animasi navigasi */
   const adminTheme = String(raw.adminTheme || '').trim()
   if (['light', 'dark', 'system'].indexOf(adminTheme) >= 0) patch.adminTheme = adminTheme
   return patch
@@ -344,7 +310,6 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
   },
 }))
 
-/* ================= fungsi turunan (dari js/store/derived.js) ================= */
 
 export interface RiwayatItem {
   productId: string
@@ -358,7 +323,6 @@ interface OrderLike {
   status?: string
 }
 
-/** Riwayat belanja pelanggan: produk unik dari stockLines pesanan sendiri. */
 export function rebuildRiwayat(orders: OrderLike[]): RiwayatItem[] {
   const byProduct: Record<string, RiwayatItem> = {}
   ;(orders || []).forEach((order) => {
@@ -384,12 +348,6 @@ interface ProductLike {
   totalTerjual?: number
 }
 
-/**
- * Produk terlaris.
- * - Admin: agregat dari pesanan + counter totalTerjual produk; kembalikan juga
- *   top8 (8 terlaris) agar pemanggil bisa persist ke store_settings bila berubah.
- * - Tamu/pelanggan: pakai agregat admin (topProductIds) bila sudah dihitung.
- */
 export function rebuildPopular(
   orders: OrderLike[],
   products: ProductLike[],
@@ -445,11 +403,6 @@ export interface InboxItem {
   read: boolean
 }
 
-/**
- * Inbox admin: diturunkan dari koleksi live (bukan notifikasi siluman).
- * Item lokal sesi (titip/share) dipertahankan; status "dibaca" ikut
- * dipertahankan antar rebuild.
- */
 export function buildInboxItems(seed: InboxSeed): InboxItem[] {
   const localKinds = ['titip', 'share']
   const prevRead: Record<string, boolean> = {}

@@ -1,24 +1,8 @@
-/**
- * KasirQuh React — src/lib/biometric.ts
- * Login sidik jari via WebAuthn + ekstensi PRF. Port js/biometric.js.
- *
- * Pola: sidik jari → kunci enkripsi → buka password tersimpan → login
- * Firebase otomatis. Opt-in eksplisit per akun. Butuh HTTPS + browser
- * dukung WebAuthn+PRF.
- */
 
 const DB_NAME = 'kasirquh-bio'
 const STORE = 'keys'
 const RECORD_ID = 'fingerprint-login'
 
-/**
- * Jeda sebelum fallback assertion PRF. Diberi agar authenticator/OS sempat
- * menyimpan kredensial hasil `create()` sebelum upacara `get()` kedua
- * dijalankan — seremoni WebAuthn yang dipicu terlalu cepat berturut-turut
- * bisa gagal/ditolak di sebagian perangkat Android+Chrome. WebAuthn tidak
- * menyediakan sinyal "kredensial sudah tersimpan", jadi jeda heuristik ini
- * memang disengaja (sama seperti vanilla: "beri waktu credential tersimpan").
- */
 const PRF_FALLBACK_SETTLE_MS = 800
 
 interface BioRecord {
@@ -126,7 +110,6 @@ function prfOutputFrom(res: Credential | null): ArrayBuffer | null {
   }
 }
 
-/** Apakah perangkat + browser mendukung login sidik jari. */
 export async function bioIsSupported(): Promise<boolean> {
   if (!window.isSecureContext) return false
   if (!window.PublicKeyCredential) return false
@@ -154,7 +137,6 @@ export async function bioIsSupported(): Promise<boolean> {
   }
 }
 
-/** Apakah ada sidik jari terdaftar (opsional filter role). */
 export async function bioIsEnrolled(role?: string): Promise<boolean> {
   const all = migrateIfNeeded(await dbGetAll())
   const ens = all.enrollments || {}
@@ -171,10 +153,6 @@ export async function bioEnrolledEmail(role?: string): Promise<string | null> {
   return keys.length ? keys[0] : null
 }
 
-/**
- * Daftarkan sidik jari: buat kredensial WebAuthn + simpan password
- * terenkripsi. Dipanggil setelah login manual berhasil + user setuju.
- */
 export async function bioRegister(email: string, password: string, role?: string): Promise<void> {
   const salt = crypto.getRandomValues(new Uint8Array(32))
   const rpId = location.hostname
@@ -234,9 +212,6 @@ export async function bioRegister(email: string, password: string, role?: string
 
   let prfOut = prfOutputFrom(cred)
   if (!prfOut) {
-    // Respons create() kadang tidak membawa output PRF (perangkat/OS
-    // tertentu) — tunggu authenticator siap lalu turunkan kunci lewat
-    // assertion kedua.
     await new Promise((res) => setTimeout(res, PRF_FALLBACK_SETTLE_MS))
     prfOut = await getPrfViaGet()
   }
@@ -259,7 +234,6 @@ export async function bioRegister(email: string, password: string, role?: string
   })
 }
 
-/** Login dengan sidik jari → {email, password, role}. */
 export async function bioAuthenticate(role?: string): Promise<BioCredentials> {
   const all = migrateIfNeeded(await dbGetAll())
   const ens = all.enrollments || {}
@@ -291,7 +265,6 @@ export async function bioAuthenticate(role?: string): Promise<BioCredentials> {
   }
 }
 
-/** Hapus pendaftaran sidik jari (satu email, atau semua bila tanpa argumen). */
 export async function bioRemove(email?: string): Promise<void> {
   if (email) {
     await dbDelete(email)

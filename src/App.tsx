@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/App.tsx
- * Shell + router + boot langganan publik.
- */
 import { useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useSWUpdate } from './lib/swUpdate'
@@ -20,7 +16,6 @@ import { useProductsStore } from './stores/products'
 import { useSettingsStore } from './stores/settings'
 import { useCatalogStore } from './stores/catalog'
 import { useChatStore } from './stores/chat'
-// Pelanggan
 import GatewayPage from './pages/customer/GatewayPage'
 import HomePage from './pages/customer/HomePage'
 import CatalogPage from './pages/customer/CatalogPage'
@@ -44,7 +39,6 @@ import HistoryPage from './pages/customer/HistoryPage'
 import MissionsPage from './pages/customer/MissionsPage'
 import OrderPage from './pages/customer/OrderPage'
 import QuizPage from './pages/customer/QuizPage'
-// Admin
 import DashboardPage from './pages/admin/DashboardPage'
 import PosPage from './pages/admin/PosPage'
 import InboxPage from './pages/admin/InboxPage'
@@ -74,7 +68,6 @@ import ReceiptPage from './pages/admin/ReceiptPage'
 import TransferPage from './pages/admin/TransferPage'
 
 
-/** Boot sekali: auth + langganan publik (produk, settings, katalog, rumpi). */
 function Boot() {
   useEffect(() => {
     let cancelled = false
@@ -90,15 +83,12 @@ function Boot() {
       unsubs.push(useCatalogStore.getState().subscribeHajatanPackages())
       unsubs.push(useChatStore.getState().subscribeRumpi())
     })
-    // Tema awal: customer (gateway tampil dulu)
     activateRoleTheme('customer')
-    // Ikuti perubahan tema OS bila pilihan = 'system'
     const unwatch = watchSystemTheme(() => {
       const role = useAuthStore.getState().session.role
       activateRoleTheme(role === 'admin' ? 'admin' : 'customer')
     })
     unsubs.push(unwatch)
-    // Terapkan tema tiap kali peran berubah (login/logout/ganti peran)
     const unsubRole = useAuthStore.subscribe((st) => {
       activateRoleTheme(st.session.role === 'admin' ? 'admin' : 'customer')
     })
@@ -109,7 +99,6 @@ function Boot() {
         try {
           u()
         } catch {
-          /* abaikan */
         }
       })
     }
@@ -117,22 +106,6 @@ function Boot() {
   return null
 }
 
-/**
- * Gerbang ISI mode tamu (selaras Native): ketukan tab sudah digerbangi
- * CustomerNav, tetapi tamu juga bisa mendarat langsung di URL konten
- * terkunci (tombol back, riwayat, tautan). Sama seperti Native — tamu
- * melihat ISI BERANDA dan alur login dibuka dengan kalimat gerbangnya;
- * isi terkunci tidak pernah dirender untuk tamu (tidak ada akun/dompet
- * versi tamu). URL dipindah ke /beranda oleh CustomerLayout saat sheet
- * login ditutup (lihat handleLoginSheetClose) — bukan di sini: navigasi
- * yang berjalan bersamaan dengan sheet membuka akan ditimpa push/cleanup
- * param ?sheet= dari useSheetRoute (navigasi dibangun dari lokasi
- * pra-redirect); navigasi sinkron di handler tutup adalah pola yang
- * dirancang aman oleh sheetRoute (sama seperti navigasi pasca-login
- * AuthSheet). Login berhasil diteruskan AuthSheet sendiri ke aksi
- * tertunda setelah onClose, jadi pindahan di handler tutup selalu kalah
- * urutan dari tujuan login — yang menang tetap aksi tertunda.
- */
 function GuestGate({ children }: { children: ReactNode }) {
   const isGuest = useAuthStore((s) => s.session.isGuest)
   const openLoginSheet = useAuthStore((s) => s.openLoginSheet)
@@ -155,13 +128,6 @@ function CustomerLayout() {
   const MAIN_TABS = ['/beranda', '/beranda/produk', '/beranda/keranjang', '/beranda/chat', '/beranda/akun']
   const showNav = MAIN_TABS.includes(pathname)
 
-  /**
-   * Sheet login ditutup saat tamu berada di URL gerbang (GuestGate):
-   * sekalian pindah ke /beranda, sinkron di handler — pola yang aman dari
-   * balapan param ?sheet= (cleanup sheetRoute jadi no-op di lokasi baru).
-   * Setelah login berhasil AuthSheet menavigasi lagi ke aksi tertunda
-   * sesudah onClose ini, jadi tujuan akhir tetap aksi tertunda.
-   */
   function handleLoginSheetClose() {
     closeLoginSheet()
     if (isGuest && guestGateForPath(pathname)) {
@@ -169,13 +135,6 @@ function CustomerLayout() {
     }
   }
 
-  /* Check-in koin harian OTOMATIS — port runDailyCheckin() vanilla
-   * (dulu dipicu go('customer') + Store.renderers.checkin saat dokumen
-   * pelanggan tersedia). Sekali per sesi pelanggan: menunggu peran
-   * customer + dokumen pelanggan + settings termuat. Idempoten berlapis:
-   * flag sesi dailyCheckedIn, lastCheckin dokumen vs todayKeyJakarta(),
-   * dan promise in-flight digabung (tidak grant dobel saat effect re-run).
-   * Tombol manual di AccountPage tetap ada sebagai fallback. */
   const custRole = useAuthStore((s) => s.session.role)
   const custIsGuest = useAuthStore((s) => s.session.isGuest)
   const custId = useAuthStore((s) => s.session.customerId)
@@ -200,8 +159,6 @@ function CustomerLayout() {
   )
 }
 
-/** Guard /: admin -> /admin; kunjungan pertama -> /gateway; sisanya pelanggan. */
-/** Guard /beranda/*: admin -> /admin; sisanya pelanggan. */
 function CustomerGate() {
   const authReady = useAuthStore((s) => s.authReady)
   const role = useAuthStore((s) => s.session.role)
@@ -216,7 +173,6 @@ function CustomerGate() {
   return <CustomerLayout />
 }
 
-/** Guard /admin/*: hanya role admin; selain itu kembali ke /. */
 function AdminGate() {
   const authReady = useAuthStore((s) => s.authReady)
   const role = useAuthStore((s) => s.session.role)
@@ -243,7 +199,7 @@ export default function App() {
         </div>
       )}
       <Routes>
-        {/* Gateway adalah halaman utama di "/". Selalu tampil dulu. */}
+        { }
         <Route path="/" element={<GatewayPage />} />
         <Route path="/beranda" element={<CustomerGate />}>
           <Route index element={<HomePage />} />

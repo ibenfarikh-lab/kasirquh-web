@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/StoreNotesPage.tsx
- * Halaman (dulu StoreNotesSheet): catatan toko.
- * Pengganti #storeNotesModal (Catatan Toko — pengingat internal, koleksi
- * `store_memos`). Dibuka dari Menu (Laci Alat). Tidak ada di daftar bernomor
- * tugas, tetapi dibutuhkan grid Menu — dibuat agar porting utuh.
- */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'

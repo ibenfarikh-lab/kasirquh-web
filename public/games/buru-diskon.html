@@ -64,7 +64,6 @@
         padding: env(safe-area-inset-top) 10px env(safe-area-inset-bottom);
       }
 
-      /* ---------- HUD ---------- */
       #hud {
         display: flex;
         align-items: center;
@@ -111,7 +110,6 @@
       #timer-bar.low { background: var(--bad); }
       #timer-text { font-size: 12px; font-weight: 800; color: var(--ink-soft); margin-top: 3px; text-align: right; }
 
-      /* ---------- Stage ---------- */
       #stage {
         position: relative;
         flex: 1;
@@ -139,7 +137,6 @@
         opacity: .55;
       }
 
-      /* ---------- Falling items ---------- */
       .item {
         position: absolute;
         left: 0; top: 0;
@@ -164,7 +161,6 @@
       .item.gold .emoji { filter: drop-shadow(0 0 10px rgba(255, 190, 30, .75)); }
       .item.gold .tag { background: var(--gold); color: #3a2703; }
 
-      /* ---------- Basket ---------- */
       #basket {
         position: absolute;
         left: 0;
@@ -180,7 +176,6 @@
       @keyframes bump { 0% { scale: 1; } 40% { scale: 1.12; } 100% { scale: 1; } }
       #basket.hurt { animation: bump .18s; filter: hue-rotate(-40deg) saturate(2); }
 
-      /* ---------- Score popups ---------- */
       .pop {
         position: absolute;
         font-family: "Baloo 2", sans-serif;
@@ -198,7 +193,6 @@
         to { opacity: 0; transform: translate(-50%, -56px); }
       }
 
-      /* ---------- Overlays ---------- */
       .overlay {
         position: absolute; inset: 0;
         display: flex; flex-direction: column;
@@ -294,7 +288,6 @@
         <div id="floor"></div>
         <div id="basket"><span class="emoji">🧺</span></div>
 
-        <!-- Layar mulai -->
         <div class="overlay" id="start-screen">
           <div class="big-emoji">🛒</div>
           <h1>Buru Diskon</h1>
@@ -309,7 +302,6 @@
           <p class="controls-hint">📱 Geser jari / mouse untuk gerakin keranjang<br />⌨️ Di komputer bisa pakai tombol ⬅️ ➡️ atau A / D</p>
         </div>
 
-        <!-- Layar jeda -->
         <div class="overlay hidden" id="pause-screen">
           <div class="big-emoji">⏸️</div>
           <h2>Istirahat Dulu</h2>
@@ -317,7 +309,6 @@
           <button class="btn" id="resume-btn">Lanjut Main</button>
         </div>
 
-        <!-- Layar game over -->
         <div class="overlay hidden" id="over-screen">
           <div class="big-emoji" id="over-emoji">🏁</div>
           <h2 id="over-title">Waktu Habis!</h2>
@@ -357,7 +348,7 @@
       var GAME_TIME = 60;
       var BASKET_W = 96;
 
-      var state = "start"; // start | playing | paused | over
+      var state = "start";
       var score = 0, lives = 3, timeLeft = GAME_TIME, best = 0;
       var caught = 0, expiredCaught = 0;
       var items = [];
@@ -386,7 +377,7 @@
           g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
           o.connect(g); g.connect(audioCtx.destination);
           o.start(); o.stop(audioCtx.currentTime + dur);
-        } catch (e) { /* suara opsional */ }
+        } catch (e) {   }
       }
       function sndGood() { beep(660, 0.09, "sine", 0.12); setTimeout(function(){ beep(990, 0.1, "sine", 0.1); }, 55); }
       function sndGold() { beep(880, 0.09, "triangle", 0.14); setTimeout(function(){ beep(1320, 0.14, "triangle", 0.12); }, 70); }
@@ -481,7 +472,6 @@
         if (timeLeft <= 0) { timeLeft = 0; renderTimer(); gameOver("Waktu Habis!"); return; }
         renderTimer();
 
-        // Gerakan keranjang
         var keySpeed = 560;
         if (keys.left) basketTarget -= keySpeed * dt;
         if (keys.right) basketTarget += keySpeed * dt;
@@ -489,12 +479,10 @@
         basketX += (basketTarget - basketX) * Math.min(1, dt * 18);
         placeBasket();
 
-        // Spawn
         spawnTimer -= dt;
         var interval = Math.max(0.42, 0.92 - elapsed * 0.009);
         if (spawnTimer <= 0) { spawnItem(); spawnTimer = interval * (0.7 + Math.random() * 0.6); }
 
-        // Jatuhkan barang
         var basketTop = stage.clientHeight - 96;
         var basketBottom = stage.clientHeight - 14;
         for (var i = items.length - 1; i >= 0; i--) {
@@ -560,7 +548,6 @@
         }
       }
 
-      // Kontrol sentuh / mouse: seret di mana saja di panggung
       function pointerX(e) {
         var r = stage.getBoundingClientRect();
         return e.clientX - r.left;
@@ -572,7 +559,6 @@
         if (state === "playing" && (e.buttons > 0 || e.pointerType === "touch")) basketTarget = clampBasket(pointerX(e));
       });
 
-      // Kontrol keyboard
       window.addEventListener("keydown", function (e) {
         if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") { keys.left = true; e.preventDefault(); }
         if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") { keys.right = true; e.preventDefault(); }

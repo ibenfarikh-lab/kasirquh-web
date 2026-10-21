@@ -1,14 +1,3 @@
-/**
- * KasirQuh React — src/stores/ledger.ts
- * Pembukuan + belanja stok. Pengganti js/store/ledger.js (recordJournal,
- * saveRestock, addManualPurchaseNote, updateStockNote, deleteStockNote,
- * loadStockNotes) + mapJournal & mapStockNote dari js/store/core.js
- * + langganan journal dari js/store/chat.js (startAdminSubs).
- *
- * Pola: zustand create() dengan state + actions; subscribe() pasang
- * onSnapshot modular dan return unsub; tulis requireOnline() dulu +
- * timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   addDoc,
@@ -60,7 +49,6 @@ function timeOf(ts: { toDate?: () => Date } | null | undefined): string {
   }
 }
 
-/** Mapper Firestore -> bentuk UI (port setia mapJournal). */
 export function mapJournal(d: QueryDocumentSnapshot<DocumentData>): JournalEntry {
   const data = d.data() || {}
   const cat = data.category || 'lainnya'
@@ -84,7 +72,6 @@ export function mapJournal(d: QueryDocumentSnapshot<DocumentData>): JournalEntry
   }
 }
 
-/** Mapper Firestore -> bentuk UI (port setia mapStockNote). */
 export function mapStockNote(d: QueryDocumentSnapshot<DocumentData>): StockNote {
   const data = d.data() || {}
   return {
@@ -102,7 +89,6 @@ export function mapStockNote(d: QueryDocumentSnapshot<DocumentData>): StockNote 
 
 export interface JournalInput {
   direction: 'income' | 'expense'
-  /** 'Penjualan' | 'Kulakan' | 'Penukaran koin' | 'Saldo Awal' | 'Lainnya' */
   type: string
   description: string
   amount: number
@@ -118,47 +104,31 @@ export interface RestockItem {
   name: string
   qtyPcs: number
   unitCost: number
-  /** 'new': pakai harga modal baru; 'avg': rata-rata tertimbang */
   costChoice: 'new' | 'avg'
   salePrice: number
   lineTotal: number
 }
 
 interface LedgerState {
-  /** Entri jurnal (admin, live) */
   journalEntries: JournalEntry[]
-  /** Arsip catatan belanja dikelompokkan per tanggal */
   purchaseNotes: Record<string, StockNote[]>
   loading: boolean
 
-  /** Langganan journal (admin). Return unsub. */
   subscribeJournal: () => () => void
-  /** Bersihkan state lingkup peran. */
   clearRole: () => void
 
-  /** Catat entri jurnal manual (termasuk Saldo Awal). */
   recordJournal: (entry: JournalInput) => Promise<void>
-  /**
-   * Belanja Stok: 1 simpan = 1 supplier/nota → stok nambah (increment),
-   * harga tersimpan, jurnal kulakan, arsip stock_notes, modal berkurang.
-   */
   saveRestock: (input: { supplier: string; items: RestockItem[]; total: number }) => Promise<void>
-  /** Catatan belanja manual → arsip + jurnal kulakan (tanpa ubah stok). */
   addManualPurchaseNote: (input: {
     supplier: string
     items: string[]
     total: number
   }) => Promise<void>
-  /** Ubah arsip catatan: HANYA arsip — stok & pembukuan tidak dihitung ulang. */
   updateStockNote: (
     docId: string,
     input: { supplier: string; items: { name: string; qty: string }[]; total: number },
   ) => Promise<void>
   deleteStockNote: (docId: string) => Promise<void>
-  /**
-   * Muat stock_notes MANUAL dengan filter tanggal (tidak auto-load —
-   * keputusan user: admin tekan refresh manual). Return jumlah catatan.
-   */
   loadStockNotes: (dateStr?: string) => Promise<number>
 }
 

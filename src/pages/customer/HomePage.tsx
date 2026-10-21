@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/HomePage.tsx
- * Pengganti #homeCustomerView + js/features/customer/home.js:
- * promo carousel, resep, kabar, layanan warga, populer, restock,
- * flash sale, active order card, AI FAB/panel.
- */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
@@ -130,8 +124,6 @@ export default function HomePage() {
   const recipeRef = useRef<HTMLDivElement>(null)
   const popularRef = useRef<HTMLDivElement>(null)
 
-  // Jam saat halaman dibuka (port updatePremiumHeader); sekali per mount.
-  // initializer useState hanya dipanggil sekali per mount — non-pure disengaja sebagai snapshot jam buka halaman
   // eslint-disable-next-line react-hooks/purity
   const [hour] = useState(() => new Date().getHours())
   const greeting = isGuest ? 'Mode tamu · harga & stok terbuka' : sessionName ? greetingForHour(hour) : 'Selamat datang kembali'
@@ -139,7 +131,6 @@ export default function HomePage() {
 
   const coinText = balance > 0 ? balance.toLocaleString('id-ID') : '0'
 
-  // promo carousel slides (port getCarouselSlots)
   const slides = useMemo(() => {
     const saved = settings.carouselSlots || {}
     return CAROUSEL_SLOTS.map((s) => ({
@@ -150,7 +141,6 @@ export default function HomePage() {
     }))
   }, [settings.carouselSlots])
 
-  // populer: 8 teratas dari totalTerjual (port renderHome, agregat lokal)
   const popular = useMemo(
     () =>
       products
@@ -175,7 +165,6 @@ export default function HomePage() {
 
   const allRecipes = recipes
 
-  /** Pintu koin/misi untuk tamu → sheet login (selaras Native: tamu tidak punya dompet). */
   function goCoin() {
     if (isGuest) openLoginSheet(GUEST_GATES.coin.action, GUEST_GATES.coin.message)
     else navigate('/beranda/koin')
@@ -223,9 +212,6 @@ export default function HomePage() {
     toast('Ide masak dibagikan ke Rumpi')
   }
 
-  // Urutan seksi home ditetapkan (permintaan user 2026-10-19):
-  // resep → kabar warung → layanan warga → promo kilat → populer → restock.
-  // homeSections hanya dipakai untuk show/hide per seksi.
   const homeSections = settings.homeSections || { restock: { show: true, order: 1 }, popular: { show: true, order: 3 }, recipe: { show: true, order: 2 } }
   const showRecipe = homeSections.recipe?.show !== false
   const showPopular = homeSections.popular?.show !== false
@@ -275,7 +261,6 @@ export default function HomePage() {
         id="createMyRecipeBtn"
         className="create-recipe-btn"
         onClick={() => {
-          // Selaras Native: tamu mengetuk ini → prompt "Masuk dulu untuk buat Ide Masakku".
           if (isGuest) openLoginSheet('recipe', 'Masuk dulu untuk buat Ide Masakku')
           else navigate('/beranda/resep-baru')
         }}
@@ -470,7 +455,6 @@ export default function HomePage() {
   )
 }
 
-/* ---------- Promo carousel (port renderPromoCarousel/showPromo/startPromo) ---------- */
 function PromoCarousel({
   slides,
   onAction,
@@ -524,7 +508,6 @@ function PromoCarousel({
   )
 }
 
-/* ---------- Kabar Warung (port renderKabar + initKabarCarousel) ---------- */
 function KabarCarousel() {
   const settings = useSettingsLocal((s) => s.settings)
   const [index, setIndex] = useState(0)
@@ -581,7 +564,6 @@ function KabarCarousel() {
       copy += ' Nikmati weekend dengan stok camilan lengkap!'
     }
     return { title, copy }
-    // mood sengaja dihitung sekali per mount dari snapshot jam buka — tidak perlu dihitung ulang tiap render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -636,15 +618,11 @@ function KabarCarousel() {
   )
 }
 
-/* ---------- Flash sale (port renderFlashCard) ---------- */
 function FlashCard({ sectionRef }: { sectionRef: React.Ref<HTMLElement> }) {
   const products = useProductsStore((s) => s.products)
   const settings = useSettingsLocal((s) => s.settings)
   const addCustomerItem = useCartStore((s) => s.addCustomerItem)
 
-  /* Countdown BERJALAN (interval 1 detik) menuju flashEndsAt; promo mati
-   * otomatis begitu flashEndsAt lewat (seperti Native home_tab.dart).
-   * Tanpa flashEndsAt, target fallback = akhir hari (perilaku lama). */
   const endsAtMs =
     settings.flashEndsAt && typeof settings.flashEndsAt.toMillis === 'function'
       ? settings.flashEndsAt.toMillis()
@@ -684,7 +662,6 @@ function FlashCard({ sectionRef }: { sectionRef: React.Ref<HTMLElement> }) {
   )
 }
 
-/* ---------- AI Teman Belanja (port aiReply) ---------- */
 function AiPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const products = useProductsStore((s) => s.products)
   const settings = useSettingsLocal((s) => s.settings)
@@ -742,7 +719,6 @@ function AiPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   )
 }
 
-/* ---------- Pantau Harga (sheet kecil lokal; daftar dari alerts store) ---------- */
 function PriceAlertSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const alerts = useAlertsStore((s) => s.alerts)
   const toggle = useAlertsStore((s) => s.toggle)

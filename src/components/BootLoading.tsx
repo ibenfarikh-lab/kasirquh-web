@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/components/BootLoading.tsx
- * Layar loading yang menarik: logo animasi + pesan bergantian + progress bar.
- */
 import { useEffect, useState } from 'react'
 import { Icon } from './ui'
 

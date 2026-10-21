@@ -1,13 +1,3 @@
-/**
- * KasirQuh React — src/lib/firebase.ts
- *
- * Pengganti js/config.js + js/firebase.js (compat SDK via CDN).
- * Sekarang memakai Firebase Modular SDK (npm) — tree-shakeable, ter-bundle Vite.
- *
- * CATATAN: nilai di bawah adalah konfigurasi client-side PUBLIK (bukan secret),
- * sama seperti di repo lama. Keamanan dijaga oleh Firestore Security Rules
- * + Firebase Auth, bukan oleh kerahasiaan config ini.
- */
 import { initializeApp, type FirebaseApp } from 'firebase/app'
 import {
   getAuth,
@@ -32,7 +22,6 @@ let auth: Auth | null = null
 let db: Firestore | null = null
 let initError: string | null = null
 
-/** Promise yang resolve setelah auth persistence siap (pengganti FB.authPersistenceReady). */
 export const authPersistenceReady: Promise<void> = (async () => {
   try {
     app = initializeApp(firebaseConfig)
@@ -60,7 +49,6 @@ export function getDb(): Firestore {
   return db
 }
 
-/** Messaging hanya tersedia di environment browser yang mendukung. */
 export function getFirebaseMessaging(): Messaging | null {
   try {
     if (typeof window === 'undefined' || !('Notification' in window)) return null
@@ -70,10 +58,6 @@ export function getFirebaseMessaging(): Messaging | null {
   }
 }
 
-/**
- * Pengganti FB.requireOnline(): lempar error jujur bila offline.
- * Pemanggil WAJIB menangkap dan menampilkan toast "Butuh koneksi internet".
- */
 export function requireOnline(): void {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     throw new Error('Butuh koneksi internet')

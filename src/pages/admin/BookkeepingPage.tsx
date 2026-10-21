@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/BookkeepingPage.tsx
- * Pengganti #bookkeepingView + js/features/admin/finance.js: periode
- * hari/minggu/bulan, ringkasan kas masuk/keluar/saldo, jurnal transaksi,
- * saldo awal, dan pencatatan manual.
- */
 import { useMemo, useState } from 'react'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import {

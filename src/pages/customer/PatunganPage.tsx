@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/PatunganPage.tsx
- * Pengganti PatunganSheet (#patunganModal + #patunganJoinModal) — halaman penuh, bukan modal.
- *
- * TODO(koordinator): daftar & gabung patungan masih lokal — gantikan dengan
- * store patungan resmi (Firestore) saat worker admin selesai.
- */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { money } from '../../lib/format'
@@ -93,7 +86,6 @@ function JoinPatunganView({
       useAuthStore.getState().openLoginSheet('patungan', 'Masuk dulu untuk ikut patungan')
       return
     }
-    // TODO: tulis keikutsertaan ke Firestore (store patungan resmi).
     join(patungan!.id, qty)
     toast('Berhasil ikut patungan · ' + qty + ' slot')
     onDone()

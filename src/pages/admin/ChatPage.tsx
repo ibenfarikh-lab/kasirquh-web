@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/ChatPage.tsx
- * Hub Chat admin: 2 card shortcut ke Rumpi Warga (/admin/chat/rumpi)
- * dan Chat Toko (/admin/chat/toko).
- */
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'

@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/HistoryPage.tsx
- * Pengganti HistorySheet (#historyModal) — halaman penuh, bukan modal.
- *
- * TODO(koordinator): riwayat masih lokal — gantikan dengan store orders resmi
- * (pesanan selesai milik pelanggan dari Firestore) saat worker orders selesai.
- */
 import { money } from '../../lib/format'
 import { useOrdersLocal } from '../../features/customer/local'
 import type { Order } from '../../types'

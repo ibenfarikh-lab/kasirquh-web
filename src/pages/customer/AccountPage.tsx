@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/AccountPage.tsx
- * Pengganti #akunCustomerView + js/features/customer/account.js:
- * profil, kartu member (barcode Code39), bonus harian, tile akun, pengaturan.
- */
 import { useRef, useState } from 'react'
 import { CUSTOMER_SOUND_KEY, playNotification, type SoundKind, type SoundMode } from '../../lib/audio'
 import { useNavigate } from 'react-router-dom'
@@ -21,8 +16,6 @@ import { clearGatewaySeen } from '../../lib/gateway'
 import { APP_VERSION } from '../../lib/version'
 import { getCustomerTheme, setCustomerTheme, type ThemeChoice } from '../../lib/theme'
 
-/* ============ Barcode Code39 (port S.code39 dari js/store/core.js) ============
- * Render sebagai SVG murni — tanpa library baru. */
 const CODE39: Record<string, string> = {
   '0': 'nnnwwnwnn', '1': 'wnnwnnnnw', '2': 'nnwwnnnnw', '3': 'wnwwnnnnn',
   '4': 'nnnwwnnnw', '5': 'wnnwwnnnn', '6': 'nnwwwnnnn', '7': 'nnnwnnwnw',
@@ -43,7 +36,6 @@ interface BarRect {
   height: number
 }
 
-/** Port barcodeRects() (js/features/customer/account.js). */
 function barcodeRects(value: string, y: number, height: number): { rects: BarRect[]; width: number } {
   let x = 18
   const rects: BarRect[] = []
@@ -60,7 +52,6 @@ function barcodeRects(value: string, y: number, height: number): { rects: BarRec
   return { rects, width: x + 18 }
 }
 
-/** Kartu member: render barcode + kode (port renderMemberCardBarcode). */
 function MemberBarcode({ code }: { code: string | null }) {
   if (!code) {
     return (
@@ -85,7 +76,6 @@ function MemberBarcode({ code }: { code: string | null }) {
   )
 }
 
-/** Kode member unik: KQ-XXXXXXXX dari 8 karakter awal UID Auth (port memberBarcodeCode). */
 function useMemberCode(): string | null {
   const customerId = useSessionLocal((s) => s.customerId)
   if (!customerId) return null
@@ -248,7 +238,6 @@ export default function AccountPage() {
   )
 }
 
-/* ---------- Pengaturan pelanggan (port #settingsModal, ringkas) ---------- */
 function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const session = useSessionLocal()
   const [name, setName] = useState(session.name || '')
@@ -260,8 +249,6 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
     try {
       let raw = localStorage.getItem(CUSTOMER_SOUND_KEY)
       if (!raw) {
-        /* Migrasi: kunci lama bersama admin — salin nilainya sekali ke kunci
-         * khusus pelanggan agar preferensi yang sudah diatur tidak hilang. */
         const legacy = localStorage.getItem('kasirquh-admin-sounds')
         if (legacy) {
           localStorage.setItem(CUSTOMER_SOUND_KEY, legacy)
@@ -269,7 +256,7 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
         }
       }
       if (raw) return { order: 'system', promo: 'system', chat: 'system', ...JSON.parse(raw) }
-    } catch { /* abaikan */ }
+    } catch {   }
     return { order: 'system', promo: 'system', chat: 'system' }
   })
   const [busy, setBusy] = useState(false)
@@ -281,7 +268,6 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
     if (!file) return
     setBusy(true)
     try {
-      // Port compressPhotoFile: max 200x200 JPEG 0.7
       const dataUrl = await compressPhoto(file, 200, 'image/jpeg', 0.7)
       if (dataUrl.length > 900000) throw new Error('Foto masih terlalu besar, pilih yang lebih kecil')
       setPhoto(dataUrl)
@@ -302,7 +288,7 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
   function apply() {
     const safe = name.trim() || 'Pelanggan'
     session.setSession({ name: safe, wa: wa.trim(), address: address.trim() })
-    try { localStorage.setItem(CUSTOMER_SOUND_KEY, JSON.stringify(sounds)) } catch { /* abaikan */ }
+    try { localStorage.setItem(CUSTOMER_SOUND_KEY, JSON.stringify(sounds)) } catch {   }
     onClose()
   }
 
@@ -381,7 +367,7 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
               </select>
               <button
                 className="sound-test"
-                onClick={() => { try { playNotification(kind, sounds[kind]) } catch { /* abaikan */ } }}
+                onClick={() => { try { playNotification(kind, sounds[kind]) } catch {   } }}
                 aria-label={`Tes bunyi ${title}`}
               >
                 <Icon name="speaker" />

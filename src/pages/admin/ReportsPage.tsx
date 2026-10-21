@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/ReportsPage.tsx
- * Pecahan dari DataPage: tab Laporan kini halaman tersendiri di KELOLA WARUNG.
- * Isi identik dengan tab Laporan lama (metrik omset/laba + tabel transaksi),
- * tanpa tab lagi. Ditautkan dari Menu dan shortcut dashboard.
- */
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'

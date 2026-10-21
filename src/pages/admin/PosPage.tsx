@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/PosPage.tsx
- * Pengganti #kasirView + js/features/admin/pos.js: katalog kasir, keranjang
- * admin, bayar tunai/koin redeem, struk, dan identifikasi member.
- */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -100,7 +95,6 @@ export default function PosPage() {
     setCashOpen(true)
   }
 
-  /* Port identifyKasirMember() vanilla: lookup member by memberCode KQ-XXXXXXXX. */
   const identifyKasirMember = async (code: string) => {
     if (!/^KQ-[A-Z0-9]{8}$/i.test(code)) {
       toast('Kode member tidak valid')
@@ -140,7 +134,6 @@ export default function PosPage() {
     }
   }
 
-  /* Port handleBarcodeCode() vanilla: KQ- → member, selain itu → cari produk. */
   const handleScan = (rawCode: string) => {
     setScanOpen(false)
     const code = String(rawCode || '').trim()
@@ -155,7 +148,6 @@ export default function PosPage() {
       return
     }
     addAdminItem(product.id, 1)
-    // Opsi B (user): tambah item kasir tanpa toast — daftar transaksi = feedback.
   }
 
   return (
@@ -357,7 +349,6 @@ export default function PosPage() {
   )
 }
 
-/* ---------- Pembayaran tunai (pengganti #cashPaymentModal) ---------- */
 
 function CashPaymentSheet({
   open,
@@ -381,7 +372,6 @@ function CashPaymentSheet({
   const [receivedText, setReceivedText] = useState('')
   const [busy, setBusy] = useState(false)
 
-  // reset tiap dibuka (pengganti openCashPayment)
   useEffect(() => {
     if (open) {
       setReceivedText('')

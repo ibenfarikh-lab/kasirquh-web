@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/stores/cart.ts
- * Keranjang pelanggan & kasir. Pengganti S.customerCart / S.adminCart
- * + addCustomerItem() / updateCustomerCart() dari js/app.js.
- */
 import { create } from 'zustand'
 import type { CartMap } from '../types'
 import { useProductsStore } from './products'
@@ -31,8 +26,6 @@ function cleanCart(cart: CartMap): CartMap {
   return out
 }
 
-/* Keranjang PERSISTEN (localStorage, pola sama seperti alerts.ts): reload
- * halaman tidak mengosongkan keranjang pelanggan maupun kasir. */
 const CUSTOMER_CART_KEY = 'kasirquh-customer-cart'
 const ADMIN_CART_KEY = 'kasirquh-admin-cart'
 
@@ -49,7 +42,6 @@ function loadCart(key: string): CartMap {
       return out
     }
   } catch {
-    /* abaikan */
   }
   return {}
 }
@@ -58,7 +50,6 @@ function persistCart(key: string, cart: CartMap) {
   try {
     localStorage.setItem(key, JSON.stringify(cart))
   } catch {
-    /* abaikan */
   }
 }
 
@@ -80,7 +71,6 @@ export const useCartStore = create<CartState>()((set, get) => ({
       }),
     }))
     persistCart(CUSTOMER_CART_KEY, get().customerCart)
-    // Opsi B (user): tambah-keranjang tanpa toast — badge keranjang = feedback.
   },
 
   decCustomerItem: (id) => {

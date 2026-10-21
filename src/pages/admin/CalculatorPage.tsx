@@ -1,17 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/CalculatorPage.tsx
- * Pengganti CalculatorSheet (dulu #calculatorModal + js/features/admin/calc.js):
- * halaman penuh, bukan modal. Data/logika sama persis, tanpa wrapper Sheet.
- *
- * 2026-10-20: display panel diperbarui —
- *  1. kolom data lebar (panel penuh, min-height besar),
- *  2. kalkulasi otomatis: hasil sementara tampil live di bawah ekspresi,
- *  3. ekspresi panjang wrap multi-baris dan menumpuk ke atas
- *     (bukan overflow ke samping/ellipsis).
- * 2026-10-20: batas panjang ekspresi dihapus (permintaan user).
- * 2026-10-20: display punya scrollbar sendiri (max-height + auto-scroll ke
- *  hasil terbaru) agar tombol tidak tenggelam saat ekspresi panjang.
- */
 import { useState, useRef, useEffect } from 'react'
 import { calcDisplayValue, calcResult } from '../../features/admin/localAdmin'
 
@@ -37,16 +23,7 @@ const KEYS = [
   { key: '000', label: '000', cls: 'zero-pack' },
 ]
 
-/**
- * Tidak ada batas panjang ekspresi: kalkulator menerima input sebanyak apa pun
- * (permintaan user — "kalkulator bisa banyak hitungan"). Evaluasi hasil dan
- * format tampilan berjalan O(n), jadi ekspresi sangat panjang tetap ringan.
- */
 
-/**
- * Hasil live dari ekspresi yang sedang diketik (operator buntut diabaikan).
- * Null bila belum ada operasi lengkap (angka-operator-angka).
- */
 function liveResultValue(expression: string): number | null {
   const trimmed = expression.replace(/[+\-*/]+$/, '')
   if (!/\d[+\-*/]/.test(trimmed)) return null
@@ -66,8 +43,6 @@ export default function CalculatorPage() {
   const [expression, setExpression] = useState('')
   const displayRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll display ke bagian terbaru: ekspresi akhir + hasil live
-  // selalu terlihat tanpa scroll manual (saat scrollbar aktif).
   useEffect(() => {
     const el = displayRef.current
     if (el) el.scrollTop = el.scrollHeight

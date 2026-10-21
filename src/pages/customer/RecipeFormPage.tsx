@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/RecipeFormPage.tsx
- * Pengganti RecipeFormSheet (#myRecipeModal) — halaman penuh, bukan modal.
- *
- * TODO(koordinator): simpan resep masih lokal — gantikan dengan store resep
- * resmi (saveMyRecipe ke Firestore) saat worker terkait selesai.
- */
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
@@ -69,7 +62,6 @@ export default function RecipeFormPage() {
     e.target.value = ''
     if (!file) return
     try {
-      // Port resizeRecipePhoto: PNG, maksimal 300 px.
       setPhoto(await compressPhoto(file, 300, 'image/png'))
     } catch {
       toast('Gambar tidak bisa dibaca')
@@ -87,7 +79,6 @@ export default function RecipeFormPage() {
       return
     }
     setBusy(true)
-    // TODO: storePromise('saveMyRecipe', { nama, desc, foto, items }).
     setTimeout(() => {
       addMyRecipe({
         id: 'mine-' + Date.now(),

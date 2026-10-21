@@ -1,11 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/MissionsPage.tsx
- * Pengganti MissionsSheet (#missionsModal + #gameModal + #buruDiskonModal;
- * js/features/customer/coins.js) — halaman penuh, bukan modal.
- *
- * TODO(koordinator): klaim koin misi/game masih lokal — gantikan dengan
- * Store.grantCoins / grantGameCoins (transaksi Firestore) saat worker koin selesai.
- */
 import { useNavigate } from 'react-router-dom'
 import { toast } from '../../components/ui'
 import { useCoinLocal, useOrdersLocal, useSessionLocal, useSettingsLocal, weekKeyOf } from '../../features/customer/local'
@@ -25,7 +17,6 @@ export default function MissionsPage() {
   const settings = useSettingsLocal((s) => s.settings)
   const myCustomerDoc = useAuthStore((s) => s.myCustomerDoc)
 
-  // Progres koin game hari ini (live dari Firestore, per-game terpisah).
   const todayKey = todayKeyJakarta()
   const tangkapToday =
     myCustomerDoc && (myCustomerDoc as Record<string, unknown>).gameCoinsDate === todayKey
@@ -38,7 +29,6 @@ export default function MissionsPage() {
 
   const balanceText = balance > 0 ? balance.toLocaleString('id-ID') + ' koin' : 'Belum ada koin'
 
-  // --- Misi Belanja 3x (port renderMissions) ---
   const today = new Date(todayKeyJakarta() + 'T12:00:00+07:00')
   const wk = weekKeyOf(today)
   const shopCount = Math.min(
@@ -62,11 +52,9 @@ export default function MissionsPage() {
       useAuthStore.getState().openLoginSheet('missions', 'Masuk dulu untuk klaim koin')
       return
     }
-    // Hadiah misi via klaim resmi (transaksi Firestore, idempoten per claimKey).
     grant(settings.coinRewards.mission, { label: 'Hadiah misi', detail: detailLabel, claimKey })
   }
 
-  // --- Misi Coba produk baru (port renderMissions) ---
   const mine = [...history].sort((a, b) => String(b.dateKey || '').localeCompare(String(a.dateKey || '')))
   const priorIds = new Set<string>()
   mine.slice(1).forEach((o) => (o.stockLines || []).forEach((l) => l.productId && priorIds.add(l.productId)))

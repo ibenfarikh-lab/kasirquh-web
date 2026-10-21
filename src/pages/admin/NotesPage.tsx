@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/NotesPage.tsx
- * Pengganti #noteView + js/features/admin/notes.js: catatan belanja (kulakan)
- * per tanggal, tambah manual, ubah/hapus arsip (tanpa mengubah Pembukuan/stok).
- */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
@@ -216,7 +211,6 @@ export default function NotesPage() {
   )
 }
 
-/* ---------- Detail / ubah / hapus arsip catatan (pengganti #purchaseNoteModal) ---------- */
 
 type Mode = 'detail' | 'edit' | 'delete'
 
@@ -250,7 +244,6 @@ function PurchaseNoteSheet({
       setTotalText(String(note.total))
       setBusy(false)
     }
-    // form edit hanya diisi ulang saat target edit berubah — note dari store tidak masuk deps agar isian user tidak tertimpa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing?.id, editing?.date])
 

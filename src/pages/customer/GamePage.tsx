@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/GamePage.tsx
- * Halaman penuh untuk game Tangkap Diskon & Buru Diskon.
- * (Sebelumnya GameSheet di dalam MissionsSheet.)
- */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useCoinLocal, useSessionLocal } from '../../features/customer/local'
@@ -67,7 +62,6 @@ export default function GamePage() {
       todayField: isBuru ? 'buruGameCoinsToday' : 'gameCoinsToday',
     })
     setPending(null)
-    // Jangan navigate langsung — biarkan toast hasil klaim terlihat dulu
     setTimeout(() => navigate(-1), 1500)
   }
 

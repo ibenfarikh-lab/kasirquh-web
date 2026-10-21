@@ -1,11 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/DeliveryPage.tsx
- * Pengganti DeliverySheet (#deliveryModal + js/features/customer/checkout.js) —
- * halaman penuh, bukan modal: fulfillment, payMethod, transfer ref, coin
- * redeem, ringkasan, confirmOrder.
- *
- * Checkout via implementasi resmi checkoutCustomer() di stores/checkout.ts.
- */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
@@ -54,7 +46,6 @@ export default function DeliveryPage() {
     [customerCart, products, settings.promoUnitPrice],
   )
 
-  // Port coinRedemption() (js/app.js baris 338)
   const redeem = useMemo(() => {
     if (!settings.coinProgramEnabled || !redeemOn || settings.coinValue <= 0) return { coins: 0, value: 0 }
     const maxValue = Math.floor((totals.total * settings.coinRedeemPercent) / 100)
@@ -84,8 +75,6 @@ export default function DeliveryPage() {
 
   async function confirmOrder() {
     if (session.isGuest || !session.customerId) {
-      // Tamu → simpan aksi, buka sheet login; setelah login dilanjutkan otomatis
-      // (AuthSheet mengarah ke /beranda/keranjang?delivery=1 → halaman checkout ini).
       useAuthStore.getState().openLoginSheet('checkout', 'Masuk dulu untuk menyelesaikan pesananmu')
       return
     }
@@ -181,7 +170,6 @@ export default function DeliveryPage() {
       try {
         playNotification('order')
       } catch {
-        /* abaikan — bunyi tidak boleh menggagalkan alur */
       }
     } catch (error) {
       if (!error || (error as { code?: string }).code !== 'OFFLINE') {

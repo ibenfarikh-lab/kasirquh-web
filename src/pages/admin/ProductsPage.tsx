@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/ProductsPage.tsx
- * Pengganti #produkView + js/features/admin/products.js + renderAdminProductData()
- * + deleteProduct() (js/app.js): filter kategori, impor CSV, tambah/ubah/hapus.
- */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
@@ -13,7 +8,6 @@ import AdminNav from '../../components/AdminNav'
 
 const FILTER_CATS = ['Sembako', 'Minuman', 'Snack', 'Rokok', 'Rumah Tangga', 'Lainnya']
 
-/* ---------- CSV (1:1 js/features/admin/products.js) ---------- */
 
 const CSV_HEADER_ALIASES: Record<string, string[]> = {
   barcode: ['kode', 'barcode', 'kode barang', 'kode produk', 'sku', 'plu'],
@@ -61,7 +55,6 @@ function parseCsvText(text: unknown): string[][] {
     } else if (ch === '"') inQuotes = true
     else if (ch === ',') pushField()
     else if (ch === '\r') {
-      /* ikut \n */
     } else if (ch === '\n') {
       pushField()
       pushRow()
@@ -117,7 +110,6 @@ function mapCsvRows(rows: string[][]): {
   return out
 }
 
-/* ---------- Halaman ---------- */
 
 export default function ProductsPage() {
   useAdminBoot()
@@ -263,7 +255,6 @@ export default function ProductsPage() {
   )
 }
 
-/* ---------- Impor CSV (pengganti #importCsvModal) ---------- */
 
 function CsvImportSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const products = useProductsStore((s) => s.products)

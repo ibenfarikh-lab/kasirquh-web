@@ -1,14 +1,3 @@
-/**
- * KasirQuh React — src/stores/customers.ts
- * Data pelanggan + persetujuan + koin. Pengganti js/store/customers.js
- * (approveCustomer, rejectCustomer, grantCoins, grantGameCoins, adjustCoins,
- * saveCustomerDoc, updateCustomerName, grantBonusToAll) plus langganan
- * dokumen pelanggan sendiri dari js/store/chat.js (startCustomerSubs).
- *
- * Pola: zustand create() dengan state + actions; subscribe() pasang
- * onSnapshot modular dan return unsub; tulis requireOnline() dulu +
- * timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   collection,
@@ -27,7 +16,6 @@ import {
 } from 'firebase/firestore'
 import { getDb, requireOnline } from '../lib/firebase'
 
-/** Hasil identifikasi member kasir (lebih lengkap dari KasirMember). */
 export interface MemberLookup {
   uid: string
   name: string
@@ -48,9 +36,7 @@ export interface CustomerRecord {
   address: string
   photoURL: string
   coins: number
-  /** Total belanja (dihitung dari pesanan — lihat refreshSpend) */
   spend: number
-  /** Riwayat ringkas: [label, sub][] */
   history: [string, string][]
 }
 
@@ -115,27 +101,17 @@ function mapPending(id: string, d: DocumentData): PendingCustomerRecord {
 }
 
 interface CustomersState {
-  /** Pelanggan approved (admin) */
   customers: CustomerRecord[]
-  /** Pendaftar pending/rejected (admin) */
   pendingCustomers: PendingCustomerRecord[]
   loading: boolean
 
-  /** Langganan admin: customers approved + pending/rejected. Return unsub gabungan. */
   subscribeCustomers: () => () => void
-  /** Langganan live dokumen customers/{uid} milik sesi. Return unsub. */
   subscribeMyDoc: (uid: string) => () => void
-  /** Bersihkan state lingkup peran (dipanggil saat ganti peran/logout). */
   clearRole: () => void
-  /** Hitung ulang spend + history dari daftar pesanan (dari js/store/derived.js). */
   refreshSpend: (orders: { customerId: string; id: string; rawStatus: string; time: string; total: number }[]) => void
 
   approveCustomer: (uid: string) => Promise<void>
   rejectCustomer: (uid: string) => Promise<void>
-  /** Grant koin transaksional: cek klaim ganda di dalam transaksi.
-   *  Return true bila koin benar-benar dikreditkan, false bila klaim
-   *  ditolak karena penanda (lastCheckin/lastGuessDate/missionClaims)
-   *  sudah tercatat — dua perangkat tidak bisa klaim bersamaan. */
   grantCoins: (uid: string, amount: number, meta?: GrantCoinsMeta) => Promise<boolean>
   grantGameCoins: (
     uid: string,
@@ -146,7 +122,6 @@ interface CustomersState {
   saveCustomerDoc: (patch: DocumentData) => Promise<void>
   updateCustomerName: (name: string) => Promise<void>
   grantBonusToAll: (amount: number, reason: string) => Promise<number>
-  /** Cari member by kode (KQ-XXXXXXXX) untuk kasir. Return null bila tidak valid. */
   identifyMemberByCode: (code: string) => Promise<MemberLookup | null>
 }
 
@@ -158,7 +133,6 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
   subscribeCustomers: () => {
     const db = getDb()
     const applySpendSoon = () => {
-      // spend dihitung ulang tiap ada perubahan pelanggan/pesanan
       get().refreshSpend(useOrdersStore.getState().onlineOrders)
     }
     const unsubApproved = onSnapshot(
@@ -206,9 +180,6 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
           return
         }
         if (data.approvalStatus !== 'approved') {
-          /* JANGAN signOut di sini — status non-approved pada subscription
-           * live sering kali transient (cache basi / race saat login ulang).
-           * Cukup tampilkan mode terbatas; sesi Firebase dipertahankan. */
           return
         }
         usePromoStore.getState().setCoinBalance(Math.max(0, Math.round(Number(data.coins) || 0)))
@@ -235,7 +206,6 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
   approveCustomer: async (uid) => {
     requireOnline()
     assertAdmin()
-    /* Opsi A: generate memberCode unik KQ-XXXXXXXX (8 char awal UID, uppercase) */
     const memberCode = 'KQ-' + String(uid).slice(0, 8).toUpperCase()
     await withTimeout(
       updateDoc(doc(getDb(), 'customers', uid), {
@@ -269,11 +239,6 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
       meta.reason === 'misi' && meta.claimKey
         ? String(meta.claimKey).replace(/[./]/g, '_')
         : null
-    /* Transaksional (pola Native grantCoins di admin_repository.dart):
-     * penanda klaim DIBACA di dalam runTransaction dari dokumen yang sama
-     * yang ditulis — cek + tulis saldo + ledger + penanda atomik dalam satu
-     * transaksi, jadi klaim bersamaan dari dua perangkat tidak bisa lolos
-     * dua-duanya. Anti-klaim-ganda tidak lagi bertumpu pada guard UI. */
     return withTimeout(
       runTransaction(db, async (tx) => {
         const ref = doc(db, 'customers', uid)
@@ -382,7 +347,7 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
   saveCustomerDoc: async (patch) => {
     const uid = useAuthStore.getState().session.customerId
     const isGuest = useAuthStore.getState().session.isGuest
-    if (!uid || isGuest) return // tamu: sesi-saja
+    if (!uid || isGuest) return
     requireOnline()
     await withTimeout(
       updateDoc(doc(getDb(), 'customers', uid), patch),
@@ -398,7 +363,7 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
     const nama = String(name || '').trim().slice(0, 50)
     if (!nama) throw new Error('Isi nama dulu')
     const s = useAuthStore.getState().session
-    useAuthStore.setState({ session: { ...s, name: nama } }) // langsung berlaku di sesi
+    useAuthStore.setState({ session: { ...s, name: nama } })
     try {
       await withTimeout(
         updateDoc(doc(getDb(), 'customers', uid), { name: nama }),
@@ -407,7 +372,6 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
       )
     } catch (error) {
       if (!error || (error as { code?: string }).code !== 'permission-denied') throw error
-      // permission-denied → diam: nama tetap sesi-saja, tanpa crash
     }
   },
 
@@ -424,8 +388,6 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
     let n = 0
     for (const d of snap.docs) {
       await get().grantCoins(d.id, amount, {
-        /* Skema ledger seragam Native: reason = kode tetap 'bonus_event';
-         * alasan bebas admin masuk ke detail saja. */
         reason: 'bonus_event',
         label: 'Bonus event',
         detail: reason,
@@ -456,10 +418,6 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
   },
 }))
 
-/**
- * refreshCustomerSpend (js/store/derived.js): hitung spend + history tiap
- * pelanggan dari daftar pesanan. Dipanggil orders store setiap pesanan berubah.
- */
 export function applySpendToCustomers(
   customers: CustomerRecord[],
   orders: { customerId: string; id: string; rawStatus: string; time: string; total: number }[],

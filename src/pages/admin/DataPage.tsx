@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/DataPage.tsx
- * Pengganti #dataView: tab Data Pelanggan dan Persetujuan
- * (renderCustomerData, setDataTab).
- * Termasuk detail pelanggan + catatan/tagihan (kasbon) via sheet.
- * Tab Laporan dipindah ke halaman tersendiri (ReportsPage).
- */
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
@@ -187,7 +180,6 @@ export default function DataPage() {
   )
 }
 
-/* ---------- Detail pelanggan + kasbon (pengganti #customerDetailModal) ---------- */
 
 function CustomerDetailSheet({
   customerId,

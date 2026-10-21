@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/lib/format.ts
- *
- * Util format & parsing, dimigrasi verbatim dari js/shared/format.js
- * (hanya fungsi murni; yang bergantung DOM/global S dipindah ke komponen/store).
- */
 
 export const money = (n: number | null | undefined): string =>
   'Rp' + Number(n || 0).toLocaleString('id-ID')

@@ -2,14 +2,11 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// KasirQuh React — build target: static SPA, deploy di Vercel.
-// Vercel otomatis mendeteksi preset "Vite": build `npm run build`, output `dist/`.
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      // Service worker kustom (src/sw.ts): workbox precaching + FCM background.
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
@@ -44,7 +41,6 @@ export default defineConfig({
         ],
       },
       injectManifest: {
-        // Jangan cache Firestore/Auth — data selalu live.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
       },
     }),

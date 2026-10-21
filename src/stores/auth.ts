@@ -1,13 +1,3 @@
-/**
- * KasirQuh React — src/stores/auth.ts
- * Sesi auth Firebase + orkestrasi langganan per peran.
- * Pengganti js/store/auth.js (beginSession, endSession, whenSessionReady,
- * setGuestSession, handleAuthState, authErrorMessage, registerCustomer,
- * loginCustomer, loginAdmin, logout).
- *
- * Pola: zustand create() dengan state + actions; tulis requireOnline() dulu
- * + timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   createUserWithEmailAndPassword,
@@ -62,10 +52,8 @@ const GUEST_SESSION: Session = {
   email: null,
 }
 
-/* Langganan peran aktif — diputus saat ganti peran / logout. */
 const roleUnsubs: (() => void)[] = []
 
-/* ---- antre sesi (pengganti _sessionSeq/_sessionPromise di Store) ---- */
 let sessionSeq = 0
 let sessionPromise: Promise<void> | null = null
 let sessionResolve: (() => void) | null = null
@@ -88,21 +76,10 @@ function endSession() {
   }
 }
 
-/* ---- tunggu siklus handleAuthState (pengganti magic-number setTimeout) ---- */
-/** Interval poll saat menunggu siklus handleAuthState selesai. */
 const SESSION_CYCLE_POLL_MS = 100
-/** Batas maksimum menunggu siklus handleAuthState sebelum lanjut seperti biasa. */
 const SESSION_CYCLE_TIMEOUT_MS = 5000
-/** Jeda antar percobaan getIdTokenResult (3x percobaan total). */
 const TOKEN_CLAIMS_RETRY_DELAYS_MS = [500, 1000]
 
-/**
- * Tunggu siklus handleAuthState yang dipicu sebuah sign-in sampai tuntas.
- * `seqBefore` = nilai sessionSeq tepat sebelum signIn dipanggil; setiap
- * handleAuthState memanggil beginSession() (sessionSeq++) di awal dan
- * endSession() (sessionResolve -> null) di finally. Timeout → lanjut
- * seperti timer lama kedaluwarsa.
- */
 function waitForSessionCycle(seqBefore: number): Promise<void> {
   return new Promise((resolve) => {
     const startedAt = Date.now()
@@ -120,29 +97,18 @@ interface AuthState {
   session: Session
   sessionStartedAt: string | null
   myCustomerDoc: MyCustomerDoc | null
-  /** true setelah onAuthStateChanged pertama kali jalan */
   authReady: boolean
-  /** 'customer' saat login via pintu pelanggan (cegah admin salah pintu) */
   loginDoor: 'customer' | null
-  /** Aksi tamu yang tertunda — dilanjutkan otomatis setelah login (mis. 'checkout'). */
   pendingGuestAction: string | null
   setPendingGuestAction: (action: string | null) => void
-  /** Sheet login global (dipakai nav/tab saat tamu menyentuh fitur terkunci). */
   loginSheetOpen: boolean
-  /**
-   * Kalimat ajakan kontekstual di sheet login — pola Native
-   * "Masuk dulu untuk ..." sesuai aksi tamu. null = kalimat bawaan sheet.
-   */
   loginSheetMessage: string | null
-  /** Buka sheet login; action opsional dicatat sebagai pendingGuestAction, message = kalimat ajakan kontekstual. */
   openLoginSheet: (action?: string | null, message?: string | null) => void
   closeLoginSheet: () => void
-  /** Sheet login admin global (dibuka dari logo toko / hotspot). */
   adminSheetOpen: boolean
   openAdminSheet: () => void
   closeAdminSheet: () => void
 
-  /** Pasang listener auth (setelah persistence siap). Return unsub. */
   init: () => () => void
   handleAuthState: (user: User | null) => Promise<void>
   sessionReady: () => Promise<void>
@@ -150,7 +116,6 @@ interface AuthState {
   loginCustomer: (email: string, password: string) => Promise<{ id: string; name: string }>
   loginAdmin: (email: string, password: string) => Promise<{ email: string }>
   logout: () => Promise<void>
-  /** Reset ke mode tamu + putus semua langganan peran. */
   resetToGuest: () => void
 }
 
@@ -161,7 +126,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
       try {
         unsub()
       } catch {
-        /* abaikan */
       }
     })
   }
@@ -246,9 +210,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
     sessionReady: () => sessionPromise || Promise.resolve(),
 
     handleAuthState: async (user) => {
-      // Catat status SEBELUM reset: bila sesi pulih setelah timer gateway
-      // kadung memasukkan aplikasi ke mode tamu (balapan timer), worker
-      // router memakai `session` untuk mengembalikan layar peran yang benar.
       const sessionWasGuest = get().session.isGuest
       void sessionWasGuest
       beginSession()
@@ -263,11 +224,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
 
         const uid = user.uid
 
-        /* Admin: custom claim admin:true (TIDAK ADA pendaftaran admin mandiri) */
-        // getIdTokenResult bisa gagal transient (jaringan belum siap saat
-        // tab baru dibuka): retry berbasis promise, max 3 percobaan total,
-        // jeda antar percobaan 500ms lalu 1000ms. Jika semua gagal,
-        // perlakukan sebagai bukan admin (seperti perilaku lama).
         let isAdmin = false
         for (let attempt = 0; ; attempt++) {
           try {
@@ -289,14 +245,11 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         }
 
         if (isAdmin) {
-          // Cegah admin salah pintu: jika login via pintu pelanggan,
-          // jangan bentuk sesi admin — signOut agar loginCustomer menolak tegas.
           if (get().loginDoor === 'customer') {
             set({ loginDoor: null })
             try {
               await signOut(getFirebaseAuth())
             } catch {
-              /* abaikan */
             }
             return
           }
@@ -312,14 +265,12 @@ export const useAuthStore = create<AuthState>()((set, get) => {
             authReady: true,
           })
           startAdminSubs()
-          // FCM: daftarkan token push (non-blocking, abaikan gagal)
           void initFcm().then((ok) => {
             if (ok) void registerFcmToken('admin').catch(() => {})
           }).catch(() => {})
           return
         }
 
-        /* Pelanggan: dokumen customers/{uid} wajib approved */
         let data: MyCustomerDoc | null = null
         try {
           const snap = await getDoc(doc(getDb(), 'customers', uid))
@@ -328,9 +279,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
           data = null
         }
         if (!data || data.approvalStatus !== 'approved') {
-          // JALUR RESTORE: jangan hancurkan sesi Firebase di sini — cukup
-          // tampilkan mode tamu. signOut hanya untuk penolakan login
-          // eksplisit (sudah diurus form login masing-masing).
           set({ authReady: true })
           return
         }
@@ -349,7 +297,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         })
         usePromoStore.getState().setCoinBalance(Math.max(0, Math.round(Number(data.coins) || 0)))
         startCustomerSubs(uid)
-        // FCM: daftarkan token push (non-blocking, abaikan gagal)
         void initFcm().then((ok) => {
           if (ok) void registerFcmToken('customer').catch(() => {})
         }).catch(() => {})
@@ -390,25 +337,19 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         try {
           await cred.user.delete()
         } catch {
-          /* abaikan */
         }
         throw new Error(authErrorMessage(error))
       }
       try {
         await signOut(auth)
       } catch {
-        /* abaikan */
       }
     },
 
     loginCustomer: async (email, password) => {
       requireOnline()
       const auth = getFirebaseAuth()
-      // Tandai pintu login agar handleAuthState bisa cegah admin salah pintu.
       set({ loginDoor: 'customer' })
-      // Catat generasi siklus sesi SEBELUM signIn, agar penantian di bawah
-      // tidak terkecoh siklus lama dari pemuatan halaman (authReady bisa
-      // sudah true sebelum login ini).
       const seqBeforeSignIn = sessionSeq
       let cred
       try {
@@ -423,14 +364,9 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         try {
           await signOut(auth)
         } catch {
-          /* abaikan */
         }
         throw new Error(msg)
       }
-      // Tunggu siklus handleAuthState untuk sign-in ini tuntas (bukan timer
-      // buta): deteksi "admin salah pintu" di handleAuthState melakukan
-      // signOut SEBELUM siklusnya tuntas, jadi setelah penantian ini
-      // auth.currentUser sudah mencerminkan hasil akhirnya.
       await waitForSessionCycle(seqBeforeSignIn)
       set({ loginDoor: null })
       if (!auth.currentUser) {
@@ -444,7 +380,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         try {
           await signOut(auth)
         } catch {
-          /* abaikan */
         }
         throw new Error(authErrorMessage(error))
       }
@@ -475,14 +410,11 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         try {
           await signOut(auth)
         } catch {
-          /* abaikan */
         }
         throw new Error('Akun ini bukan admin')
       }
       await get().sessionReady()
       if (get().session.role !== 'admin') {
-        // Sesi auth tidak berubah (pengguna sudah masuk) sehingga handleAuthState
-        // tidak jalan ulang — pasang status admin eksplisit (klaim sudah terverifikasi).
         clearRoleSubs()
         set({
           session: {
@@ -506,7 +438,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
       try {
         await signOut(getFirebaseAuth())
       } catch {
-        /* abaikan */
       }
     },
 
@@ -516,12 +447,9 @@ export const useAuthStore = create<AuthState>()((set, get) => {
   }
 })
 
-/* Kunci preferensi dering mengikuti peran sesi (lib/audio): pelanggan dan
- * admin punya kunci localStorage terpisah agar tidak saling menimpa. */
 setSoundRole(useAuthStore.getState().session.role)
 useAuthStore.subscribe((s) => setSoundRole(s.session.role))
 
-/** Pesan error auth berbahasa Indonesia yang jujur (verbatim dari kode lama). */
 export function authErrorMessage(error: unknown): string {
   const code = (error as { code?: string } | null)?.code || ''
   if (code === 'auth/email-already-in-use') return 'Email sudah dipakai'
@@ -536,26 +464,22 @@ export function authErrorMessage(error: unknown): string {
   return (error as { message?: string } | null)?.message || 'Terjadi kesalahan, coba lagi'
 }
 
-/** Lempar bila peran sesi bukan admin. */
 export function assertAdmin(): void {
   const role: SessionRole = useAuthStore.getState().session.role
   if (role !== 'admin') throw new Error('Hanya admin yang boleh melakukan ini')
 }
 
-/** UID pelanggan aktif, atau null bila tamu/admin. */
 export function activeCustomerId(): string | null {
   const s = useAuthStore.getState().session
   return s.role === 'customer' && !s.isGuest ? s.customerId : null
 }
 
-/** UID pelanggan aktif; lempar pesan jujur bila belum masuk. */
 export function requireCustomerId(): string {
   const uid = activeCustomerId()
   if (!uid) throw new Error('Masuk dulu sebagai pelanggan')
   return uid
 }
 
-/** Toast pengganti Store.notifyUser. */
 export function notifyUser(msg: string): void {
   toast(msg)
 }

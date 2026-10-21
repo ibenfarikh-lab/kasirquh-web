@@ -1,17 +1,3 @@
-/**
- * KasirQuh React — src/stores/catalog.ts
- * Katalog komunitas: resep, patungan, paket rutin & hajatan.
- * Pengganti js/store/catalog.js (watchPatungan, watchRutinPackages,
- * saveRutinPackage, deleteRutinPackage, watchHajatanPackages,
- * saveHajatanPackage, deleteHajatanPackage, createPatungan, joinPatungan,
- * confirmPatunganPayment, setPatunganStatus, watchRecipes, saveRecipe,
- * deleteRecipe, saveMyRecipe, deleteMyRecipe) + mapRecipe dari
- * js/store/core.js + langganan my_recipes dari js/store/chat.js.
- *
- * Pola: zustand create() dengan state + actions; subscribe() pasang
- * onSnapshot modular dan return unsub; tulis requireOnline() dulu +
- * timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   addDoc,
@@ -34,7 +20,6 @@ import { withTimeout, WRITE_TIMEOUT_MS } from '../lib/firestore'
 import type { Recipe, RecipeItem } from '../types'
 import { assertAdmin, requireCustomerId, useAuthStore } from './auth'
 
-/** Mapper Firestore -> bentuk UI (port setia mapRecipe). */
 export function mapRecipe(d: QueryDocumentSnapshot<DocumentData>): Recipe {
   const data = d.data() || {}
   return {
@@ -46,7 +31,6 @@ export function mapRecipe(d: QueryDocumentSnapshot<DocumentData>): Recipe {
   }
 }
 
-/** Baris bahan resep dari form → bentuk Firestore (port setia). */
 export function cleanRecipeItems(items: unknown): RecipeItem[] {
   return ((items as DocumentData[] | undefined) || [])
     .map((it) => ({
@@ -66,7 +50,6 @@ export interface PatunganParticipant {
   paidAt?: string
 }
 
-/** Bentuk dokumen `patungan` (port setia — field Firestore apa adanya). */
 export interface PatunganItem {
   id: string
   title: string
@@ -80,7 +63,6 @@ export interface PatunganItem {
   status: string
 }
 
-/** Bentuk dokumen paket rutin/hajatan (port setia — field Firestore apa adanya). */
 export interface ServicePackageRecord {
   id: string
   name: string
@@ -112,31 +94,21 @@ export interface RecipeInput {
   items: RecipeItem[]
 }
 
-/* Satu langganan publik permanen — tidak ikut terputus saat ganti mode. */
 let recipesWatched = false
 
 interface CatalogState {
-  /** Ide Masak / resep warung (publik, live) */
   recipes: Recipe[]
-  /** Resepku pelanggan */
   myRecipes: Recipe[]
-  /** Patungan Warga aktif (limit 20, hemat kuota) */
   patunganList: PatunganItem[]
   rutinPackages: ServicePackageRecord[]
   hajatanPackages: ServicePackageRecord[]
   loading: boolean
 
-  /** Langganan koleksi `recipes` (publik). Return unsub. */
   subscribeRecipes: () => () => void
-  /** Langganan my_recipes milik pelanggan. Return unsub. */
   subscribeMyRecipes: (uid: string) => () => void
-  /** Langganan patungan aktif. Return unsub. */
   subscribePatungan: () => () => void
-  /** Langganan paket rutin aktif. Return unsub (diam bila offline). */
   subscribeRutinPackages: () => () => void
-  /** Langganan paket hajatan aktif. Return unsub (diam bila offline). */
   subscribeHajatanPackages: () => () => void
-  /** Bersihkan state lingkup peran. */
   clearRole: () => void
 
   saveRecipe: (data: RecipeInput, id?: string) => Promise<void>
@@ -190,7 +162,6 @@ export const useCatalogStore = create<CatalogState>()((set) => ({
         set({ myRecipes: snap.docs.map((d) => mapRecipe(d)) })
       },
       (err) => {
-        /* diam bila aturan belum dipublish */
         console.error('[KasirQuh] langganan "my_recipes" gagal:', err)
       },
     )

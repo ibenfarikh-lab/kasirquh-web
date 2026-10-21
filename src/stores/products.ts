@@ -1,13 +1,3 @@
-/**
- * KasirQuh React — src/stores/products.ts
- * REFERENSI pola store: pengganti js/store/products.js + mapper mapProduct.
- *
- * Pola yang WAJIB diikuti store lain:
- * - zustand create() dengan state + actions
- * - subscribe(): pasang onSnapshot modular, return unsub
- * - tulis: requireOnline() dulu, timeout 30 dtk, pesan error jujur
- * - mapper: Firestore doc -> tipe UI (lihat src/types.ts)
- */
 import { create } from 'zustand'
 import {
   collection,
@@ -77,7 +67,6 @@ export interface CsvProductItem {
 interface ProductsState {
   products: Product[]
   loading: boolean
-  /** Mulai langganan live; panggil sekali saat boot. Return unsub. */
   subscribe: () => () => void
   refresh: () => Promise<void>
   save: (data: ProductFormData, id?: string) => Promise<void>
@@ -111,7 +100,6 @@ export const useProductsStore = create<ProductsState>()((set, get) => ({
   },
 
   refresh: async () => {
-    // one-shot reload (langganan live tetap jalan via subscribe)
     const snap = await getDocs(collection(getDb(), 'products'))
     const products = snap.docs
       .map((d) => mapProduct(d))

@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/TitipPage.tsx
- * Pengganti TitipSheet (#titipModal) — halaman penuh, bukan modal.
- */
 import { useState } from 'react'
 
 import { toast } from '../../components/ui'

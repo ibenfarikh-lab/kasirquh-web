@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/InboxPage.tsx
- * Pengganti #pesananView + js/features/admin/inbox.js + renderInbox().
- * Pusat notifikasi: dikelompokkan (stok, pesanan, titipan, chat, pendaftaran),
- * bisa dilipat, ditandai dibaca per grup / semua.
- */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot, adminRoute } from '../../features/admin/useAdminBoot'

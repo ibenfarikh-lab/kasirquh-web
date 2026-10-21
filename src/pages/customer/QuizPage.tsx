@@ -1,12 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/QuizPage.tsx
- * Pengganti QuizSheet (#priceGuessModal; Tebak Harga; js/features/customer/quiz.js —
- * fungsi di kode lama berstatus TUNDA, diport dari implementasi app.js) —
- * halaman penuh, bukan modal.
- *
- * TODO(koordinator): hadiah koin masih lokal — gantikan dengan Store.grantCoins
- * saat worker koin selesai.
- */
 import { useEffect, useState } from 'react'
 import { useProductsStore } from '../../stores/products'
 import { money } from '../../lib/format'
@@ -60,13 +51,11 @@ export default function QuizPage() {
 
   const alreadyPlayed = lastGuessDate === todayKeyJakarta()
 
-  // Sheet lama me-reset soal tiap dibuka; di halaman, reset saat mount.
   useEffect(() => {
     setQuestion(makeQuestion(products))
     setDone(false)
     setPicked(null)
     setResult(products.length ? 'Pilih satu jawaban.' : 'Belum ada produk untuk permainan tebak harga.')
-    // soal sengaja dibuat sekali per mount — products masuk deps akan mengganti soal saat user sedang menjawab
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -77,7 +66,6 @@ export default function QuizPage() {
     const correct = price === question.product.price
     const reward = settings.coinRewards.guess
     if (correct && !alreadyPlayed && settings.coinProgramEnabled && settings.coinEvents.guess && reward > 0) {
-      // TODO(worker-koin): Store.grantCoins(uid, reward, { reason: 'tebak_harga', ... }).
       grant(reward, {
         label: 'Hadiah tebak harga',
         detail: 'Jawaban benar ' + todayKeyJakarta(),

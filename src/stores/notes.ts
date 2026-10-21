@@ -1,14 +1,3 @@
-/**
- * KasirQuh React — src/stores/notes.ts
- * Catatan: kasbon pelanggan, memo toko, titipan barang. Pengganti
- * js/store/notes.js (addCustomerNote, addStoreMemo, deleteStoreMemo,
- * submitTitipRequest, setTitipStatus) + mapCustomerNote dari js/store/core.js
- * + langganan customer_notes/store_memos/titip_requests dari js/store/chat.js.
- *
- * Pola: zustand create() dengan state + actions; subscribe() pasang
- * onSnapshot modular dan return unsub; tulis requireOnline() dulu +
- * timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   addDoc,
@@ -67,7 +56,6 @@ function dateTimeOf(ts: { toDate?: () => Date } | null | undefined): string {
   }
 }
 
-/** Kunci tanggal YYYY-MM-DD → 'Senin, 7 Oktober 2026' (id-ID) */
 function formatTanggalIndonesia(key: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(key || ''))
   if (!m) return ''
@@ -85,7 +73,6 @@ function formatTanggalIndonesia(key: string): string {
   }
 }
 
-/** Sortir dokumen di klien berdasar timestamp (hindari composite index manual). */
 function sortDocsDesc(
   docs: QueryDocumentSnapshot<DocumentData>[],
   field: string,
@@ -97,7 +84,6 @@ function sortDocsDesc(
   return docs.slice().sort((a, b) => ms(b.data() || {}) - ms(a.data() || {}))
 }
 
-/** Mapper Firestore -> bentuk UI (port setia mapCustomerNote). */
 export function mapCustomerNote(d: QueryDocumentSnapshot<DocumentData>): CustomerNote {
   const data = d.data() || {}
   return {
@@ -106,7 +92,6 @@ export function mapCustomerNote(d: QueryDocumentSnapshot<DocumentData>): Custome
     type: data.type || 'catatan',
     amount: Math.round(Number(data.amount) || 0),
     note: String(data.note || ''),
-    /* Tanggal catatan (noteDate) didahulukan; bila tidak ada pakai createdAt */
     time: data.noteDate
       ? formatTanggalIndonesia(data.noteDate)
       : data.createdAt
@@ -140,21 +125,14 @@ function mapTitipRequest(d: QueryDocumentSnapshot<DocumentData>): TitipRequest {
 }
 
 interface NotesState {
-  /** Catatan & tagihan dari toko untuk pelanggan sesi (kasbon digital) */
   customerNotesList: CustomerNote[]
-  /** Catatan pelanggan — admin (moderasi) */
   adminCustomerNotes: CustomerNote[]
-  /** Catatan Toko: pengingat internal admin */
   storeMemos: StoreMemo[]
-  /** Titipan barang pelanggan */
   titipRequests: TitipRequest[]
   loading: boolean
 
-  /** Langganan customer_notes milik pelanggan. Return unsub. */
   subscribeCustomerNotes: (uid: string) => () => void
-  /** Langganan admin: customer_notes + store_memos + titip_requests. Return unsub gabungan. */
   subscribeAdminNotes: () => () => void
-  /** Bersihkan state lingkup peran. */
   clearRole: () => void
 
   addCustomerNote: (input: {
@@ -235,7 +213,6 @@ export const useNotesStore = create<NotesState>()((set) => ({
         try {
           u()
         } catch {
-          /* abaikan */
         }
       })
     }

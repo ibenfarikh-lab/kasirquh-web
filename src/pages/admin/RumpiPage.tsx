@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/AdminRumpiPage.tsx
- * Halaman Rumpi Warga mode admin (moderasi): posting sebagai Mimi,
- * hapus postingan pelanggan, suka. Diakses dari hub /admin/chat.
- */
 import { useEffect, useRef, useState } from 'react'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'
@@ -68,7 +63,6 @@ export default function AdminRumpiPage() {
   )
 }
 
-/* ---------- Feed Rumpi mode admin (moderasi) ---------- */
 
 function RumpiFeed({ messages }: { messages: RumpiMessage[] }) {
   const deleteRumpi = useLocalAdminStore((s) => s.deleteRumpi)

@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/TokoChatPage.tsx
- * Pengganti ThreadSheet (#directChatModal) — halaman penuh, bukan modal.
- * Konten mengalir natural tanpa ruang kosong menggantung seperti di sheet.
- */
 import { useEffect, useRef, useState } from 'react'
 
 import { Icon, EmptyNote, toast } from '../../components/ui'

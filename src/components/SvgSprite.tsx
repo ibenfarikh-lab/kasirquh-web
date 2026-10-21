@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/components/SvgSprite.tsx
- * Sprite SVG inline (port pola vanilla: 39 simbol di index.html).
- * Referensi via <use href="#id"/> — tidak bergantung file eksternal.
- */
 export function SvgSprite() {
   return (
     <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">

@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/components/AdminNav.tsx
- * Pengganti nav.bottom-nav admin: 5 tombol (Beranda, Kasir, Inbox, Catatan, Menu).
- * Badge Inbox = jumlah notifikasi belum dibaca.
- */
 import { NavLink, useLocation } from 'react-router-dom'
 import { Icon } from './ui'
 import { useInboxUnread } from '../features/admin/localAdmin'

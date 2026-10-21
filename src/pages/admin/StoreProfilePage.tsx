@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/StoreProfilePage.tsx
- * Halaman Profil Toko (dulu StoreProfileSheet): #storeProfileModal
- * (identitas & jam operasional toko).
- */
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '../../components/ui'
@@ -31,10 +26,6 @@ export default function StoreProfilePage() {
   const [phone, setPhone] = useState(storePhone)
   const [saving, setSaving] = useState(false)
 
-  /* Pengaman form settings (pola yang sama di semua form pengaturan):
-   * field yang belum disentuh user mengikuti snapshot settings terbaru;
-   * alamat & telepon kini dibaca dari dokumen — dulu teks contoh hardcode
-   * yang selalu menimpa nilai live setiap kali profil disimpan. */
   const dirtyRef = useRef<Set<ProfileField>>(new Set())
   useEffect(() => {
     if (!settingsLoaded) return
@@ -52,7 +43,6 @@ export default function StoreProfilePage() {
       return
     }
     if (dirtyRef.current.size === 0) {
-      /* Simpan tanpa perubahan: tidak menulis apa pun ke Firestore. */
       navigate(-1)
       toast('Tidak ada perubahan')
       return

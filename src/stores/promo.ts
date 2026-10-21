@@ -1,15 +1,3 @@
-/**
- * KasirQuh React — src/stores/promo.ts
- * Program Koin Warga + kelola promo. Pengganti:
- * - js/store/promo.js (savePromo, setPromoActive, deletePromo)
- * - langganan coin_ledger + S.promosAdmin dari js/store/chat.js
- * - runDailyCheckin + claimMissionCoins dari js/features/customer/coins.js
- * - fungsi hitung koin dari js/store/checkout.js & js/app.js
- *
- * Pola: zustand create() dengan state + actions; subscribe() pasang
- * onSnapshot modular dan return unsub; tulis requireOnline() dulu +
- * timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   addDoc,
@@ -79,19 +67,8 @@ function mapCoinEntry(d: DocumentData): CoinEntry {
 
 export type CheckinResult = 'claimed' | 'sudah' | 'nonaktif' | 'tamu'
 
-/** Janji check-in yang sedang berjalan. Re-run konkuren (effect double-fire,
- *  tombol manual ditekan saat auto-checkin jalan, dsb.) memakai janji yang
- *  SAMA agar UI sesi ini tidak memproses dua kali. Anti-klaim-ganda antar
- *  perangkat ditegakkan server-side: grantCoins mengecek lastCheckin di
- *  dalam runTransaction — janji ini bukan lagi penegaknya. */
 let checkinInflight: Promise<CheckinResult> | null = null
 
-/**
- * Inti check-in harian — port runDailyCheckin() vanilla
- * (js/features/customer/coins.js): cek lastCheckin dokumen, cek program,
- * grant 'harian' + toast. Guard sesi (tamu/dailyCheckedIn/doc) ada di
- * checkin(); fungsi ini hanya dipanggil setelah guard lolos.
- */
 async function runCheckinOnce(
   customerId: string,
   myCustomerDoc: { lastCheckin?: string },
@@ -122,7 +99,7 @@ async function runCheckinOnce(
         detail: 'Bonus hari ini',
       })
     markDone()
-    if (!granted) return 'sudah' // transaksi menolak: sudah diklaim (perangkat lain)
+    if (!granted) return 'sudah'
     setTimeout(() => {
       toast('Bonus harian · +' + settings.coinRewards.checkin + ' Koin Warga')
     }, 180)
@@ -138,34 +115,23 @@ async function runCheckinOnce(
   }
 }
 
-/** Dokumen `promos` mentah + id (untuk kelola admin). */
 export interface PromoAdminRecord extends Promo {
   [key: string]: unknown
 }
 
 interface PromoState {
-  /** Saldo koin sesi (live dari customers/{uid}.coins) */
   coinBalance: number
-  /** Riwayat koin milik pelanggan (live dari coin_ledger) */
   coinHistory: CoinEntry[]
-  /** Check-in harian sudah diproses sesi ini */
   dailyCheckedIn: boolean
-  /** Promo SEMUA (termasuk nonaktif) — khusus kelola admin */
   promosAdmin: PromoAdminRecord[]
 
   setCoinBalance: (n: number) => void
-  /** Langganan riwayat koin sendiri. Return unsub. */
   subscribeCoinHistory: (uid: string) => () => void
-  /** Langganan promo (semua, admin). Return unsub. */
   subscribePromosAdmin: () => () => void
-  /** Bersihkan state lingkup peran. */
   clearRole: () => void
 
-  /** Check-in harian: klaim bonus bila belum diambil hari ini. */
   checkin: () => Promise<CheckinResult>
-  /** Label status check-in untuk UI (cermin teks DOM kode lama). */
   checkinLabel: () => string
-  /** Klaim hadiah misi/tebak-harga (sekali per claimKey). */
   claimMission: (
     detailLabel: string,
     claimKey: string,
@@ -232,7 +198,6 @@ export const usePromoStore = create<PromoState>()((set, get) => ({
     if (session.isGuest || get().dailyCheckedIn || !session.customerId || !myCustomerDoc) {
       return 'tamu'
     }
-    // Grant sedang berjalan: pakai janji yang sama, jangan grant ulang.
     if (checkinInflight) return checkinInflight
     const run = runCheckinOnce(session.customerId, myCustomerDoc)
     checkinInflight = run
@@ -329,9 +294,7 @@ export const usePromoStore = create<PromoState>()((set, get) => ({
   },
 }))
 
-/* ================= fungsi hitung koin (murni) ================= */
 
-/** Bonus koin belanja: floor(total / coinSpendRule) * coinSpendReward. */
 export function calcEarnedCoins(total: number): number {
   const s = useSettingsStore.getState()
   if (
@@ -345,10 +308,6 @@ export function calcEarnedCoins(total: number): number {
   return 0
 }
 
-/**
- * Penukaran koin maksimal: dibatasi persen belanja (coinRedeemLimit) dan
- * saldo. Cermin coinRedemption() di js/app.js.
- */
 export function calcMaxRedeem(total: number, balance: number): { coins: number; value: number } {
   const s = useSettingsStore.getState()
   if (!s.coinProgramEnabled || s.coinRate <= 0 || s.coinRedeemLimit <= 0) {

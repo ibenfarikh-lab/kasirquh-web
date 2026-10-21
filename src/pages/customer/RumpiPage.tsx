@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/RumpiPage.tsx
- * Pengganti RumpiSheet (#customerRumpiModal) — halaman penuh, bukan modal.
- * Konten mengalir natural tanpa ruang kosong menggantung seperti di sheet.
- */
 import { useEffect, useRef, useState } from 'react'
 
 import { Icon, toast } from '../../components/ui'

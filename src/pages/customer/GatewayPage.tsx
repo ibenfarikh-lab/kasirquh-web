@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/GatewayPage.tsx
- * Pengganti section #gateway + js/init/gateway.js:
- * carousel promo, tombol Masuk/Lewati, adminHotspot.
- */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
@@ -43,7 +38,6 @@ export default function GatewayPage() {
 
 
   const goGuest = useCallback(() => {
-    // Selesai gateway -> dashboard sesi tersimpan jika ada, else mode tamu.
     if (timer.current) clearTimeout(timer.current)
     const s = useAuthStore.getState().session
     if (!s.isGuest) {
@@ -78,7 +72,6 @@ export default function GatewayPage() {
         goGuest()
       }
     }, ADVANCE_MS)
-    // deps disengaja minimal [goGuest, showSlide] — selain itu hanya ref & konstanta modul yang tidak wajib masuk deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goGuest, showSlide])
 
@@ -90,7 +83,6 @@ export default function GatewayPage() {
     } else {
       goGuest()
     }
-    // deps disengaja minimal — selain callback hanya ref & konstanta modul yang tidak wajib masuk deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goGuest, showSlide, schedule])
 
@@ -100,18 +92,15 @@ export default function GatewayPage() {
     return () => {
       if (timer.current) clearTimeout(timer.current)
     }
-    // jalan sekali per mount — callback sengaja tidak masuk deps agar timer tidak di-restart saat settings berubah
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Hentikan timer auto-skip saat modal login/admin terbuka (jangan tendang ke dashboard).
   useEffect(() => {
     if (authOpen || adminOpen) {
       if (timer.current) clearTimeout(timer.current)
     } else {
       schedule()
     }
-    // schedule sengaja tidak masuk deps agar buka-tutup modal login tidak me-reset timer slide gateway
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authOpen, adminOpen])
 

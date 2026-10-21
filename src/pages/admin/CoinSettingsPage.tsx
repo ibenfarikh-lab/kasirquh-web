@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/CoinSettingsPage.tsx
- * Halaman (dulu CoinSettingsSheet): Kendali Koin Warga.
- * Pengganti #coinSettingsModal + #adjustCoinModal + #bonusEventModal.
- * Kendali Koin Warga: program on/off, nilai, batas tukar, event & hadiah,
- * aturan belanja, bonus massal, dan koreksi saldo per pelanggan.
- */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
@@ -61,10 +54,6 @@ export default function CoinSettingsPage() {
   const [adjustTarget, setAdjustTarget] = useState<Customer | null>(null)
   const [bonusOpen, setBonusOpen] = useState(false)
 
-  /* Pengaman form settings (pola yang sama di semua form pengaturan):
-   * field yang belum disentuh user mengikuti snapshot settings terbaru;
-   * sebelum settingsLoaded form berisi nilai bawaan — simpan dalam keadaan
-   * itu menimpa nilai koin live, jadi simpan digerbang sampai termuat. */
   const dirtyRef = useRef<Set<CoinField>>(new Set())
   useEffect(() => {
     if (!settingsLoaded) return
@@ -108,7 +97,6 @@ export default function CoinSettingsPage() {
       return
     }
     if (dirtyRef.current.size === 0) {
-      /* Simpan tanpa perubahan: tidak menulis apa pun ke Firestore. */
       toast('Tidak ada perubahan')
       navigate('/admin/menu')
       return
@@ -328,7 +316,6 @@ export default function CoinSettingsPage() {
   )
 }
 
-/* ---------- Ubah saldo koin (pengganti #adjustCoinModal) ---------- */
 
 function AdjustCoinSheet({
   target,
@@ -425,7 +412,6 @@ function AdjustCoinSheet({
   )
 }
 
-/* ---------- Event bonus (pengganti #bonusEventModal) ---------- */
 
 function BonusEventSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const grantBonusToAll = useLocalAdminStore((s) => s.grantBonusToAll)

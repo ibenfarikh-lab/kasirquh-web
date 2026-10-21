@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/AdminTokoPage.tsx
- * Halaman Chat Toko mode admin: daftar percakapan pelanggan + balasan langsung.
- * Diakses dari hub /admin/chat.
- */
 import { useEffect, useRef, useState } from 'react'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'
@@ -15,7 +10,6 @@ export default function AdminTokoPage() {
   const [threadOpen, setThreadOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
-  // Back browser menutup overlay percakapan (route-based, sama seperti Sheet).
   useSheetRoute('chat-thread', threadOpen, () => setThreadOpen(false))
 
   const directThreads = useLocalAdminStore((s) => s.directThreads)
@@ -28,7 +22,6 @@ export default function AdminTokoPage() {
     setThreadOpen(true)
   }
 
-  // Urutkan: yang di-pin selalu di atas (urutan pin), lalu aktivitas terbaru.
   const pinRank = new Map(pinnedChatIds.map((id, i) => [id, i]))
   const threads = Object.values(directThreads).sort((a, b) => {
     const pa = a.pinned ? (pinRank.get(a.id) ?? 999) : 999
@@ -150,7 +143,6 @@ export default function AdminTokoPage() {
   )
 }
 
-/* ---------- Percakapan langsung (pengganti #directChatModal) ---------- */
 
 function DirectChatInline({ onClose }: { onClose: () => void }) {
   const directThreads = useLocalAdminStore((s) => s.directThreads)
@@ -177,7 +169,6 @@ function DirectChatInline({ onClose }: { onClose: () => void }) {
       toast('Pilih percakapan dulu')
       return
     }
-    // optimistic: tampilkan langsung
     setText('')
     setSending(true)
     sendChatMessage(activeDirectThread, isi)

@@ -1,13 +1,7 @@
-/**
- * KasirQuh React — src/components/ui.tsx
- * Primitif UI bersama. Class CSS dipakai apa adanya dari app.css lama
- * agar tampilan 1:1 — JANGAN rename class.
- */
 import { useEffect, useId, type ReactNode, type MouseEvent } from 'react'
 import { create } from 'zustand'
 import { useSheetRoute } from '../lib/sheetRoute'
 
-/* ---------- Icon: sprite SVG inline (SvgSprite, 39 simbol — port vanilla) ---------- */
 export function Icon({
   name,
   className = 'icon',
@@ -24,7 +18,6 @@ export function Icon({
   )
 }
 
-/* ---------- Sheet: pengganti openSheet()/closeSheets() + .modal/.sheet ---------- */
 
 export function Sheet({
   open,
@@ -39,13 +32,10 @@ export function Sheet({
   children: ReactNode
   sheetClassName?: string
   labelledBy?: string
-  /** Id unik untuk back-button route-based. Default: useId (tanpa ubah pemakai). */
   sheetId?: string
 }) {
   const autoId = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   const id = sheetId || `sheet-${autoId}`
-  // Back browser menutup sheet via search param (Opsi A). Semua 15 pemakai
-  // otomatis dapat perilaku ini tanpa perubahan.
   useSheetRoute(id, open, onClose)
   useEffect(() => {
     if (!open) return
@@ -98,14 +88,6 @@ export function SheetHeader({
   )
 }
 
-/* ---------- Toast: pengganti toast() global — interaktif (2026-10-20) ----------
- * Backward compatible: toast("pesan") tetap jalan seperti dulu.
- * Baru (opsional, opts ke-2):
- *   type:    'success' | 'warning' | 'error' | 'info' — warna + ikon otomatis
- *   action:  { label, onClick } — tombol di dalam toast (mis. "Lihat"/"Batal")
- *   duration: ms tampil (default 3200)
- * Ketuk toast = langsung tutup; bar tipis di bawah menunjukkan sisa waktu.
- */
 export type ToastType = 'success' | 'warning' | 'error' | 'info'
 
 export interface ToastAction {
@@ -139,8 +121,6 @@ const TOAST_DEFAULT_DURATION = 3200
 export const useToastStore = create<ToastState>()((set, get) => ({
   items: [],
   push: (message, opts) => {
-    // Anti-tumpuk: pesan yang sama persis & masih tampil → jangan diduplikasi
-    // (cegah toast berlapis-lapis saat aksi yang sama diulang cepat).
     if (get().items.some((t) => t.message === message)) return
     const id = toastSeq++
     const duration = Math.max(500, opts?.duration ?? TOAST_DEFAULT_DURATION)
@@ -151,7 +131,6 @@ export const useToastStore = create<ToastState>()((set, get) => ({
       action: opts?.action,
       duration,
     }
-    // Maksimal 2 toast tampil bersamaan (model pill bawah): yang tertua dibuang.
     set((s) => ({ items: [...s.items, item].slice(-2) }))
     setTimeout(() => {
       set((s) => ({ items: s.items.filter((t) => t.id !== id) }))
@@ -160,12 +139,10 @@ export const useToastStore = create<ToastState>()((set, get) => ({
   dismiss: (id) => set((s) => ({ items: s.items.filter((t) => t.id !== id) })),
 }))
 
-/** Pengganti global toast(msg) dari kode lama. */
 export function toast(message: string, opts?: ToastOptions): void {
   useToastStore.getState().push(message, opts)
 }
 
-/** Ikon per tipe toast (nama = simbol SvgSprite yang sudah ada). */
 const TOAST_ICONS: Record<ToastType, string> = {
   success: 'check',
   warning: 'alert',
@@ -215,7 +192,6 @@ export function Toaster() {
   )
 }
 
-/* ---------- Util kecil ---------- */
 export function EmptyNote({ children }: { children: ReactNode }) {
   return <div className="empty-note">{children}</div>
 }

@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/RutinPage.tsx
- * Pengganti RutinSheet (#rutinModal) — halaman penuh, bukan modal.
- *
- * TODO(koordinator): jadwal rutin disimpan lokal — gantikan dengan dokumen
- * customers/{uid} (worker auth) saat tersedia.
- */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
@@ -55,7 +48,6 @@ export default function RutinPage() {
       navigate('/beranda/keranjang')
       return
     }
-    // Fallback paket bawaan (port verbatim dari app.js)
     const specs =
       activeChoice === 'minum'
         ? [

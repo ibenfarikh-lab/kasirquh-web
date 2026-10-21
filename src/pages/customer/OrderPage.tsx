@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/OrderPage.tsx
- * Pengganti OrderSheet (#orderModal; port renderActiveOrder) —
- * halaman penuh, bukan modal. Pesanan diambil dari param route :id.
- */
 import { useParams } from 'react-router-dom'
 import { money } from '../../lib/format'
 import { useOrdersLocal } from '../../features/customer/local'
@@ -12,8 +7,6 @@ export default function OrderPage() {
   const activeOrder = useOrdersLocal((s) => s.activeOrder)
   const history = useOrdersLocal((s) => s.history)
 
-  // Pertahankan perilaku sheet: tampilkan pesanan aktif; cocokkan dengan :id
-  // bila diberikan, fallback ke riwayat untuk id yang cocok.
   const activeMatch = activeOrder && (!id || activeOrder.id === id) ? activeOrder : null
   const historyMatch = !activeMatch ? history.find((o) => o.id === id) || null : null
   const shownId = activeMatch ? activeMatch.id : historyMatch ? historyMatch.id : null

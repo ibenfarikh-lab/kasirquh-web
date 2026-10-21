@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/sw.ts
- * Service worker kustom (vite-plugin-pwa injectManifest):
- * workbox precaching + Firebase Cloud Messaging background handler.
- */
 /// <reference lib="webworker" />
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching'
 import { skipWaiting, clientsClaim } from 'workbox-core'
@@ -18,26 +13,21 @@ declare const self: ServiceWorkerGlobalScope & {
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
-/* Aktif segera & ambil alih tab yang terbuka — tanpa ini SW baru hanya
-   'menunggu' dan user harus hapus cache manual untuk dapat versi baru. */
 skipWaiting()
 clientsClaim()
 
-/* Terima perintah update dari aplikasi (tombol "Update tersedia") */
 self.addEventListener('message', (e) => {
   if ((e.data as { type?: string })?.type === 'SKIP_WAITING') {
     void self.skipWaiting()
   }
 })
 
-/* SPA fallback: semua navigasi (kecuali /__/* dan /games/*) ke index.html */
 registerRoute(
   new NavigationRoute(createHandlerBoundToURL('/index.html'), {
     denylist: [/^\/__/, /^\/games\//],
   }),
 )
 
-/* ---------- FCM: push saat aplikasi di background/tertutup ---------- */
 const firebaseApp = initializeApp({
   apiKey: 'AIzaSyDyI4SeDiLg8vSAhwrjHAWQQ3W49Jnp6Ks',
   authDomain: 'kasirquh-app.firebaseapp.com',
@@ -60,7 +50,6 @@ try {
     self.registration.showNotification(title, options)
   })
 } catch {
-  /* messaging tidak didukung — abaikan */
 }
 
 self.addEventListener('notificationclick', (event) => {

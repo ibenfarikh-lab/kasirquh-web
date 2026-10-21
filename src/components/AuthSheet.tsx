@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/components/AuthSheet.tsx
- * Sheet Masuk/Daftar pelanggan — dipakai di GatewayPage dan global
- * (CustomerLayout) agar tamu yang menyentuh fitur terkunci langsung
- * mendapat modal login tanpa pindah halaman.
- */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/auth'
@@ -13,8 +7,6 @@ import { Icon, Sheet, toast } from './ui'
 
 export function AuthSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
-  // Kalimat ajakan kontekstual pola Native "Masuk dulu untuk ..." (bila
-  // sheet dibuka dari gerbang tamu); null = kalimat bawaan.
   const loginMessage = useAuthStore((s) => s.loginSheetMessage)
   const [tab, setTab] = useState<'login' | 'register'>('login')
   const [name, setName] = useState('')
@@ -39,7 +31,6 @@ export function AuthSheet({ open, onClose }: { open: boolean; onClose: () => voi
     }
   }, [open])
 
-  /** Tawarkan pendaftaran sidik jari setelah login manual berhasil. */
   function bioOfferEnroll(loginEmail: string, loginPassword: string) {
     bioIsSupported()
       .then((supported) => {
@@ -89,7 +80,6 @@ export function AuthSheet({ open, onClose }: { open: boolean; onClose: () => voi
     try {
       await useAuthStore.getState().loginCustomer(email.trim().toLowerCase(), password)
       onClose()
-      // Lanjutkan aksi tamu yang tertunda (mis. checkout) — port finishCustomerLogin.
       const pending = useAuthStore.getState().pendingGuestAction
       useAuthStore.getState().setPendingGuestAction(null)
       if (pending === 'checkout') {

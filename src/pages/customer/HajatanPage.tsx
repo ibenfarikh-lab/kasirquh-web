@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/HajatanPage.tsx
- * Pengganti HajatanSheet (#hajatanModal) — halaman penuh, bukan modal.
- */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
@@ -43,7 +39,6 @@ export default function HajatanPage() {
       navigate('/beranda/keranjang')
       return
     }
-    // Fallback paket bawaan (port verbatim dari app.js)
     if (activeChoice === 'snack') {
       const cheapest = useProductsStore
         .getState()

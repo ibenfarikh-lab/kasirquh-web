@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/BudgetPage.tsx
- * Pengganti BudgetSheet (Mode Anggaran V2) — halaman penuh, bukan modal.
- */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
@@ -9,7 +5,6 @@ import { useCartStore } from '../../stores/cart'
 import { money, groupedNumber, numericValue } from '../../lib/format'
 import type { CartMap } from '../../types'
 
-/** Port getBudgetEligible() (js/features/customer/services.js). */
 function getBudgetEligible() {
   const products = useProductsStore.getState().products
   return products.filter((p) => p.isActive !== false && p.stock > 0 && p.price > 0 && p.budgetEligible !== false)
@@ -28,7 +23,6 @@ export default function BudgetPage() {
 
   const amount = numericValue(amountText)
 
-  // Port calculateBudget(): termurah dulu, hormati budgetMaxQty & stok.
   const bundle: CartMap = useMemo(() => {
     const picked = eligible.filter((p) => selected.has(p.id)).sort((a, b) => a.price - b.price)
     if (!amount || !picked.length) return {}

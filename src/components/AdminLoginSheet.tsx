@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/components/AdminLoginSheet.tsx
- * Sheet login admin — dipakai di GatewayPage (hotspot) dan global
- * (CustomerLayout) agar bisa dibuka dari logo toko di beranda.
- */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/auth'

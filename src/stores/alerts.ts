@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/stores/alerts.ts
- * Pantau harga. Pengganti S.priceAlerts + priceWatching() dari js/app.js.
- * Disimpan di localStorage (perangkat) — sederhana & offline-friendly.
- */
 import { create } from 'zustand'
 import type { PriceAlert } from '../types'
 
@@ -22,7 +17,6 @@ function persist(alerts: PriceAlert[]) {
   try {
     localStorage.setItem(KEY, JSON.stringify(alerts))
   } catch {
-    /* abaikan */
   }
 }
 
@@ -37,7 +31,6 @@ export const useAlertsStore = create<AlertsState>()((set, get) => ({
 
   isWatching: (productId) => get().alerts.some((a) => a.productId === productId),
 
-  /** Toggle pantau; return true bila sekarang dipantau. */
   toggle: (alert) => {
     const exists = get().alerts.some((a) => a.productId === alert.productId)
     const alerts = exists

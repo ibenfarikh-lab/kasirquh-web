@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/StockShoppingPage.tsx
- * Halaman (dulu StockShoppingSheet): belanja stok.
- * Pengganti #stockShoppingModal + #stockSummaryModal + js/features/admin/stock.js.
- * Belanja Stok: saran kulakan otomatis -> checklist -> ringkasan -> simpan
- * (stok nambah, modal & harga jual tersimpan, jurnal kulakan, arsip stock_notes).
- */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
@@ -88,7 +81,6 @@ export default function StockShoppingPage() {
   useEffect(() => {
     setThreshold(lowStockThreshold)
     setSpendManual(false)
-    // inisialisasi form sekali per mount — ambang batas dari store hanya dipakai sebagai nilai awal agar tidak menimpa isian user
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -1,15 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/CatalogPage.tsx
- * REFERENSI pola halaman: pengganti renderCustomer() + renderCatalogCats()
- * + openProduct() + updateDetailTotal() dari js/app.js.
- *
- * Pola yang WAJIB diikuti halaman lain:
- * - baca state dari zustand store (bukan global S)
- * - class CSS dipakai apa adanya dari app.css — JANGAN rename
- * - teks Indonesia dipertahankan verbatim
- * - Sheet untuk modal (bukan manipulasi DOM manual)
- * - Icon dari sprite via komponen <Icon/>
- */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
@@ -167,7 +155,6 @@ export default function CatalogPage() {
         onClose={() => setDetailId(null)}
         onAsk={(p) => {
           setDetailId(null)
-          // Chat adalah tab bergembok: tamu → sheet login, bukan halaman chat.
           if (useAuthStore.getState().session.isGuest) {
             useAuthStore.getState().openLoginSheet('chat', 'Masuk dulu untuk chat dengan warung')
             return
@@ -179,7 +166,6 @@ export default function CatalogPage() {
   )
 }
 
-/* ---------- Sheet detail produk (pengganti #productModal + openProduct()) ---------- */
 function ProductDetailSheet({
   productId,
   onClose,
@@ -197,7 +183,6 @@ function ProductDetailSheet({
   const toggleAlert = useAlertsStore((s) => s.toggle)
   const [qty, setQty] = useState(1)
 
-  // reset qty tiap ganti produk (pengganti S.detailQty)
   const [lastId, setLastId] = useState<string | null>(null)
   if (productId !== lastId) {
     setLastId(productId)
@@ -263,7 +248,6 @@ function ProductDetailSheet({
               aria-label="Tambah"
               onClick={() =>
                 setQty((v) => {
-                  // Port vanilla: batasi jumlah maksimal sesuai stok.
                   const stock = Number(product.stock) || 0
                   if (weight) {
                     const max = Math.max(0.1, stock || 99)

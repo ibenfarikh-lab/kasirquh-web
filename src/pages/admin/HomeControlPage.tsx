@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/HomeControlPage.tsx
- * Halaman Pusat Kendali Beranda (dulu HomeControlSheet):
- * #homeControlModal. Info toko & teks berjalan,
- * slide gateway, promo kilat, kabar warung, susunan bagian beranda, carousel
- * 5 slot, dan Ide Masak (tambah/ubah/hapus, maks 5).
- */
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sheet, SheetHeader, Icon, toast } from '../../components/ui'
@@ -71,11 +64,6 @@ export default function HomeControlPage() {
   const [recipeFormId, setRecipeFormId] = useState<string | null>(null)
   const [recipeFormOpen, setRecipeFormOpen] = useState(false)
 
-  /* Pengaman form settings (pola yang sama di semua form pengaturan):
-   * field yang belum disentuh user selalu mengikuti snapshot settings
-   * terbaru; field yang sudah diedit user tidak pernah ditimpa. Sebelum
-   * settingsLoaded, form TIDAK diisi dari nilai bawaan/kosong — itulah
-   * vektor yang dulu menimpa runningText live menjadi ''. */
   const dirtyRef = useRef<Set<keyof Form>>(new Set())
   useEffect(() => {
     if (!settingsLoaded) return
@@ -116,7 +104,6 @@ export default function HomeControlPage() {
       return
     }
     if (dirtyRef.current.size === 0) {
-      /* Simpan tanpa perubahan: tidak menulis apa pun ke Firestore. */
       navigate(-1)
       toast('Tidak ada perubahan')
       return
@@ -492,7 +479,6 @@ export default function HomeControlPage() {
   )
 }
 
-/* ---------- Form tambah/ubah Ide Masak (pengganti #adminRecipeModal) ---------- */
 
 function RecipeFormSheet({
   open,
@@ -527,7 +513,6 @@ function RecipeFormSheet({
       setPickQty('1')
       setSaving(false)
     }
-    // form resep hanya diisi ulang saat sheet dibuka/recipeId berubah — recipe & products dari store tidak masuk deps agar isian user tidak tertimpa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, recipeId])
 

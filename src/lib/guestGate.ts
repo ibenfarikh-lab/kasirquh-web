@@ -1,18 +1,6 @@
-/**
- * KasirQuh React — src/lib/guestGate.ts
- * Gerbang ISI mode tamu (selaras Native, perintah user 2026-10-21):
- * tidak ada akun tamu — tamu yang mendarat di konten terkunci dikembalikan
- * ke Beranda dan sheet login dibuka dengan kalimat pola Native
- * "Masuk dulu untuk ...". Tabel ini satu-satunya sumber pemetaan
- * rute → aksi tertunda + kalimat ajakan; dipakai GuestContentGuard di
- * App.tsx. Titik ketuk di halaman memakai openLoginSheet langsung dengan
- * action & kalimat yang sama dari tabel ini.
- */
 
 export interface GuestGate {
-  /** Kunci aksi tertunda — dilanjutkan AuthSheet setelah login berhasil. */
   action: string
-  /** Kalimat ajakan kontekstual pola "Masuk dulu untuk ...". */
   message: string
 }
 
@@ -26,16 +14,6 @@ export const GUEST_GATES = {
   account: { action: 'account', message: 'Masuk dulu untuk membuka Akunmu' },
 } as const satisfies Record<string, GuestGate>
 
-/**
- * Rute konten terkunci untuk tamu. Chat & Akun adalah tab bergembok;
- * sub-halamannya (Rumpi, Chat Toko, Riwayat, Catatan & Tagihan, Detail
- * Pesanan) adalah isi tab itu. Koin/Misi/Tebak Harga adalah fitur koin —
- * tamu tidak punya dompet, jadi isinya tidak pernah ditampilkan ke tamu.
- * Game Tangkap/Buru Diskon juga digerbang sejak pintu masuk (selaras
- * Native): tamu tidak bisa membuka game sama sekali. Jenis game mengikuti
- * semantik GamePage — kind 'buru-diskon' = Buru Diskon, selain itu
- * Tangkap Diskon.
- */
 export function guestGateForPath(pathname: string): GuestGate | null {
   if (pathname === '/beranda/koin') return GUEST_GATES.coin
   if (pathname === '/beranda/misi') return GUEST_GATES.missions
@@ -55,7 +33,6 @@ export function guestGateForPath(pathname: string): GuestGate | null {
   return null
 }
 
-/** Rute tujuan setelah login untuk aksi tertunda (selain checkout/chat/account bawaan AuthSheet). */
 export const PENDING_GUEST_ROUTES: Record<string, string> = {
   coin: '/beranda/koin',
   missions: '/beranda/misi',

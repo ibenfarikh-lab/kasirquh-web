@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/MenuPage.tsx
- * Pengganti #menuView: grid Kelola Warung / Kelola Pelanggan / Pengaturan.
- * Tombol data-admin-jump -> rute admin; data-open-sheet -> sheet lokal.
- */
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot, adminRoute } from '../../features/admin/useAdminBoot'
 import { Icon, toast } from '../../components/ui'
@@ -89,8 +84,6 @@ export default function MenuPage() {
             <button
               className="menu-launch settings-wide"
               onClick={async () => {
-                // Konsep terkunci: admin TIDAK boleh menjadi pelanggan.
-                // Keluar dulu → gateway → masuk sebagai pelanggan bila perlu.
                 await useAuthStore.getState().logout()
                 clearGatewaySeen()
                 navigate('/', { replace: true })

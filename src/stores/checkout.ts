@@ -1,13 +1,3 @@
-/**
- * KasirQuh React — src/stores/checkout.ts
- * Draf checkout pelanggan + kasir tunai admin. Pengganti
- * js/store/checkout.js (checkoutCustomer, completeCashSale) — logika
- * hitung (total, ongkir, diskon koin) dari js/app.js (cartTotals,
- * coinRedemption, updateCheckoutSummary).
- *
- * Pola: zustand create() dengan state + actions; tulis requireOnline()
- * dulu + timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   collection,
@@ -57,11 +47,8 @@ export interface CheckoutSummary {
 }
 
 interface CheckoutState {
-  /** Cara terima pesanan */
   fulfillment: Fulfillment
-  /** Metode bayar */
   payMethod: PayMethod
-  /** Toggle "Gunakan" koin di checkout */
   coinRedeem: boolean
   address: string
   slot: string
@@ -77,14 +64,8 @@ interface CheckoutState {
   setTransferReference: (v: string) => void
   resetDraft: () => void
 
-  /** Total keranjang pelanggan (harga promo/grosir per qty). */
   cartTotals: () => { lines: CartLine[]; total: number; itemCount: number }
-  /** Ringkasan checkout: total + ongkir − diskon koin. */
   summary: () => CheckoutSummary
-  /**
-   * Kasir admin (tunai): decrement stok atomik + jurnal penjualan.
-   * member: pelanggan teridentifikasi di kasir (opsional).
-   */
   completeCashSale: (input: {
     lines: { productId: string; qty: number; total: number }[]
     total: number
@@ -107,11 +88,6 @@ export interface CheckoutResult {
   itemCount: number
 }
 
-/**
- * Implementasi resmi checkout pelanggan — dipindahkan dari
- * pages/customer/DeliveryPage.tsx (port StoreCheckout.checkoutCustomer).
- * Satu-satunya mesin checkout: transaksi nomor urut + validasi stok + koin.
- */
 export async function checkoutCustomer(args: {
   cart: CartMap
   fulfillment: Fulfillment
@@ -139,12 +115,10 @@ export async function checkoutCustomer(args: {
 
   return withTimeout(
     runTransaction(db, async (t) => {
-      // 1. nomor urut
       const counterRef = doc(db, 'counters', 'orders')
       const counterSnap = await t.get(counterRef)
       const seq = ((counterSnap.exists() ? (counterSnap.data().seq as number) : 0) || 0) + 1
 
-      // 2. pelanggan: wajib approved; ambil saldo koin terkini
       const custRef = doc(db, 'customers', args.customerId)
       const custSnap = await t.get(custRef)
       if (!custSnap.exists() || custSnap.data().approvalStatus !== 'approved') {
@@ -152,7 +126,6 @@ export async function checkoutCustomer(args: {
       }
       const coins = Math.max(0, Math.round(Number(custSnap.data().coins) || 0))
 
-      // 3. validasi stok per item (baca ulang) + harga
       const items: { productId: string; name: string; price: number; qty: number; subtotal: number; ref: ReturnType<typeof doc> }[] = []
       let total = 0
       for (const [pid, qty] of entries) {
@@ -184,7 +157,6 @@ export async function checkoutCustomer(args: {
         items.push({ productId: pid, name: String(pd.name || 'Produk'), price: unit, qty, subtotal, ref: pRef })
       }
 
-      // 4. koin: penukaran (batas admin) + bonus belanja
       const fee = args.fulfillment === 'delivery' ? DELIVERY_FEE : 0
       const fullTotal = total + fee
       let redeemCoins = 0
@@ -201,7 +173,6 @@ export async function checkoutCustomer(args: {
         earned = Math.floor(total / args.coinSpendRule) * args.coinSpendReward
       }
 
-      // 5. tulis atomik
       const code = 'WM-' + String(seq).padStart(6, '0')
       const ts = serverTimestamp()
       t.set(counterRef, { seq }, { merge: true })
@@ -325,7 +296,6 @@ export const useCheckoutStore = create<CheckoutState>()((set, get) => ({
     const fee = get().fulfillment === 'delivery' ? DELIVERY_FEE : 0
     let redeemCoins = 0
     let redeemValue = 0
-    /* coinRedemption(): hanya bila program nyala + toggle dipakai + saldo ada */
     if (
       settings.coinProgramEnabled &&
       get().coinRedeem &&
@@ -355,16 +325,11 @@ export const useCheckoutStore = create<CheckoutState>()((set, get) => ({
         updatedAt: ts,
       })
     })
-    /* Opsi A: catat member jika teridentifikasi di kasir */
     const km = input.member || null
-    /* Opsi B: koin tukar & dapat */
     let redeemCoins = Math.max(0, Math.round(Number(input.redeemCoins) || 0))
     const earnedCoins = Math.max(0, Math.round(Number(input.earnedCoins) || 0))
     let total = Math.round(Number(input.total) || 0)
     const coinVal = Math.max(1, Math.round(Number(useSettingsStore.getState().coinRate) || 1))
-    /* Validasi ulang member saat bayar: antara scan dan pembayaran, member
-     * bisa di-reject/dihapus admin. Satu read dokumen dipakai untuk dua cek
-     * (koin & approval) — efisien, tanpa read ganda. */
     let memberDoc: DocumentData | null = null
     if (km && km.uid) {
       try {
@@ -377,7 +342,6 @@ export const useCheckoutStore = create<CheckoutState>()((set, get) => ({
         throw new Error('Member tidak valid — transaksi dibatalkan')
       }
     }
-    /* Cegah koin minus — pakai ulang memberDoc di atas. */
     if (km && km.uid && redeemCoins > 0 && memberDoc) {
       const actualCoins = Math.max(0, Math.round(Number(memberDoc.coins) || 0))
       if (redeemCoins > actualCoins) {
@@ -416,7 +380,6 @@ export const useCheckoutStore = create<CheckoutState>()((set, get) => ({
           detail: 'Potongan Rp' + (redeemCoins * coinVal).toLocaleString('id-ID'),
           createdAt: ts,
         })
-        /* Beban promosi untuk koin yang ditukar */
         batch.set(doc(collection(db, 'journal')), {
           type: 'pengeluaran',
           category: 'beban_promosi',
@@ -443,7 +406,6 @@ export const useCheckoutStore = create<CheckoutState>()((set, get) => ({
         })
       }
     }
-    /* Naikkan counter penjualan per produk agar masuk Sedang Laris */
     lines.forEach((l) => {
       batch.update(doc(db, 'products', l.productId), {
         totalTerjual: increment(l.qty),

@@ -1,11 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/CoinPage.tsx
- * Pengganti CoinSheet (#coinModal + js/features/customer/coins.js) —
- * halaman penuh, bukan modal.
- *
- * TODO(koordinator): saldo & riwayat masih lokal — gantikan dengan store koin
- * resmi (coin_ledger Firestore) saat worker koin/admin selesai.
- */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCoinLocal, useSettingsLocal } from '../../features/customer/local'
@@ -20,7 +12,6 @@ export default function CoinPage() {
   const balanceText = balance > 0 ? balance.toLocaleString('id-ID') + ' koin' : 'Belum ada koin'
   const rupiahText = balance > 0 ? 'Rp' + (balance * settings.coinValue).toLocaleString('id-ID') : 'Belum ada koin'
 
-  // Port renderCoinBanner(): pesan bergantian tiap 4 detik dari event game aktif.
   const bannerMsgs: string[] = []
   if (settings.coinProgramEnabled) {
     if (settings.coinEvents.tangkapDiskon) bannerMsgs.push('Sudah main Tangkap Diskon hari ini? 500 koin menanti!')
@@ -32,11 +23,9 @@ export default function CoinPage() {
     if (bannerMsgs.length < 2) return
     const t = setInterval(() => setBannerIdx((i) => (i + 1) % bannerMsgs.length), 4000)
     return () => clearInterval(t)
-    // interval rotasi banner jalan sekali per pembukaan — bannerMsgs dihitung ulang tiap render, masuk deps akan me-restart interval terus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Port renderCoinRuleList(): aturan dari settingan live.
   const rules = [
     'Bonus harian: +' + settings.coinRewards.checkin.toLocaleString('id-ID') + ' koin (1x sehari)',
     'Belanja: +' + settings.coinRewards.spend.toLocaleString('id-ID') + ' koin tiap Rp' + settings.coinSpendRule.toLocaleString('id-ID') + ' (otomatis)',

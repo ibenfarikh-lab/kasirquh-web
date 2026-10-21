@@ -1,9 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/HajatanAdminPage.tsx
- * Halaman (dulu HajatanAdminSheet): kelola paket hajatan.
- * Pengganti #hajatanAdminModal + js/features/admin/hajatan.js.
- * Kelola paket hajatan (nama, deskripsi, daftar produk + qty).
- */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'

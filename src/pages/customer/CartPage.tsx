@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/pages/customer/CartPage.tsx
- * Pengganti #keranjangCustomerView + js/features/customer/cart.js.
- */
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
@@ -20,7 +16,6 @@ export default function CartPage() {
   const [savedMenu, setSavedMenu] = useState<CartMap | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Auto-buka halaman checkout setelah login dari guest checkout (?delivery=1).
   useEffect(() => {
     if (searchParams.get('delivery') === '1') {
       searchParams.delete('delivery')

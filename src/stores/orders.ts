@@ -1,14 +1,3 @@
-/**
- * KasirQuh React — src/stores/orders.ts
- * Pesanan online. Pengganti js/store/orders.js (settleOrder, rejectTransfer,
- * setOrderStatus, cancelOrder, deleteOrder) + mapOrder dari js/store/core.js
- * + langganan pesanan dari js/store/chat.js. (Checkout pelanggan resmi
- * ada di stores/checkout.ts — checkoutCustomer.)
- *
- * Pola: zustand create() dengan state + actions; subscribe() pasang
- * onSnapshot modular dan return unsub; tulis requireOnline() dulu +
- * timeout 30 dtk via withTimeout + pesan error jujur.
- */
 import { create } from 'zustand'
 import {
   collection,
@@ -33,7 +22,6 @@ import { rebuildPopular, rebuildRiwayat, useSettingsStore, type PopularItem, typ
 import { useCustomersStore } from './customers'
 import { useProductsStore } from './products'
 
-/** Bentuk UI pesanan — port setia mapOrder (items tetap tuple warisan). */
 export interface OrderRecord {
   id: string
   docId: string
@@ -48,7 +36,6 @@ export interface OrderRecord {
   method: string
   transferStatus: string
   transferReference: string
-  /** [nama, "2x", "Rp1.000", productId] — bentuk warisan kode lama */
   items: [string, string, string, string][]
   total: number
   fullTotal: number
@@ -105,14 +92,13 @@ const STATUS_LABEL: Record<string, string> = {
   dibatalkan: 'Dibatalkan',
 }
 
-/** Mapper Firestore -> bentuk UI (port setia mapOrder). */
 export function mapOrder(
   d: QueryDocumentSnapshot<DocumentData>,
   wa = '',
 ): OrderRecord | null {
   const data = d.data() || {}
   const raw = data.status || 'menunggu'
-  if (raw === 'dibatalkan') return null // pesanan batal keluar dari daftar
+  if (raw === 'dibatalkan') return null
   const fulfillment = data.fulfillment || 'pickup'
   const items = (data.items || []).map(
     (it: DocumentData): [string, string, string, string] => [
@@ -158,10 +144,6 @@ export function mapOrder(
   }
 }
 
-/**
- * Harga satuan pelanggan: harga promo kilat dulu, lalu harga grosir bila
- * qty memenuhi batas. (customerUnitPrice dari js/store/core.js)
- */
 export function customerUnitPrice(
   product: { id: string; price: number; wholesaleQty?: number; wholesalePrice?: number },
   qty: number,
@@ -176,31 +158,20 @@ export function customerUnitPrice(
 
 interface OrdersState {
   onlineOrders: OrderRecord[]
-  /** Banner pesanan aktif pelanggan */
   activeOrder: ActiveOrderInfo | null
-  /** Riwayat belanja pelanggan (diturunkan) */
   riwayat: RiwayatItem[]
-  /** Produk terlaris (diturunkan) */
   popular: PopularItem[]
   loading: boolean
 
-  /** Langganan pesanan milik pelanggan. Return unsub. */
   subscribeCustomerOrders: (uid: string) => () => void
-  /** Langganan semua pesanan (admin). Return unsub. */
   subscribeAdminOrders: () => () => void
   clearRole: () => void
 
-  /** Ubah status: menunggu → dikemas → dikirim (admin). */
   updateStatus: (orderId: string, status: string) => Promise<void>
-  /** Selesaikan pesanan: status selesai + jurnal penjualan + jurnal beban koin (admin). */
   settleOrder: (orderId: string) => Promise<void>
-  /** Batalkan pesanan: kembalikan stok + koin (admin). */
   cancel: (orderId: string) => Promise<void>
-  /** Selesaikan + jurnal penjualan (admin, konfirmasi transfer). */
   confirmTransfer: (orderId: string) => Promise<void>
-  /** Tolak bukti transfer (admin). */
   rejectTransfer: (orderId: string, reason: string) => Promise<void>
-  /** Hapus dokumen pesanan (admin). */
   deleteOrder: (orderId: string) => Promise<void>
 }
 
@@ -224,7 +195,6 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
           .sort((a, b) => ms(b.data() || {}) - ms(a.data() || {}))
           .map((d) => mapOrder(d))
           .filter((o): o is OrderRecord => o !== null)
-        /* Pulihkan banner pesanan aktif — hanya bila slot masih kosong */
         const prev = get().activeOrder
         let activeOrder: ActiveOrderInfo | null = prev
         if (prev == null) {
@@ -241,7 +211,6 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
             }
           }
         } else {
-          /* Pesanan yang dilacak sudah selesai → kosongkan banner */
           const tracked = (onlineOrders || []).find((o) => o.id === prev.id)
           if (tracked && tracked.status !== 'active') activeOrder = null
         }
@@ -283,9 +252,6 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
         const products = useProductsStore.getState().products
         const curTop = ((settings.storeSettings.topProductIds as string[]) || []).join('|')
         const { popular, top8 } = rebuildPopular(onlineOrders, products, true, [])
-        /* 8 terlaris → persist ke store_settings agar tamu/pelanggan ikut
-         * dapat. Hanya tulis bila daftar berubah (cegah loop); lewati bila
-         * pesanan belum termuat agar tidak menimpa dengan daftar kosong. */
         if (top8.length && top8.join('|') !== curTop) {
           void settings.saveStoreSettings({ topProductIds: top8 }).catch(() => {})
         }
@@ -456,7 +422,6 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
         if (d.status !== 'menunggu' && d.status !== 'dikemas' && d.status !== 'dikirim') {
           throw new Error('Pesanan tidak dapat diselesaikan')
         }
-        /* Laba: harga jual saat checkout − modal saat ini */
         let profit = 0
         let itemCount = 0
         for (const it of (d.items || []) as DocumentData[]) {
@@ -538,11 +503,6 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
         const snap = await t.get(ref)
         if (!snap.exists()) throw new Error('Pesanan tidak ditemukan')
         const d = snap.data() || {}
-        /* Pesanan SELESAI sudah settle — jurnal/stok/koin final, jangan
-         * diubah; hapus dokumennya saja. Pesanan DIBATALKAN sudah
-         * dikembalikan oleh cancel(). Selain itu pesanan BELUM selesai:
-         * kembalikan stok & koin persis seperti cancel() (atomik dalam
-         * transaksi yang sama), baru hapus dokumennya. */
         const alreadySettled = d.status === 'selesai' || d.status === 'dibatalkan'
         if (!alreadySettled) {
           ;(d.items || []).forEach((it: DocumentData) => {
@@ -588,7 +548,6 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
   },
 }))
 
-/** Label status pesanan (orderStatusLabel dari js/store/core.js). */
 export function orderStatusLabel(raw: string): string {
   return STATUS_LABEL[raw] || raw
 }

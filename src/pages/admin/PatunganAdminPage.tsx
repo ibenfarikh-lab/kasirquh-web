@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/PatunganAdminPage.tsx
- * Halaman (dulu PatunganAdminSheet): buat & kelola patungan warga.
- * Pengganti #patunganAdminModal + renderPatunganAdminList() (js/app.js).
- * Buat patungan warga + kelola: konfirmasi pembayaran peserta,
- * tandai selesai / batalkan.
- */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'

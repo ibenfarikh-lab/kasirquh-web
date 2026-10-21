@@ -1,22 +1,3 @@
-/**
- * KasirQuh React — src/features/customer/local.ts
- *
- * LAPISAN ADAPTER (dulu: store interim).
- *
- * Hook-hook di bawah ini MENERUSKAN ke store resmi di src/stores/* —
- * tidak ada langganan Firestore ganda, tidak ada data tiruan lokal.
- * Semua baca/tulis data kini lewat:
- *   sesi     -> useAuthStore      (src/stores/auth.ts)
- *   settings -> useSettingsStore  (src/stores/settings.ts)
- *   koin     -> usePromoStore     (src/stores/promo.ts)
- *   pesanan  -> useOrdersStore    (src/stores/orders.ts)
- *   chat     -> useChatStore      (src/stores/chat.ts)
- *   resep/patungan/paket -> useCatalogStore (src/stores/catalog.ts)
- *   catatan  -> useNotesStore     (src/stores/notes.ts)
- *
- * Helper murni + useRoutinesLocal (jadwal rutin memang disimpan lokal
- * di perangkat, sesuai perilaku aplikasi lama) tetap tinggal di sini.
- */
 import {
   useAuthStore,
   type MyCustomerDoc,
@@ -53,7 +34,6 @@ import type {
 import { todayKeyJakarta } from '../../lib/firestore'
 import { create } from 'zustand'
 
-/* ================= tipe lokal (kompatibilitas) ================= */
 
 export interface ActiveOrderInfo {
   id: string
@@ -76,9 +56,7 @@ export interface CustomerSettings extends StoreSettings {
   hajatanPackages: ServicePackage[]
 }
 
-/* ================= helper murni (port verbatim) ================= */
 
-/** Port Store.customerUnitPrice (js/store/core.js): grosir bila qty capai batas. */
 export function customerUnitPrice(
   p: Product,
   qty: number,
@@ -97,7 +75,6 @@ export interface CartTotals {
   discount: number
 }
 
-/** Port cartTotals() (js/features/customer/cart.js). */
 export function cartTotals(
   cart: CartMap,
   products: Product[],
@@ -120,7 +97,6 @@ export interface StockIssue {
   qty: number
 }
 
-/** Port cartStockIssue() (js/app.js baris 71). */
 export function cartStockIssue(cart: CartMap, products: Product[]): StockIssue | null {
   for (const [id, qty] of Object.entries(cart)) {
     if (qty <= 0) continue
@@ -130,7 +106,6 @@ export function cartStockIssue(cart: CartMap, products: Product[]): StockIssue |
   return null
 }
 
-/** Port purchaseAgeLabel() (js/features/customer/home.js). */
 export function purchaseAgeLabel(dateKey: string): string {
   const today = new Date(todayKeyJakarta() + 'T12:00:00+07:00')
   const purchaseDate = new Date(dateKey + 'T12:00:00+07:00')
@@ -138,7 +113,6 @@ export function purchaseAgeLabel(dateKey: string): string {
   return days === 0 ? 'Dibeli hari ini' : days === 1 ? 'Dibeli kemarin' : 'Dibeli ' + days + ' hari lalu'
 }
 
-/** Port weekKeyOf() (js/features/customer/coins.js). */
 export function weekKeyOf(date: Date): string {
   const t = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dow = (t.getUTCDay() + 6) % 7
@@ -149,12 +123,10 @@ export function weekKeyOf(date: Date): string {
   )
 }
 
-/** Port updatePremiumHeader() — sapaan per jam (js/features/customer/home.js). */
 export function greetingForHour(h: number): string {
   return h < 11 ? 'Selamat pagi' : h < 15 ? 'Selamat siang' : h < 19 ? 'Selamat sore' : 'Selamat malam'
 }
 
-/** Port logika buka/tutup toko (js/features/customer/home.js). */
 export function isOpenNow(openTime: string, closeTime: string, now = new Date()): boolean {
   const toMin = (t: string): number | null => {
     const m = String(t).match(/(\d{1,2}):(\d{2})/)
@@ -167,7 +139,6 @@ export function isOpenNow(openTime: string, closeTime: string, now = new Date())
   return oMin <= cMin ? cur >= oMin && cur < cMin : cur >= oMin || cur < cMin
 }
 
-/** Port routineNextDate() (js/features/customer/services.js). */
 export function routineNextDate(routine: Routine): Date {
   const now = new Date()
   if (routine.interval !== 'mingguan') {
@@ -183,7 +154,6 @@ export function routineNextDate(routine: Routine): Date {
   return next
 }
 
-/** Port aiReply() (js/features/customer/services.js). */
 export function aiReply(
   text: string,
   products: Product[],
@@ -204,7 +174,6 @@ export function aiReply(
   return 'Maaf, aku belum paham. Coba tanya soal stok, harga termurah, promo, atau jam buka.'
 }
 
-/* ================= session -> useAuthStore ================= */
 
 export interface SessionLocalState {
   role: SessionRole
@@ -240,7 +209,6 @@ export function useSessionLocal<T = SessionLocalState>(
     wa: docStr(myCustomerDoc, 'wa'),
     address: docStr(myCustomerDoc, 'address'),
     setSession: (patch) => {
-      // Kompat: penulisan profil diteruskan ke dokumen customers/{uid}.
       const uid = useAuthStore.getState().session.customerId
       if (!uid) return
       const doc: Record<string, unknown> = {}
@@ -258,7 +226,6 @@ export function useSessionLocal<T = SessionLocalState>(
   return selector(state)
 }
 
-/* ================= settings -> useSettingsStore (+ katalog) ================= */
 
 interface SettingsLocalState {
   settings: CustomerSettings
@@ -310,12 +277,10 @@ export function useSettingsLocal<T = SettingsLocalState>(
   }
   return selector({
     settings,
-    // Pengaturan toko hanya diubah admin lewat sheet admin; sisi pelanggan read-only.
     setSettings: () => {},
   })
 }
 
-/* ================= koin -> usePromoStore ================= */
 
 export interface CoinGrantEntry {
   label: string
@@ -348,8 +313,6 @@ export function useCoinLocal<T = CoinLocalState>(
     lastCheckin: docStr(myCustomerDoc, 'lastCheckin'),
     grant: (amount, entry) => {
       if (entry.claimKey) {
-        // Hadiah misi/tebak-harga -> klaim resmi (idempoten per claimKey).
-        // Teruskan amount & reason agar tidak tertukar (mis. tebak harga pakai reward guess).
         void usePromoStore.getState().claimMission(entry.detail || entry.label, entry.claimKey, {
           amount: amount,
           reason: entry.reason || 'misi',
@@ -357,7 +320,6 @@ export function useCoinLocal<T = CoinLocalState>(
         })
         return
       }
-      // Hadiah game -> grantGameCoins resmi (cap 500/hari).
       const uid = useAuthStore.getState().session.customerId
       if (!uid) {
         toast('Masuk dulu untuk klaim koin')
@@ -379,15 +341,12 @@ export function useCoinLocal<T = CoinLocalState>(
           toast(e instanceof Error ? e.message : 'Gagal klaim koin')
         })
     },
-    // Check-in kini lewat usePromoStore().checkin() — lihat AccountPage.
     setLastCheckin: () => {},
   }
   return selector(state)
 }
 
-/* ================= pesanan -> useOrdersStore ================= */
 
-/** Konversi OrderRecord (tuple items) -> Order (objek items). Dipakai juga adapter admin. */
 export function recordToOrder(r: OrderRecord): Order {
   return {
     id: r.id,
@@ -472,7 +431,6 @@ export function useOrdersLocal<T = OrdersLocalState>(
     history: onlineOrders.map(recordToOrder),
     setActiveOrder: (o) =>
       useOrdersStore.setState({ activeOrder: o as OfficialActiveOrderInfo | null }),
-    // Langganan Firestore menambahkan pesanan resmi; prepend di sini untuk UI instan.
     prependHistory: (o) =>
       useOrdersStore.setState((s) => ({
         onlineOrders: [orderToRecord(o), ...s.onlineOrders],
@@ -481,7 +439,6 @@ export function useOrdersLocal<T = OrdersLocalState>(
   return selector(state)
 }
 
-/* ================= chat -> useChatStore ================= */
 
 interface ChatLocalState {
   rumpi: RumpiMessage[]
@@ -529,7 +486,6 @@ export function useChatLocal<T = ChatLocalState>(
   return selector(state)
 }
 
-/* ================= resep & patungan -> useCatalogStore ================= */
 
 interface RecipesLocalState {
   recipes: Recipe[]
@@ -592,7 +548,6 @@ export function usePatunganLocal<T = PatunganLocalState>(
   })
 }
 
-/* ================= catatan -> useNotesStore ================= */
 
 interface NotesLocalState {
   notes: CustomerNote[]
@@ -605,12 +560,10 @@ export function useNotesLocal<T = NotesLocalState>(
   const customerNotesList = useNotesStore((s) => s.customerNotesList)
   return selector({
     notes: customerNotesList,
-    // Diisi langganan Firestore (subscribeCustomerNotes); tidak ada penulisan lokal.
     setNotes: () => {},
   })
 }
 
-/* ================= jadwal rutin (tetap lokal, sesuai perilaku lama) ================= */
 
 const ROUTINE_KEY = 'kasirquh.routines.v1'
 
@@ -635,7 +588,6 @@ const useRoutinesLocalStore = create<RoutinesLocalState>()((set) => ({
     try {
       localStorage.setItem(ROUTINE_KEY, JSON.stringify(list))
     } catch {
-      /* abaikan */
     }
     set({ routines: list })
   },
@@ -647,12 +599,7 @@ export function useRoutinesLocal<T = RoutinesLocalState>(
   return useRoutinesLocalStore(selector)
 }
 
-/* ================= kompres foto (port compressPhotoFile / resizeRecipePhoto) ================= */
 
-/**
- * Kompres gambar di client via canvas → data URL.
- * Port compressPhotoFile() (js/features/customer/account.js).
- */
 export function compressPhoto(
   file: File,
   max: number,

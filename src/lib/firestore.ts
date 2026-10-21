@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/lib/firestore.ts
- * Helper Firestore: timeout tulis + error offline jujur (pengganti __withTimeout).
- */
 export const WRITE_TIMEOUT_MS = 30000
 
 export function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -23,7 +19,6 @@ export function withTimeout<T>(promise: Promise<T>, ms: number, label: string): 
   ])
 }
 
-/** Kunci tanggal YYYY-MM-DD zona Asia/Jakarta (pengganti __todayKey). */
 export function todayKeyJakarta(date = new Date()): string {
   return new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Asia/Jakarta',

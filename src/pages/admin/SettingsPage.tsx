@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/SettingsPage.tsx
- * Halaman Pengaturan (dulu SettingsSheet): #adminSettingsModal +
- * #errorLogModal + #adminSessionModal (js/features/admin/settings.js).
- *
- * Tema: localStorage perangkat (seperti kode lama). Sesi: useAuthStore resmi.
- */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon, Sheet, SheetHeader, toast } from '../../components/ui'
@@ -33,7 +26,6 @@ function loadJSON<T>(key: string, fb: T): T {
   }
 }
 
-/* Bunyi lokal sederhana (pengganti ringkas js/shared/audio.js untuk tombol Tes) */
 function beep(pattern: number[]) {
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
@@ -55,7 +47,6 @@ function beep(pattern: number[]) {
     })
     setTimeout(() => void ctx.close(), pattern.length * 200 + 300)
   } catch {
-    /* abaikan */
   }
 }
 
@@ -103,17 +94,14 @@ export default function SettingsPage() {
         const nm = localStorage.getItem(NAV_MOTION_KEY)
         if (nm !== null) setNavMotion(nm !== '0')
       } catch {
-        /* abaikan */
       }
       setSounds(loadJSON<Record<SoundKind, SoundPreset>>(SOUND_KEY, { order: 'system', promo: 'system', chat: 'system' }))
       try {
         setVibrate(localStorage.getItem(VIBRATE_KEY) !== '0')
       } catch {
-        /* abaikan */
       }
       setSaving(false)
     }
-    // baca preferensi dari localStorage sekali per mount — tidak perlu jalan ulang karena perubahan disimpan langsung ke state+localStorage
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -131,7 +119,6 @@ export default function SettingsPage() {
       try {
         localStorage.setItem(SOUND_KEY, JSON.stringify(next))
       } catch {
-        /* abaikan */
       }
       return next
     })
@@ -143,7 +130,6 @@ export default function SettingsPage() {
       try {
         localStorage.setItem(SOUND_KEY, JSON.stringify(next))
       } catch {
-        /* abaikan */
       }
       return next
     })
@@ -154,7 +140,6 @@ export default function SettingsPage() {
       try {
         localStorage.setItem(VIBRATE_KEY, v ? '1' : '0')
       } catch {
-        /* abaikan */
       }
       return !v
     })
@@ -166,7 +151,6 @@ export default function SettingsPage() {
     try {
       localStorage.setItem(NAV_MOTION_KEY, next ? '1' : '0')
     } catch {
-      /* abaikan */
     }
     document.documentElement.dataset.navMotion = next ? 'on' : 'off'
     saveStoreSettings({ adminNavMotion: next })
@@ -407,7 +391,6 @@ export default function SettingsPage() {
   )
 }
 
-/* ---------- Log Error (pengganti #errorLogModal) ---------- */
 
 function ErrorLogSheet({
   open,
@@ -436,7 +419,6 @@ function ErrorLogSheet({
               try {
                 t = new Date(e.at).toLocaleString('id-ID')
               } catch {
-                /* abaikan */
               }
               return (
                 <article className="note-card" style={{ marginBottom: 8 }} key={i}>
@@ -467,7 +449,6 @@ function ErrorLogSheet({
   )
 }
 
-/* ---------- Tombol sidik jari (hanya bila didukung & terdaftar) ---------- */
 
 function BioButton() {
   const [visible, setVisible] = useState(false)
@@ -478,7 +459,6 @@ function BioButton() {
         const ok = (await bioIsSupported()) && (await bioIsEnrolled('admin'))
         if (alive) setVisible(ok)
       } catch {
-        /* abaikan */
       }
     })()
     return () => {
@@ -509,7 +489,6 @@ function BioButton() {
   )
 }
 
-/* ---------- Info Sesi (pengganti #adminSessionModal) ---------- */
 
 function SessionInfoSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const session = useAuthStore((s) => s.session)

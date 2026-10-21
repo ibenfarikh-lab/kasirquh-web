@@ -1,7 +1,3 @@
-/**
- * KasirQuh React — src/types.ts
- * Tipe domain, diturunkan dari mapper js/store/core.js (bentuk UI yang dipakai fitur).
- */
 import type { Timestamp } from 'firebase/firestore'
 
 export interface Product {
@@ -256,7 +252,6 @@ export interface Session {
   email: string | null
 }
 
-/** Keranjang: productId -> qty */
 export type CartMap = Record<string, number>
 
 export interface PriceAlert {

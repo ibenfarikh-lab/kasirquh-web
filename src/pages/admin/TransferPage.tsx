@@ -1,10 +1,3 @@
-/**
- * KasirQuh React — src/pages/admin/TransferPage.tsx
- * Pengganti TransferSheet (dulu #transferModal + renderTransfers() di
- * js/features/admin/orders.js): halaman penuh konfirmasi pembayaran
- * transfer — verifikasi (lunaskan) atau tolak. Logika sama persis,
- * tanpa wrapper Sheet.
- */
 import { useState } from 'react'
 import { toast } from '../../components/ui'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'

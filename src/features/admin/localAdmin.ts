@@ -1,24 +1,3 @@
-/**
- * KasirQuh React — src/features/admin/localAdmin.ts
- *
- * LAPISAN ADAPTER (dulu: store interim milik Worker Admin).
- *
- * Hook `useLocalAdminStore` di bawah ini MENERUSKAN ke store resmi di
- * src/stores/* — tidak ada langganan Firestore ganda, tidak ada data tiruan.
- * Semua baca/tulis data kini lewat:
- *   jurnal/stok   -> useLedgerStore    (src/stores/ledger.ts)
- *   pesanan       -> useOrdersStore    (src/stores/orders.ts)
- *   pelanggan     -> useCustomersStore (src/stores/customers.ts)
- *   catatan/memo  -> useNotesStore     (src/stores/notes.ts)
- *   chat/rumpi    -> useChatStore      (src/stores/chat.ts)
- *   katalog/paket -> useCatalogStore   (src/stores/catalog.ts)
- *   kasir         -> useCheckoutStore  (src/stores/checkout.ts)
- *   pengaturan    -> useSettingsStore  (src/stores/settings.ts)
- *
- * State UI lokal admin (kategori aktif, member kasir, struk terakhir, dsb.)
- * tinggal di useAdminUIStore kecil di bawah. Helper murni + konstanta
- * (AI admin, kalkulator, shortcut dashboard) tetap di file ini.
- */
 import { create } from 'zustand'
 import type { DocumentData } from 'firebase/firestore'
 import { todayKeyJakarta, pad2 } from '../../lib/firestore'
@@ -49,7 +28,6 @@ import type {
   ThreadMessage,
 } from '../../types'
 
-/* ================= Tipe lokal (tidak ada di src/types.ts) ================= */
 
 export interface InboxItem {
   id: string
@@ -96,9 +74,7 @@ export interface DirectThread {
   unread: number
   customerUnread: number
   lastMessage: string
-  /** Millis terakhir thread diperbarui (untuk urutan daftar). */
   updatedAt: number
-  /** true bila thread di-pin admin (selalu di urutan teratas). */
   pinned: boolean
   loading: boolean
 }
@@ -195,14 +171,12 @@ export interface TitipRequest {
 
 export type JournalPeriod = 'day' | 'week' | 'month'
 
-/* ================= Helper tanggal (mirip Store.dateKeyOf/timeOf/dateTimeOf) ================= */
 
 function tsToDate(ts: unknown): Date {
   const t = ts as { toDate?: () => Date } | null
   try {
     if (t && typeof t.toDate === 'function') return t.toDate()
   } catch {
-    /* abaikan */
   }
   return new Date()
 }
@@ -257,10 +231,8 @@ export function shiftDateKey(key: string, days: number): string {
   )
 }
 
-/* ================= Mapper Firestore -> bentuk UI (1:1 js/store/core.js) ================= */
 
 
-/* ================= Kalkulasi murni (1:1 js/features/admin/finance.js) ================= */
 
 export function entriesForPeriod(
   entries: JournalEntry[],
@@ -287,7 +259,6 @@ export function cashBalance(entries: JournalEntry[]): number {
   )
 }
 
-/* ================= AI Admin murni (1:1 js/features/admin/ai.js) ================= */
 
 export function adminAiStock(products: Product[], lowStockThreshold: number): string {
   const low = products
@@ -418,15 +389,7 @@ export function adminAiResponse(
   return 'Saya belum memahami pertanyaan itu. Coba tanyakan “omzet hari ini”, “transaksi apa saja hari ini”, “stok apa yang menipis”, “saldo kas”, atau nama produk tertentu.'
 }
 
-/* ================= Kalkulator murni (1:1 js/features/admin/calc.js) ================= */
 
-/**
- * Satu instance NumberFormat dipakai ulang untuk semua token.
- * Dulu tiap token memanggil Number(v).toLocaleString('id-ID', {...}) yang
- * mengkonstruksi Intl baru per token per render — O(n) konstruksi Intl tiap
- * ketukan tombol bikin main thread jenuh saat ekspresi panjang (freeze di HP).
- * Hasil format identik (terverifikasi).
- */
 const idNumberFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 })
 
 export function calcDisplayValue(expression: string): string {
@@ -455,7 +418,6 @@ export function calcResult(expression: string): number {
   return Math.round(total * 100) / 100
 }
 
-/* ================= Catatan belanja: parsing (1:1 js/features/admin/notes.js) ================= */
 
 function cleanInputLocal(value: unknown): string {
   return String(value || '')
@@ -486,7 +448,6 @@ export function purchaseItemLabel(item: unknown): string {
   return parts.name + (parts.qty ? ' · ' + parts.qty : '')
 }
 
-/* ================= Shortcut dashboard (1:1 js/store/core.js) ================= */
 
 export interface DashboardShortcutAction {
   kind: 'view' | 'tab' | 'sheet' | 'route'
@@ -544,9 +505,7 @@ interface LocalAdminState {
   titipRequests: TitipRequest[]
   inboxItems: InboxItem[]
   inboxReadIds: string[]
-  /** ID thread chat yang di-pin (urutan = prioritas). */
   pinnedChatIds: string[]
-  /** Pin/unpin thread chat pelanggan. */
   togglePinChat: (id: string) => void
   shortcutIds: string[]
   shortcutEdit: boolean
@@ -567,7 +526,6 @@ interface LocalAdminState {
   homeControl: HomeControlState
   errorLog: AdminErrorEntry[]
 
-  /* langganan */
   subscribeAll: () => () => void
   subscribeJournal: () => () => void
   subscribeOrders: () => () => void
@@ -582,7 +540,6 @@ interface LocalAdminState {
   subscribeRecipes: () => () => void
   watchThreadMessages: (threadId: string) => () => void
 
-  /* aksi tulis */
   saveStoreSettings: (patch: DocumentData) => Promise<void>
   recordJournal: (entry: {
     direction: 'income' | 'expense'
@@ -667,7 +624,6 @@ interface LocalAdminState {
   setPatunganStatus: (id: string, status: string) => Promise<void>
   confirmPatunganPayment: (patunganId: string, customerId: string) => Promise<void>
 
-  /* aksi lokal */
   setJournalPeriod: (p: JournalPeriod) => void
   setLowStockThreshold: (n: number) => void
   setActivePurchaseDate: (d: string) => void
@@ -689,18 +645,12 @@ interface LocalAdminState {
 }
 
 
-/* =====================================================================
- * LAPISAN ADAPTER — pengganti implementasi mega-store interim.
- * useLocalAdminStore(selector) meneruskan ke store resmi; tidak ada
- * langganan Firestore di sini (diorkestrasi useAuthStore per peran).
- * ===================================================================== */
 
 const INBOX_READ_KEY = 'kqh_inbox_read'
 const SHORTCUT_KEY = 'kqh_dashboard_shortcut_ids'
 const PINNED_CHAT_KEY = 'kqh_pinned_chats'
 
 
-/* ---------- state UI lokal admin (bukan data Firestore) ---------- */
 
 interface AdminUIState {
   adminCat: string
@@ -722,8 +672,6 @@ interface AdminUIState {
   clearErrorLog: () => void
 }
 
-/* Struk terakhir PERSISTEN (localStorage, seperti Native SharedPreferences):
- * reload halaman tidak menghilangkan struk terakhir. */
 const LAST_RECEIPT_KEY = 'kasirquh-admin-last-receipt'
 
 function loadLastReceipt(): LastReceipt | null {
@@ -731,7 +679,6 @@ function loadLastReceipt(): LastReceipt | null {
     const raw = localStorage.getItem(LAST_RECEIPT_KEY)
     if (raw) return JSON.parse(raw) as LastReceipt
   } catch {
-    /* abaikan */
   }
   return null
 }
@@ -753,7 +700,6 @@ const useAdminUIStore = create<AdminUIState>()((set) => ({
       if (r) localStorage.setItem(LAST_RECEIPT_KEY, JSON.stringify(r))
       else localStorage.removeItem(LAST_RECEIPT_KEY)
     } catch {
-      /* abaikan */
     }
     set({ lastReceipt: r })
   },
@@ -774,7 +720,6 @@ const useAdminUIStore = create<AdminUIState>()((set) => ({
   clearErrorLog: () => set({ errorLog: [] }),
 }))
 
-/* ---------- derivasi inbox (port rebuildInbox) ---------- */
 
 interface InboxInputs {
   products: Product[]
@@ -864,16 +809,11 @@ function persistInboxRead(ids: string[]) {
   try {
     localStorage.setItem(INBOX_READ_KEY, JSON.stringify(ids))
   } catch {
-    /* abaikan */
   }
-  /* Gerbang settingsLoaded: daftar dibaca diturunkan dari state settings —
-   * sebelum snapshot pertama tiba, menulis ke Firestore bisa menghapus
-   * status baca yang tersimpan di dokumen. Salinan lokal tetap disimpan. */
   if (!useSettingsStore.getState().settingsLoaded) return
   void useSettingsStore.getState().saveStoreSettings({ inboxReadIds: ids }).catch(() => {})
 }
 
-/* ---------- bangun state gabungan ---------- */
 
 function buildAdminState(): LocalAdminState {
   const ui = useAdminUIStore.getState()
@@ -957,10 +897,7 @@ function buildAdminState(): LocalAdminState {
       try {
         localStorage.setItem(PINNED_CHAT_KEY, JSON.stringify(next))
       } catch {
-        /* abaikan */
       }
-      /* Gerbang settingsLoaded: `cur` masih [] sebelum snapshot pertama —
-       * menulis saat itu akan menghapus pin lain yang tersimpan di dokumen. */
       if (!useSettingsStore.getState().settingsLoaded) return
       void useSettingsStore.getState().saveStoreSettings({ pinnedChatIds: next }).catch(() => {})
     },
@@ -1011,7 +948,6 @@ function buildAdminState(): LocalAdminState {
     },
     errorLog: ui.errorLog,
 
-    /* langganan: diorkestrasi useAuthStore per peran — tidak ada di sini */
     subscribeAll: noopUnsub,
     subscribeJournal: noopUnsub,
     subscribeOrders: noopUnsub,
@@ -1029,7 +965,6 @@ function buildAdminState(): LocalAdminState {
       return () => {}
     },
 
-    /* aksi tulis -> store resmi */
     saveStoreSettings: (patch) => useSettingsStore.getState().saveStoreSettings(patch),
     recordJournal: (entry) => useLedgerStore.getState().recordJournal(entry),
     saveRestock: (payload) =>
@@ -1097,7 +1032,6 @@ function buildAdminState(): LocalAdminState {
     confirmPatunganPayment: (patunganId, customerId) =>
       useCatalogStore.getState().confirmPatunganPayment(patunganId, customerId),
 
-    /* aksi lokal */
     setJournalPeriod: ui.setJournalPeriod,
     setLowStockThreshold: (n) =>
       void useSettingsStore.getState().saveStoreSettings({ lowStockDefault: n }).catch(() => {}),
@@ -1137,11 +1071,8 @@ function buildAdminState(): LocalAdminState {
       try {
         localStorage.setItem(SHORTCUT_KEY, JSON.stringify(next))
       } catch {
-        /* abaikan */
       }
       ui.setShortcutEdit(false)
-      /* Gerbang settingsLoaded: sebelum snapshot pertama, `ids` masih daftar
-       * bawaan — menulisnya menimpa daftar shortcut tersimpan admin. */
       if (!useSettingsStore.getState().settingsLoaded) return
       void useSettingsStore.getState().saveStoreSettings({ dashboardShortcutIds: next }).catch(() => {})
     },
@@ -1150,7 +1081,6 @@ function buildAdminState(): LocalAdminState {
       try {
         localStorage.setItem(SHORTCUT_KEY, JSON.stringify(next))
       } catch {
-        /* abaikan */
       }
       if (!useSettingsStore.getState().settingsLoaded) return
       void useSettingsStore.getState().saveStoreSettings({ dashboardShortcutIds: next }).catch(() => {})
@@ -1160,14 +1090,9 @@ function buildAdminState(): LocalAdminState {
   }
 }
 
-/**
- * Pengganti mega-store: hook yang berlangganan store resmi dan
- * menyajikan bentuk LocalAdminState lama ke konsumen.
- */
 export function useLocalAdminStore<T = LocalAdminState>(
   selector: (s: LocalAdminState) => T = (s) => s as unknown as T,
 ): T {
-  // Berlangganan agar komponen render ulang saat data resmi berubah.
   useLedgerStore((s) => s.journalEntries)
   useLedgerStore((s) => s.purchaseNotes)
   useOrdersStore((s) => s.onlineOrders)
@@ -1193,10 +1118,8 @@ export function useLocalAdminStore<T = LocalAdminState>(
   return selector(buildAdminState())
 }
 
-/** Kompat getState() untuk pemakaian non-hook (PosPage). */
 useLocalAdminStore.getState = () => buildAdminState()
 
-/** Selector praktis: jumlah notifikasi belum dibaca. */
 export function useInboxUnread(): number {
   return useLocalAdminStore((s) => s.inboxItems.filter((x) => !x.read).length)
 }

@@ -1,13 +1,6 @@
-/**
- * KasirQuh React — src/components/ScannerModal.tsx
- * Pengganti #scannerModal + js/features/admin/scanner.js + startBarcodeScanner()
- * di js/app.js: kamera via BarcodeDetector bawaan browser + input manual.
- * Tanpa library eksternal. Class CSS dipakai apa adanya (JANGAN rename).
- */
 import { useEffect, useRef, useState } from 'react'
 import { Sheet, SheetHeader, toast } from './ui'
 
-/* BarcodeDetector belum tentu ada di lib DOM TS — deklarasi minimal. */
 interface DetectedBarcode {
   rawValue: string
 }
@@ -39,7 +32,6 @@ export default function ScannerModal({
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const busyRef = useRef(false)
 
-  /* Siklus kamera mengikuti `open` — Sheet unmount saat tutup. */
   useEffect(() => {
     if (!open) return
     busyRef.current = false
@@ -58,7 +50,6 @@ export default function ScannerModal({
         try {
           stream.getTracks().forEach((t) => t.stop())
         } catch {
-          /* abaikan */
         }
         stream = null
       }
@@ -83,7 +74,6 @@ export default function ScannerModal({
           }
         }
       } catch {
-        /* abaikan — lanjut coba getUserMedia */
       }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         if (!cancelled) setHint('Browser tidak mendukung kamera · pakai ketik manual di bawah')
@@ -99,7 +89,6 @@ export default function ScannerModal({
           try {
             s.getTracks().forEach((t) => t.stop())
           } catch {
-            /* abaikan */
           }
           return
         }
@@ -110,7 +99,6 @@ export default function ScannerModal({
           try {
             await video.play()
           } catch {
-            /* abaikan */
           }
         }
         if (cancelled) return
@@ -156,7 +144,6 @@ export default function ScannerModal({
               }
             }
           } catch {
-            /* abaikan — coba frame berikutnya */
           }
         }, 500)
       } catch (err) {
@@ -183,7 +170,6 @@ export default function ScannerModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open ])
 
-  /* onScan via ref agar interval tidak perlu re-subscribe tiap render. */
   const onScanRef = useRef(onScan)
   onScanRef.current = onScan
 

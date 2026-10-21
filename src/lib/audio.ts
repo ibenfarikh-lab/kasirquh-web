@@ -1,24 +1,13 @@
-/**
- * KasirQuh React — src/lib/audio.ts
- * Audio notifikasi (Web Audio API). Port dari js/shared/audio.js vanilla.
- *
- * 3 jenis bunyi: order | promo | chat
- * 3 mode: system | mimi | silent (silent → getar jika diaktifkan)
- */
 
 export type SoundKind = 'order' | 'promo' | 'chat'
 export type SoundMode = 'system' | 'mimi' | 'silent'
 
 const ADMIN_SOUND_KEY = 'kasirquh-admin-sounds'
-/** Kunci preferensi dering khusus pelanggan (terpisah dari admin agar di
- *  perangkat bersama preferensi dua peran tidak saling menimpa). */
 export const CUSTOMER_SOUND_KEY = 'kasirquh-customer-sounds'
 const VIBRATE_KEY = 'kasirquh-vibrate-silent'
 
-/** Peran sesi aktif (diatur auth store lewat setSoundRole). */
 let soundRole: 'admin' | 'customer' | null = null
 
-/** Dipanggil auth store setiap peran sesi berubah. */
 export function setSoundRole(role: 'admin' | 'customer' | null): void {
   soundRole = role
 }
@@ -66,7 +55,6 @@ function ensureAudio(): AudioContext | null {
     try {
       void audioCtx.resume()
     } catch {
-      /* abaikan */
     }
   }
   return audioCtx
@@ -80,7 +68,6 @@ function getSoundMode(kind: SoundKind): SoundMode {
       return parsed[kind] || 'system'
     }
   } catch {
-    /* abaikan */
   }
   return 'system'
 }
@@ -93,11 +80,6 @@ function getVibrateWhenSilent(): boolean {
   }
 }
 
-/**
- * Putar notifikasi bunyi.
- * @param kind jenis: order | promo | chat
- * @param mode override mode (default dari pengaturan tersimpan)
- */
 export function playNotification(kind: SoundKind, mode?: SoundMode): void {
   const m = mode || getSoundMode(kind)
 
@@ -107,7 +89,6 @@ export function playNotification(kind: SoundKind, mode?: SoundMode): void {
       try {
         navigator.vibrate(pattern)
       } catch {
-        /* abaikan */
       }
     }
     return
@@ -138,7 +119,6 @@ export function playNotification(kind: SoundKind, mode?: SoundMode): void {
         tone(ctx, 880, now + 0.16, 0.1, 'sine', 0.22)
       }
     } catch {
-      /* abaikan */
     }
   }
 

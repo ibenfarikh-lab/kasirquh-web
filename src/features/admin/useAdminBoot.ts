@@ -1,8 +1,3 @@
-/**
- * KasirQuh React — src/features/admin/useAdminBoot.ts
- * Helper kecil milik Worker Admin: pasang langganan data admin (localAdmin)
- * sekali halaman admin dipasang, setelah Firebase siap.
- */
 import { useEffect } from 'react'
 import { authPersistenceReady } from '../../lib/firebase'
 import { useLocalAdminStore } from './localAdmin'
@@ -15,7 +10,6 @@ export function useAdminBoot() {
       try {
         unsub = subscribeAll()
       } catch {
-        /* Firebase belum siap — halaman tetap render dengan state kosong */
       }
     })
     return () => {
@@ -24,7 +18,6 @@ export function useAdminBoot() {
   }, [subscribeAll])
 }
 
-/** Peta nama view lama -> rute React admin. */
 export function adminRoute(view: string): string {
   const map: Record<string, string> = {
     dashboard: '/admin',
