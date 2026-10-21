@@ -90,7 +90,7 @@ function OrderCard({ order }: { order: Order }) {
                 aria-label="Tandai dikemas"
                 onClick={() =>
                   setOrderStatus(order.docId, 'dikemas')
-                    .then(() => toast('Pesanan ' + order.id + ' dikemas'))
+                    .then(() => {})
                     .catch((e) => fail(e, 'Gagal update status'))
                 }
               >
@@ -103,7 +103,7 @@ function OrderCard({ order }: { order: Order }) {
                 aria-label="Tandai dikirim"
                 onClick={() =>
                   setOrderStatus(order.docId, 'dikirim')
-                    .then(() => toast('Pesanan ' + order.id + ' dikirim'))
+                    .then(() => {})
                     .catch((e) => fail(e, 'Gagal update status'))
                 }
               >
@@ -146,7 +146,7 @@ function OrderCard({ order }: { order: Order }) {
             aria-label="Hapus pesanan"
             onClick={() =>
               deleteOrder(order.docId)
-                .then(() => toast('Pesanan ' + order.id + ' dihapus'))
+                .then(() => {})
                 .catch((e) => fail(e, 'Hapus gagal'))
             }
           >

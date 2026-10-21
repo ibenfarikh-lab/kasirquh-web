@@ -37,12 +37,10 @@ export default function CartPage() {
 
   function clearCart() {
     if (!Object.keys(customerCart).length) {
-      toast('Keranjang sudah kosong')
       return
     }
     if (!window.confirm('Kosongkan semua isi keranjang?')) return
     clearCustomerCart()
-    toast('Keranjang dikosongkan')
   }
 
   function saveMenu() {

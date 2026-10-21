@@ -51,7 +51,7 @@ export default function RumpiPage() {
       return
     }
     sendRumpi(t, photo, sessionName || 'Pelanggan', photoURL)
-      .then(() => toast('Postingan tampil di Rumpi Warga'))
+      .then(() => {})
       .catch(() => toast('Gagal kirim, coba lagi'))
     setText('')
     setPhoto('')

@@ -135,7 +135,7 @@ function RumpiFeed({ messages }: { messages: RumpiMessage[] }) {
                 aria-label={'Hapus pesan dari ' + message.name}
                 onClick={() =>
                   deleteRumpi(message.id)
-                    .then(() => toast('Pesan dihapus dari Rumpi Warga'))
+                    .then(() => {})
                     .catch((error: unknown) => {
                       const e = error as { code?: string; message?: string }
                       if (!e || e.code !== 'OFFLINE') toast(e && e.message ? e.message : 'Hapus gagal')
@@ -171,7 +171,6 @@ function RumpiComposer() {
         setText('')
         setPhoto('')
         if (fileRef.current) fileRef.current.value = ''
-        toast('Postingan tampil di Rumpi pelanggan')
       })
       .catch((error: unknown) => {
         const e = error as { code?: string; message?: string }

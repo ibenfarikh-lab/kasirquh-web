@@ -34,7 +34,6 @@ export default function StoreNotesPage() {
       .then(() => {
         setTitle('')
         setBody('')
-        toast('Catatan toko ditambahkan')
       })
       .catch((error: unknown) => {
         const e = error as { code?: string; message?: string }

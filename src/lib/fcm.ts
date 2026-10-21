@@ -8,7 +8,6 @@
 import { deleteToken, getToken, isSupported, onMessage } from 'firebase/messaging'
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { getDb, getFirebaseAuth, getFirebaseMessaging } from './firebase'
-import { toast } from '../components/ui'
 
 const FCM_VAPID_KEY =
   'BCqm7CrTfNFb3NWswI3crJLVuL_LptKcU3iR9_miapPhkKwfREd1liSoJ-h0dpTcdGwNiKtlA75nTZeA1vJusCE'
@@ -25,9 +24,10 @@ export async function initFcm(): Promise<boolean> {
     const messaging = await getFirebaseMessaging()
     if (!messaging) return false
     onMessage(messaging, (payload) => {
+      // Keputusan user (2026-10-21): notifikasi foreground TIDAK diteruskan ke
+      // toast (biang tumpukan toast). Cukup notifikasi sistem + penanda Inbox.
       const title = payload.notification?.title || 'Warunge Mimi'
       const body = payload.notification?.body || 'Ada kabar baru'
-      toast(title + ': ' + body)
       if (Notification.permission === 'granted') {
         try {
           new Notification(title, { body, icon: '/assets/img/img-005.png' })

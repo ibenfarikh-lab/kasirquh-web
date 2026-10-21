@@ -53,7 +53,6 @@ export default function PatunganAdminPage() {
         setSlots('')
         setDeadline('')
         setNote('')
-        toast('Patungan dibuat')
       })
       .catch((error: unknown) => {
         const e = error as { code?: string; message?: string }
@@ -193,7 +192,7 @@ export default function PatunganAdminPage() {
                   className="ghost"
                   onClick={() =>
                     setPatunganStatus(p.id, 'selesai')
-                      .then(() => toast('Patungan ditandai selesai'))
+                      .then(() => {})
                       .catch(() => toast('Gagal'))
                   }
                 >
@@ -203,7 +202,7 @@ export default function PatunganAdminPage() {
                   className="ghost"
                   onClick={() =>
                     setPatunganStatus(p.id, 'batal')
-                      .then(() => toast('Patungan dibatalkan'))
+                      .then(() => {})
                       .catch(() => toast('Gagal'))
                   }
                 >

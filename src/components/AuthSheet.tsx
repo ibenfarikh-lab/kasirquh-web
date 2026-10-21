@@ -67,7 +67,6 @@ export function AuthSheet({ open, onClose }: { open: boolean; onClose: () => voi
       await useAuthStore.getState().loginCustomer(cred.email, cred.password)
       onClose()
       navigate('/beranda', { replace: true })
-      toast('Selamat datang kembali')
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Gagal masuk dengan sidik jari')
     } finally {
@@ -98,7 +97,6 @@ export function AuthSheet({ open, onClose }: { open: boolean; onClose: () => voi
       } else {
         navigate('/beranda', { replace: true })
       }
-      toast('Selamat datang kembali')
       bioOfferEnroll(email.trim().toLowerCase(), password)
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Masuk gagal')

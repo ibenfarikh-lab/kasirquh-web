@@ -37,7 +37,6 @@ export default function HajatanAdminPage() {
   const addItem = () => {
     if (!pickId) return
     if (items.some((it) => it.productId === pickId)) {
-      toast('Produk sudah ada di paket')
       return
     }
     setItems((list) => [
@@ -66,7 +65,6 @@ export default function HajatanAdminPage() {
         setName('')
         setDesc('')
         setItems([])
-        toast('Paket tersimpan')
       })
       .catch(() => toast('Gagal simpan'))
       .finally(() => setSaving(false))
@@ -79,13 +77,12 @@ export default function HajatanAdminPage() {
     setName(p.name || '')
     setDesc(p.description || '')
     setItems((p.items || []).map((it) => ({ productId: it.productId, qty: it.qty })))
-    toast('Edit paket: ' + p.name)
   }
 
   const remove = (id: string) => {
     if (!window.confirm('Hapus paket ini?')) return
     deleteHajatanPackage(id)
-      .then(() => toast('Paket dihapus'))
+      .then(() => {})
       .catch(() => toast('Gagal hapus'))
   }
 

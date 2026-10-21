@@ -66,7 +66,7 @@ export default function InboxPage() {
   const setTitip = (item: InboxItem, status: string) => {
     const docId = item.id.replace(/^titip-/, '')
     setTitipStatus(docId, status)
-      .then(() => toast('Status titipan: ' + status))
+      .then(() => {})
       .catch((error: unknown) => {
         const e = error as { code?: string; message?: string }
         if (!e || e.code !== 'OFFLINE') toast(e && e.message ? e.message : 'Gagal update')
@@ -85,7 +85,6 @@ export default function InboxPage() {
             className="mark-read-btn"
             onClick={() => {
               markAllInboxRead()
-              toast('Semua notifikasi ditandai dibaca')
             }}
           >
             Tandai semua dibaca
@@ -120,7 +119,6 @@ export default function InboxPage() {
                         title="Tandai dibaca"
                         onClick={() => {
                           markInboxGroupRead(g.kind)
-                          toast('Ditandai dibaca')
                         }}
                       >
                         ✓

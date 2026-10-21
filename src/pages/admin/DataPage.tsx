@@ -148,7 +148,7 @@ export default function DataPage() {
                         className="approve"
                         onClick={() =>
                           approveCustomer(x.id)
-                            .then(() => toast(x.name + ' disetujui · akun bisa masuk'))
+                            .then(() => {})
                             .catch((e) => fail(e, 'Gagal menyetujui'))
                         }
                       >
@@ -158,7 +158,7 @@ export default function DataPage() {
                         className="reject"
                         onClick={() =>
                           rejectCustomer(x.id)
-                            .then(() => toast(x.name + ' ditolak'))
+                            .then(() => {})
                             .catch((e) => fail(e, 'Gagal menolak'))
                         }
                       >

@@ -151,7 +151,8 @@ export const useToastStore = create<ToastState>()((set, get) => ({
       action: opts?.action,
       duration,
     }
-    set((s) => ({ items: [...s.items, item] }))
+    // Maksimal 2 toast tampil bersamaan (model pill bawah): yang tertua dibuang.
+    set((s) => ({ items: [...s.items, item].slice(-2) }))
     setTimeout(() => {
       set((s) => ({ items: s.items.filter((t) => t.id !== id) }))
     }, duration)

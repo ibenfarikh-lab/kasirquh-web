@@ -63,7 +63,6 @@ export function AdminLoginSheet({ open, onClose }: { open: boolean; onClose: () 
       markGatewaySeen()
       onClose()
       navigate('/admin', { replace: true })
-      toast('Mode Admin dibuka')
       bioOfferEnrollAdmin(email.trim().toLowerCase(), password)
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Masuk gagal')
@@ -82,7 +81,6 @@ export function AdminLoginSheet({ open, onClose }: { open: boolean; onClose: () 
       markGatewaySeen()
       onClose()
       navigate('/admin', { replace: true })
-      toast('Mode Admin dibuka')
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Gagal masuk dengan sidik jari')
     } finally {

@@ -129,7 +129,6 @@ export default function AccountPage() {
     session.clearSession()
     clearGatewaySeen()
     navigate('/', { replace: true })
-    toast('Keluar dari akun')
   }
 
   return (
@@ -294,7 +293,6 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
     const safe = name.trim() || 'Pelanggan'
     session.setSession({ name: safe, wa: wa.trim(), address: address.trim() })
     try { localStorage.setItem('kasirquh-admin-sounds', JSON.stringify(sounds)) } catch { /* abaikan */ }
-    toast('Pengaturan diterapkan')
     onClose()
   }
 

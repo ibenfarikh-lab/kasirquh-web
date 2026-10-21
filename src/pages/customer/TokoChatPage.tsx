@@ -45,7 +45,7 @@ export default function TokoChatPage() {
     setText('')
     setPhoto('')
     sendThreadMessage(t, 'customer', photo)
-      .then(() => toast('Pesan terkirim ke warung'))
+      .then(() => {})
       .catch(() => toast('Gagal kirim, coba lagi'))
   }
 

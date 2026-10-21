@@ -155,7 +155,7 @@ export default function PosPage() {
       return
     }
     addAdminItem(product.id, 1)
-    toast(product.short + ' masuk keranjang')
+    // Opsi B (user): tambah item kasir tanpa toast — daftar transaksi = feedback.
   }
 
   return (
@@ -237,7 +237,6 @@ export default function PosPage() {
                           aria-label={'Tambah ' + p.name}
                           onClick={() => {
                             addAdminItem(p.id, 1)
-                            toast(p.short + ' masuk keranjang')
                           }}
                         >
                           +

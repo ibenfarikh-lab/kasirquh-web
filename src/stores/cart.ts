@@ -48,7 +48,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
         [id]: (s.customerCart[id] || 0) + amount,
       }),
     }))
-    toast(amount > 1 ? 'Semua bahan masuk keranjang' : 'Ditambahkan ke keranjang')
+    // Opsi B (user): tambah-keranjang tanpa toast — badge keranjang = feedback.
   },
 
   decCustomerItem: (id) =>

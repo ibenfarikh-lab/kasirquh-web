@@ -155,7 +155,6 @@ export default function SettingsPage() {
       } catch {
         /* abaikan */
       }
-      toast(v ? 'Getar mode hening nonaktif' : 'Getar mode hening aktif')
       return !v
     })
   }
@@ -170,7 +169,7 @@ export default function SettingsPage() {
     }
     document.documentElement.dataset.navMotion = next ? 'on' : 'off'
     saveStoreSettings({ adminNavMotion: next })
-      .then(() => toast(next ? 'Animasi navigasi aktif · tersimpan' : 'Animasi navigasi dimatikan · tersimpan'))
+      .then(() => {})
       .catch(() => toast('Gagal menyimpan'))
   }
 
