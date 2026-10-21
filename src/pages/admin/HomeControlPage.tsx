@@ -11,6 +11,7 @@ import { Sheet, SheetHeader, Icon, toast } from '../../components/ui'
 import AdminNav from '../../components/AdminNav'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useProductsStore } from '../../stores/products'
+import { useSettingsStore } from '../../stores/settings'
 import {
   useLocalAdminStore,
   type HomeControlState,
@@ -63,34 +64,63 @@ export default function HomeControlPage() {
   const saveStoreSettings = useLocalAdminStore((s) => s.saveStoreSettings)
   const recipes = useLocalAdminStore((s) => s.recipes)
   const deleteRecipe = useLocalAdminStore((s) => s.deleteRecipe)
+  const settingsLoaded = useSettingsStore((s) => s.settingsLoaded)
 
   const [form, setForm] = useState<Form>(() => toForm(homeControl))
   const [saving, setSaving] = useState(false)
   const [recipeFormId, setRecipeFormId] = useState<string | null>(null)
   const [recipeFormOpen, setRecipeFormOpen] = useState(false)
 
+  /* Pengaman form settings (pola yang sama di semua form pengaturan):
+   * field yang belum disentuh user selalu mengikuti snapshot settings
+   * terbaru; field yang sudah diedit user tidak pernah ditimpa. Sebelum
+   * settingsLoaded, form TIDAK diisi dari nilai bawaan/kosong — itulah
+   * vektor yang dulu menimpa runningText live menjadi ''. */
+  const dirtyRef = useRef<Set<keyof Form>>(new Set())
   useEffect(() => {
-    setForm(toForm(homeControl))
-    setSaving(false)
-    // inisialisasi form sekali per mount — homeControl tidak masuk deps agar perubahan store tidak menimpa isian user
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (!settingsLoaded) return
+    const next = toForm(homeControl)
+    setForm((prev) => {
+      const merged = { ...next }
+      dirtyRef.current.forEach((k) => {
+        ;(merged as Record<string, unknown>)[k] = prev[k]
+      })
+      return JSON.stringify(merged) === JSON.stringify(prev) ? prev : merged
+    })
+  }, [homeControl, settingsLoaded])
 
-  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }))
+  const set = <K extends keyof Form>(k: K, v: Form[K]) => {
+    dirtyRef.current.add(k)
+    setForm((f) => ({ ...f, [k]: v }))
+  }
 
-  const toggleSection = (k: 'restock' | 'popular' | 'recipe') =>
+  const toggleSection = (k: 'restock' | 'popular' | 'recipe') => {
+    dirtyRef.current.add('sections')
     setForm((f) => ({
       ...f,
       sections: { ...f.sections, [k]: { ...f.sections[k], show: !f.sections[k].show } },
     }))
+  }
 
-  const orderSection = (k: 'restock' | 'popular' | 'recipe', order: number) =>
+  const orderSection = (k: 'restock' | 'popular' | 'recipe', order: number) => {
+    dirtyRef.current.add('sections')
     setForm((f) => ({
       ...f,
       sections: { ...f.sections, [k]: { ...f.sections[k], order: Math.max(1, order) } },
     }))
+  }
 
   const apply = () => {
+    if (!settingsLoaded) {
+      toast('Pengaturan masih dimuat — tunggu sebentar, lalu coba lagi')
+      return
+    }
+    if (dirtyRef.current.size === 0) {
+      /* Simpan tanpa perubahan: tidak menulis apa pun ke Firestore. */
+      navigate(-1)
+      toast('Tidak ada perubahan')
+      return
+    }
     const flashProduct = products.find((p) => p.id === form.flashProductId)
     setSaving(true)
     saveStoreSettings({
@@ -327,12 +357,13 @@ export default function HomeControlPage() {
                   <input
                     value={form.slots[s.key + 'Title'] ?? s.defTitle}
                     maxLength={64}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      dirtyRef.current.add('slots')
                       setForm((f) => ({
                         ...f,
                         slots: { ...f.slots, [s.key + 'Title']: e.target.value },
                       }))
-                    }
+                    }}
                   />
                 </label>
                 <label>
@@ -340,12 +371,13 @@ export default function HomeControlPage() {
                   <input
                     value={form.slots[s.key + 'Copy'] ?? s.defCopy}
                     maxLength={110}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      dirtyRef.current.add('slots')
                       setForm((f) => ({
                         ...f,
                         slots: { ...f.slots, [s.key + 'Copy']: e.target.value },
                       }))
-                    }
+                    }}
                   />
                 </label>
                 <label>
@@ -353,12 +385,13 @@ export default function HomeControlPage() {
                   <input
                     value={form.slots[s.key + 'Badge'] ?? s.defBadge}
                     maxLength={12}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      dirtyRef.current.add('slots')
                       setForm((f) => ({
                         ...f,
                         slots: { ...f.slots, [s.key + 'Badge']: e.target.value },
                       }))
-                    }
+                    }}
                   />
                 </label>
                 <small className="slot-action">→ {s.label}</small>
@@ -444,7 +477,7 @@ export default function HomeControlPage() {
         </div>
       </div>
 
-      <button className="primary-wide" disabled={saving} onClick={apply}>
+      <button className="primary-wide" disabled={saving || !settingsLoaded} onClick={apply}>
         {saving ? 'Menyimpan…' : 'Terapkan ke Beranda'}
       </button>
 

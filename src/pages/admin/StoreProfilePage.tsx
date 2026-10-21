@@ -3,12 +3,15 @@
  * Halaman Profil Toko (dulu StoreProfileSheet): #storeProfileModal
  * (identitas & jam operasional toko).
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '../../components/ui'
 import AdminNav from '../../components/AdminNav'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import { useLocalAdminStore } from '../../features/admin/localAdmin'
+import { useSettingsStore } from '../../stores/settings'
+
+type ProfileField = 'name' | 'openAt' | 'closeAt' | 'address' | 'phone'
 
 export default function StoreProfilePage() {
   useAdminBoot()
@@ -16,25 +19,44 @@ export default function StoreProfilePage() {
   const storeName = useLocalAdminStore((s) => s.storeName)
   const openTime = useLocalAdminStore((s) => s.openTime)
   const closeTime = useLocalAdminStore((s) => s.closeTime)
+  const storeAddress = useLocalAdminStore((s) => s.storeAddress)
+  const storePhone = useLocalAdminStore((s) => s.storePhone)
   const saveStoreSettings = useLocalAdminStore((s) => s.saveStoreSettings)
+  const settingsLoaded = useSettingsStore((s) => s.settingsLoaded)
 
   const [name, setName] = useState(storeName)
   const [openAt, setOpenAt] = useState(openTime)
   const [closeAt, setCloseAt] = useState(closeTime)
-  const [address, setAddress] = useState('Jl. Melati, lingkungan RT 02')
-  const [phone, setPhone] = useState('0812-3456-7890')
+  const [address, setAddress] = useState(storeAddress)
+  const [phone, setPhone] = useState(storePhone)
   const [saving, setSaving] = useState(false)
 
+  /* Pengaman form settings (pola yang sama di semua form pengaturan):
+   * field yang belum disentuh user mengikuti snapshot settings terbaru;
+   * alamat & telepon kini dibaca dari dokumen — dulu teks contoh hardcode
+   * yang selalu menimpa nilai live setiap kali profil disimpan. */
+  const dirtyRef = useRef<Set<ProfileField>>(new Set())
   useEffect(() => {
-    setName(storeName)
-    setOpenAt(openTime)
-    setCloseAt(closeTime)
-    setSaving(false)
-    // inisialisasi form sekali per mount — nilai store hanya dipakai sebagai nilai awal agar tidak menimpa isian user
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (!settingsLoaded) return
+    const d = dirtyRef.current
+    if (!d.has('name')) setName((v) => (v === storeName ? v : storeName))
+    if (!d.has('openAt')) setOpenAt((v) => (v === openTime ? v : openTime))
+    if (!d.has('closeAt')) setCloseAt((v) => (v === closeTime ? v : closeTime))
+    if (!d.has('address')) setAddress((v) => (v === storeAddress ? v : storeAddress))
+    if (!d.has('phone')) setPhone((v) => (v === storePhone ? v : storePhone))
+  }, [settingsLoaded, storeName, openTime, closeTime, storeAddress, storePhone])
 
   const save = () => {
+    if (!settingsLoaded) {
+      toast('Pengaturan masih dimuat — tunggu sebentar, lalu coba lagi')
+      return
+    }
+    if (dirtyRef.current.size === 0) {
+      /* Simpan tanpa perubahan: tidak menulis apa pun ke Firestore. */
+      navigate(-1)
+      toast('Tidak ada perubahan')
+      return
+    }
     const clean = (v: string) => v.replace(/[<>]/g, '').trim()
     setSaving(true)
     saveStoreSettings({
@@ -68,26 +90,59 @@ export default function StoreProfilePage() {
       <div className="control-grid">
         <label className="control-field full">
           Nama toko
-          <input value={name} onChange={(e) => setName(e.target.value)} />
+          <input
+            value={name}
+            onChange={(e) => {
+              dirtyRef.current.add('name')
+              setName(e.target.value)
+            }}
+          />
         </label>
         <label className="control-field">
           Jam buka
-          <input type="time" value={openAt} onChange={(e) => setOpenAt(e.target.value)} />
+          <input
+            type="time"
+            value={openAt}
+            onChange={(e) => {
+              dirtyRef.current.add('openAt')
+              setOpenAt(e.target.value)
+            }}
+          />
         </label>
         <label className="control-field">
           Jam tutup
-          <input type="time" value={closeAt} onChange={(e) => setCloseAt(e.target.value)} />
+          <input
+            type="time"
+            value={closeAt}
+            onChange={(e) => {
+              dirtyRef.current.add('closeAt')
+              setCloseAt(e.target.value)
+            }}
+          />
         </label>
         <label className="control-field full">
           Alamat
-          <textarea value={address} onChange={(e) => setAddress(e.target.value)} />
+          <textarea
+            value={address}
+            onChange={(e) => {
+              dirtyRef.current.add('address')
+              setAddress(e.target.value)
+            }}
+          />
         </label>
         <label className="control-field full">
           Telepon
-          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => {
+              dirtyRef.current.add('phone')
+              setPhone(e.target.value)
+            }}
+          />
         </label>
       </div>
-      <button className="primary-wide" style={{ marginTop: 12 }} disabled={saving} onClick={save}>
+      <button className="primary-wide" style={{ marginTop: 12 }} disabled={saving || !settingsLoaded} onClick={save}>
         {saving ? 'Menyimpan…' : 'Simpan Profil Toko'}
       </button>
         <AdminNav />

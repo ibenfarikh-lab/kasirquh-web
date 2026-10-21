@@ -558,6 +558,8 @@ interface LocalAdminState {
   storeName: string
   openTime: string
   closeTime: string
+  storeAddress: string
+  storePhone: string
   rutinPackages: ServicePackageAdmin[]
   hajatanPackages: ServicePackageAdmin[]
   patunganList: PatunganAdmin[]
@@ -864,6 +866,10 @@ function persistInboxRead(ids: string[]) {
   } catch {
     /* abaikan */
   }
+  /* Gerbang settingsLoaded: daftar dibaca diturunkan dari state settings —
+   * sebelum snapshot pertama tiba, menulis ke Firestore bisa menghapus
+   * status baca yang tersimpan di dokumen. Salinan lokal tetap disimpan. */
+  if (!useSettingsStore.getState().settingsLoaded) return
   void useSettingsStore.getState().saveStoreSettings({ inboxReadIds: ids }).catch(() => {})
 }
 
@@ -953,6 +959,9 @@ function buildAdminState(): LocalAdminState {
       } catch {
         /* abaikan */
       }
+      /* Gerbang settingsLoaded: `cur` masih [] sebelum snapshot pertama —
+       * menulis saat itu akan menghapus pin lain yang tersimpan di dokumen. */
+      if (!useSettingsStore.getState().settingsLoaded) return
       void useSettingsStore.getState().saveStoreSettings({ pinnedChatIds: next }).catch(() => {})
     },
     shortcutIds: st.dashboardShortcutIds,
@@ -978,6 +987,8 @@ function buildAdminState(): LocalAdminState {
     storeName: st.storeName,
     openTime: st.openTime,
     closeTime: st.closeTime,
+    storeAddress: st.storeAddress,
+    storePhone: st.storePhone,
     rutinPackages: rutinPackages as unknown as ServicePackageAdmin[],
     hajatanPackages: hajatanPackages as unknown as ServicePackageAdmin[],
     patunganList: patunganList as unknown as PatunganAdmin[],
@@ -1129,6 +1140,9 @@ function buildAdminState(): LocalAdminState {
         /* abaikan */
       }
       ui.setShortcutEdit(false)
+      /* Gerbang settingsLoaded: sebelum snapshot pertama, `ids` masih daftar
+       * bawaan — menulisnya menimpa daftar shortcut tersimpan admin. */
+      if (!useSettingsStore.getState().settingsLoaded) return
       void useSettingsStore.getState().saveStoreSettings({ dashboardShortcutIds: next }).catch(() => {})
     },
     removeShortcut: (id) => {
@@ -1138,6 +1152,7 @@ function buildAdminState(): LocalAdminState {
       } catch {
         /* abaikan */
       }
+      if (!useSettingsStore.getState().settingsLoaded) return
       void useSettingsStore.getState().saveStoreSettings({ dashboardShortcutIds: next }).catch(() => {})
     },
     logError: ui.logError,

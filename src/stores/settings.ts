@@ -103,6 +103,9 @@ interface SettingsState {
   runningText: string
   openTime: string
   closeTime: string
+  /** Alamat & telepon toko — dari store_settings/main (ditulis Profil Toko). */
+  storeAddress: string
+  storePhone: string
   adminTheme: string
   /** Promo aktif (publik, tarik manual hemat kuota — bukan real-time) */
   promos: Promo[]
@@ -236,6 +239,8 @@ function applySettingsData(d: StoreSettings): Partial<SettingsState> {
   const raw = d as DocumentData
   patch.storeName = (String(raw.storeName || 'Warunge Mimi')).trim() || 'Warunge Mimi'
   if (typeof raw.runningText === 'string') patch.runningText = raw.runningText
+  if (typeof raw.storeAddress === 'string') patch.storeAddress = raw.storeAddress
+  if (typeof raw.storePhone === 'string') patch.storePhone = raw.storePhone
   /* Preferensi admin (persist): tema, dering, animasi navigasi */
   const adminTheme = String(raw.adminTheme || '').trim()
   if (['light', 'dark', 'system'].indexOf(adminTheme) >= 0) patch.adminTheme = adminTheme
@@ -279,6 +284,8 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
   runningText: '',
   openTime: '',
   closeTime: '',
+  storeAddress: '',
+  storePhone: '',
   adminTheme: 'dark',
   promos: [],
 

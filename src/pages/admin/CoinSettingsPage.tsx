@@ -5,12 +5,23 @@
  * Kendali Koin Warga: program on/off, nilai, batas tukar, event & hadiah,
  * aturan belanja, bonus massal, dan koreksi saldo per pelanggan.
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminBoot } from '../../features/admin/useAdminBoot'
 import AdminNav from '../../components/AdminNav'
 import { Sheet, SheetHeader, toast } from '../../components/ui'
 import { useLocalAdminStore, type CoinEvents } from '../../features/admin/localAdmin'
+import { useSettingsStore } from '../../stores/settings'
+
+type CoinField =
+  | 'enabled'
+  | 'rate'
+  | 'redeemPercent'
+  | 'events'
+  | 'rewards'
+  | 'spendRule'
+  | 'spendReward'
+  | 'rule'
 import { money, numericValue } from '../../lib/format'
 import type { Customer } from '../../types'
 
@@ -35,6 +46,7 @@ export default function CoinSettingsPage() {
   const coin = useLocalAdminStore((s) => s.coin)
   const saveStoreSettings = useLocalAdminStore((s) => s.saveStoreSettings)
   const customerData = useLocalAdminStore((s) => s.customerData)
+  const settingsLoaded = useSettingsStore((s) => s.settingsLoaded)
 
   const [enabled, setEnabled] = useState(coin.enabled)
   const [rate, setRate] = useState(String(coin.value || 1))
@@ -49,10 +61,58 @@ export default function CoinSettingsPage() {
   const [adjustTarget, setAdjustTarget] = useState<Customer | null>(null)
   const [bonusOpen, setBonusOpen] = useState(false)
 
-  const toggleEvent = (key: keyof CoinEvents) =>
+  /* Pengaman form settings (pola yang sama di semua form pengaturan):
+   * field yang belum disentuh user mengikuti snapshot settings terbaru;
+   * sebelum settingsLoaded form berisi nilai bawaan — simpan dalam keadaan
+   * itu menimpa nilai koin live, jadi simpan digerbang sampai termuat. */
+  const dirtyRef = useRef<Set<CoinField>>(new Set())
+  useEffect(() => {
+    if (!settingsLoaded) return
+    const d = dirtyRef.current
+    if (!d.has('enabled')) setEnabled((v) => (v === coin.enabled ? v : coin.enabled))
+    if (!d.has('rate')) {
+      const next = String(coin.value || 1)
+      setRate((v) => (v === next ? v : next))
+    }
+    if (!d.has('redeemPercent')) {
+      const next = String(coin.redeemPercent)
+      setRedeemPercent((v) => (v === next ? v : next))
+    }
+    if (!d.has('events'))
+      setEvents((v) =>
+        JSON.stringify(v) === JSON.stringify(coin.events) ? v : { ...coin.events },
+      )
+    if (!d.has('rewards'))
+      setRewards((v) =>
+        JSON.stringify(v) === JSON.stringify(coin.rewards) ? v : { ...coin.rewards },
+      )
+    if (!d.has('spendRule')) {
+      const next = String(coin.spendRule)
+      setSpendRule((v) => (v === next ? v : next))
+    }
+    if (!d.has('spendReward')) {
+      const next = String(coin.spendReward)
+      setSpendReward((v) => (v === next ? v : next))
+    }
+    if (!d.has('rule')) setRule((v) => (v === coin.rule ? v : coin.rule))
+  }, [coin, settingsLoaded])
+
+  const toggleEvent = (key: keyof CoinEvents) => {
+    dirtyRef.current.add('events')
     setEvents((e) => ({ ...e, [key]: !e[key] }))
+  }
 
   const save = () => {
+    if (!settingsLoaded) {
+      toast('Pengaturan masih dimuat — tunggu sebentar, lalu coba lagi')
+      return
+    }
+    if (dirtyRef.current.size === 0) {
+      /* Simpan tanpa perubahan: tidak menulis apa pun ke Firestore. */
+      toast('Tidak ada perubahan')
+      navigate('/admin/menu')
+      return
+    }
     const rateVal = numericValue(rate)
     if (!(rateVal > 0)) {
       toast('Nilai tukar koin harus angka positif')
@@ -119,7 +179,10 @@ export default function CoinSettingsPage() {
         <button
           className="toggle-btn"
           aria-pressed={enabled}
-          onClick={() => setEnabled((v) => !v)}
+          onClick={() => {
+            dirtyRef.current.add('enabled')
+            setEnabled((v) => !v)
+          }}
         >
           {enabled ? 'NYALA' : 'MATI'}
         </button>
@@ -130,7 +193,10 @@ export default function CoinSettingsPage() {
           <input
             inputMode="numeric"
             value={rate}
-            onChange={(e) => setRate(e.target.value.replace(/[^\d]/g, ''))}
+            onChange={(e) => {
+              dirtyRef.current.add('rate')
+              setRate(e.target.value.replace(/[^\d]/g, ''))
+            }}
           />
           <small style={{ color: 'var(--muted)' }}>Nilai tukar 1 koin dalam rupiah (berlaku di semua pintu)</small>
         </label>
@@ -139,7 +205,10 @@ export default function CoinSettingsPage() {
           <input
             inputMode="numeric"
             value={redeemPercent}
-            onChange={(e) => setRedeemPercent(e.target.value.replace(/[^\d]/g, ''))}
+            onChange={(e) => {
+              dirtyRef.current.add('redeemPercent')
+              setRedeemPercent(e.target.value.replace(/[^\d]/g, ''))
+            }}
           />
         </label>
       </div>
@@ -158,19 +227,23 @@ export default function CoinSettingsPage() {
                 inputMode="numeric"
                 value={spendReward}
                 aria-label="Koin hadiah belanja"
-                onChange={(e) => setSpendReward(e.target.value.replace(/[^\d]/g, ''))}
+                onChange={(e) => {
+                  dirtyRef.current.add('spendReward')
+                  setSpendReward(e.target.value.replace(/[^\d]/g, ''))
+                }}
               />
             ) : (
               <input
                 inputMode="numeric"
                 value={String(rewards[row.rewardKey!])}
                 aria-label={'Koin ' + row.title.toLowerCase()}
-                onChange={(e) =>
+                onChange={(e) => {
+                  dirtyRef.current.add('rewards')
                   setRewards((r) => ({
                     ...r,
                     [row.rewardKey!]: Math.max(0, numericValue(e.target.value.replace(/[^\d]/g, ''))),
                   }))
-                }
+                }}
               />
             )}
             <button
@@ -189,15 +262,24 @@ export default function CoinSettingsPage() {
           <input
             inputMode="numeric"
             value={spendRule}
-            onChange={(e) => setSpendRule(e.target.value.replace(/[^\d]/g, ''))}
+            onChange={(e) => {
+              dirtyRef.current.add('spendRule')
+              setSpendRule(e.target.value.replace(/[^\d]/g, ''))
+            }}
           />
         </label>
         <label className="control-field full">
           Aturan program
-          <textarea value={rule} onChange={(e) => setRule(e.target.value)} />
+          <textarea
+            value={rule}
+            onChange={(e) => {
+              dirtyRef.current.add('rule')
+              setRule(e.target.value)
+            }}
+          />
         </label>
       </div>
-      <button className="primary-wide" style={{ marginTop: 12 }} disabled={saving} onClick={save}>
+      <button className="primary-wide" style={{ marginTop: 12 }} disabled={saving || !settingsLoaded} onClick={save}>
         {saving ? 'Menyimpan…' : 'Simpan Pengaturan Koin'}
       </button>
       <button
