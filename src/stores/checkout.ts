@@ -21,7 +21,7 @@ import {
 } from 'firebase/firestore'
 import { getDb, requireOnline } from '../lib/firebase'
 import { withTimeout, WRITE_TIMEOUT_MS } from '../lib/firestore'
-import { assertAdmin, useAuthStore } from './auth'
+import { assertAdmin } from './auth'
 import { useSettingsStore } from './settings'
 import { usePromoStore, calcMaxRedeem } from './promo'
 import { useProductsStore } from './products'
@@ -81,8 +81,6 @@ interface CheckoutState {
   cartTotals: () => { lines: CartLine[]; total: number; itemCount: number }
   /** Ringkasan checkout: total + ongkir − diskon koin. */
   summary: () => CheckoutSummary
-  /** Tulis pesanan ke Firestore (implementasi resmi: checkoutCustomer). */
-  confirmOrder: () => Promise<CheckoutResult>
   /**
    * Kasir admin (tunai): decrement stok atomik + jurnal penjualan.
    * member: pelanggan teridentifikasi di kasir (opsional).
@@ -341,38 +339,6 @@ export const useCheckoutStore = create<CheckoutState>()((set, get) => ({
     }
     const grandTotal = Math.max(0, total + fee - redeemValue)
     return { lines, itemsTotal: total, itemCount, fee, redeemCoins, redeemValue, grandTotal }
-  },
-
-  confirmOrder: async () => {
-    const cart = useCartStore.getState().customerCart
-    const name =
-      get().name.trim() || useAuthStore.getState().session.name || 'Pelanggan'
-    const customerId = useAuthStore.getState().session.customerId
-    if (!customerId) throw new Error('Masuk dulu sebagai pelanggan')
-    const settings = useSettingsStore.getState()
-    const result = await checkoutCustomer({
-      cart,
-      fulfillment: get().fulfillment,
-      address: get().address,
-      slot: get().slot,
-      name: name,
-      payMethod: get().payMethod,
-      transferReference: get().transferReference,
-      customerId: customerId,
-      coinProgramEnabled: settings.coinProgramEnabled,
-      coinRedeemEnabled: get().coinRedeem,
-      coinValue: settings.coinRate,
-      coinRedeemPercent: settings.coinRedeemLimit,
-      coinEventsSpend: !!settings.coinEvents.spend,
-      coinSpendReward: settings.coinSpendReward,
-      coinSpendRule: settings.coinSpendRule,
-      promoUnitPrice: settings.promoUnitPrice,
-      flashProductId: settings.flashProductId ?? null,
-      flashRule: String(settings.flashRule || ''),
-    })
-    useCartStore.getState().clearCustomerCart()
-    get().resetDraft()
-    return result
   },
 
   completeCashSale: async (input) => {
