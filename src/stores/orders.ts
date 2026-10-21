@@ -12,7 +12,6 @@
 import { create } from 'zustand'
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   increment,
@@ -531,8 +530,58 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
   deleteOrder: async (orderId) => {
     requireOnline()
     assertAdmin()
+    const db = getDb()
+    const ts = serverTimestamp()
     await withTimeout(
-      deleteDoc(doc(getDb(), 'orders', orderId)),
+      runTransaction(db, async (t) => {
+        const ref = doc(db, 'orders', orderId)
+        const snap = await t.get(ref)
+        if (!snap.exists()) throw new Error('Pesanan tidak ditemukan')
+        const d = snap.data() || {}
+        /* Pesanan SELESAI sudah settle — jurnal/stok/koin final, jangan
+         * diubah; hapus dokumennya saja. Pesanan DIBATALKAN sudah
+         * dikembalikan oleh cancel(). Selain itu pesanan BELUM selesai:
+         * kembalikan stok & koin persis seperti cancel() (atomik dalam
+         * transaksi yang sama), baru hapus dokumennya. */
+        const alreadySettled = d.status === 'selesai' || d.status === 'dibatalkan'
+        if (!alreadySettled) {
+          ;(d.items || []).forEach((it: DocumentData) => {
+            if (it.productId) {
+              t.update(doc(db, 'products', it.productId), {
+                stock: increment(Number(it.qty) || 0),
+                updatedAt: ts,
+              })
+            }
+          })
+          const coinBack = Math.round(Number(d.coinUsed) || 0) - Math.round(Number(d.earnedCoins) || 0)
+          if (coinBack !== 0 && d.customerId) {
+            t.update(doc(db, 'customers', d.customerId), { coins: increment(coinBack) })
+          }
+          if (d.coinUsed > 0 && d.customerId) {
+            t.set(doc(collection(db, 'coin_ledger')), {
+              customerId: d.customerId,
+              amount: Math.round(d.coinUsed),
+              reason: 'tukar',
+              label: 'Koin kembali · #' + (d.code || ''),
+              detail: 'Pesanan dihapus',
+              orderId: ref.id,
+              createdAt: ts,
+            })
+          }
+          if (d.earnedCoins > 0 && d.customerId) {
+            t.set(doc(collection(db, 'coin_ledger')), {
+              customerId: d.customerId,
+              amount: -Math.round(d.earnedCoins),
+              reason: 'belanja',
+              label: 'Bonus dibatalkan · #' + (d.code || ''),
+              detail: 'Pesanan dihapus',
+              orderId: ref.id,
+              createdAt: ts,
+            })
+          }
+        }
+        t.delete(ref)
+      }),
       WRITE_TIMEOUT_MS,
       'Hapus pesanan',
     )
