@@ -424,7 +424,9 @@ export const useCustomersStore = create<CustomersState>()((set, get) => ({
     let n = 0
     for (const d of snap.docs) {
       await get().grantCoins(d.id, amount, {
-        reason: reason,
+        /* Skema ledger seragam Native: reason = kode tetap 'bonus_event';
+         * alasan bebas admin masuk ke detail saja. */
+        reason: 'bonus_event',
         label: 'Bonus event',
         detail: reason,
       })
