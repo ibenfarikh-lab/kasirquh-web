@@ -37,6 +37,7 @@ export default function CoinSettingsPage() {
   const customerData = useLocalAdminStore((s) => s.customerData)
 
   const [enabled, setEnabled] = useState(coin.enabled)
+  const [rate, setRate] = useState(String(coin.value || 1))
   const [redeemPercent, setRedeemPercent] = useState(String(coin.redeemPercent))
   const [events, setEvents] = useState<CoinEvents>({ ...coin.events })
   const [rewards, setRewards] = useState({ ...coin.rewards })
@@ -52,9 +53,14 @@ export default function CoinSettingsPage() {
     setEvents((e) => ({ ...e, [key]: !e[key] }))
 
   const save = () => {
+    const rateVal = numericValue(rate)
+    if (!(rateVal > 0)) {
+      toast('Nilai tukar koin harus angka positif')
+      return
+    }
     setSaving(true)
     saveStoreSettings({
-      coinRate: 1,
+      coinRate: rateVal,
       coinRedeemLimit: Math.min(100, Math.max(0, numericValue(redeemPercent))),
       coinProgramEnabled: enabled,
       coinEvents: { ...events },
@@ -121,8 +127,12 @@ export default function CoinSettingsPage() {
       <div className="control-grid" style={{ marginTop: 10 }}>
         <label className="control-field">
           Nilai 1 koin (Rp)
-          <input inputMode="numeric" value="1" readOnly disabled style={{ opacity: 0.6 }} />
-          <small style={{ color: 'var(--muted)' }}>Terkunci: 1 koin = Rp1</small>
+          <input
+            inputMode="numeric"
+            value={rate}
+            onChange={(e) => setRate(e.target.value.replace(/[^\d]/g, ''))}
+          />
+          <small style={{ color: 'var(--muted)' }}>Nilai tukar 1 koin dalam rupiah (berlaku di semua pintu)</small>
         </label>
         <label className="control-field">
           Maks. penukaran (%)
