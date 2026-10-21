@@ -230,11 +230,16 @@ function applySettingsData(d: StoreSettings): Partial<SettingsState> {
     }
   })
   patch.homeSections = homeSections
-  /* Jam operasional (live, format HH:MM) */
+  /* Jam operasional (live, format HH:MM). Nilai EFEKTIF diselesaikan di sini,
+   * satu sumber untuk semua konsumen: dokumen yang belum menyimpan jam
+   * berarti jam bawaan aplikasi 06:00–21:00 (konvensi yang sama seperti
+   * fallback storeName di bawah dan `|| '06:00'` di Beranda pelanggan).
+   * Tanpa ini form Profil Toko menampilkan '' ("--:--") untuk nilai yang
+   * sebenarnya efektif berlaku. */
   const hhmm = (v: unknown) =>
     typeof v === 'string' && /^\d{2}:\d{2}$/.test(v.trim()) ? v.trim() : ''
-  patch.openTime = hhmm((d as DocumentData).openTime)
-  patch.closeTime = hhmm((d as DocumentData).closeTime)
+  patch.openTime = hhmm((d as DocumentData).openTime) || '06:00'
+  patch.closeTime = hhmm((d as DocumentData).closeTime) || '21:00'
   /* Nama warung + running text (satu sumber) */
   const raw = d as DocumentData
   patch.storeName = (String(raw.storeName || 'Warunge Mimi')).trim() || 'Warunge Mimi'

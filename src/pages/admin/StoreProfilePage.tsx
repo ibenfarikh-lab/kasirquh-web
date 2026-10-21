@@ -87,6 +87,7 @@ export default function StoreProfilePage() {
           </span>
         </div>
       <p className="tool-intro">Identitas dan informasi operasional yang dilihat pelanggan.</p>
+      {!settingsLoaded && <p className="tool-intro">Memuat pengaturan toko…</p>}
       <div className="control-grid">
         <label className="control-field full">
           Nama toko
