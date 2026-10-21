@@ -471,55 +471,17 @@ body[data-ui-theme="light"] .checkin-card{background:#fff7ed;border-color:#f0d9b
 .coin-shortcut-btn:active{transform:scale(.97)}
 
 /* Tema OLED Hitam Pekat */
-body[data-ui-theme="oled"]{--ink:#ffffff;--muted:#8a8a8a;--paper:#000000;--card:#0a0a0a;--line:#2a2a2a;--shadow:0 8px 22px rgba(0,0,0,.6);background:#000000;color-scheme:dark}
-body[data-ui-theme="oled"] .customer-head{background:#f49a24}
 
 
-body[data-ui-theme="oled"] .product-card,body[data-ui-theme="oled"] .quick-card,body[data-ui-theme="oled"] .popular-card,body[data-ui-theme="oled"] .profile-card,body[data-ui-theme="oled"] .settings-list,body[data-ui-theme="oled"] .checkout-card,body[data-ui-theme="oled"] .chat-choice article{border-color:var(--line)}
-body[data-ui-theme="oled"] .promo-carousel{background:#0a0a0a;border:1px solid var(--line)}
-body[data-ui-theme="oled"] .coin-chip{color:#ffb84d}
-body[data-ui-theme="oled"] .sheet{background:#0a0a0a;border-color:var(--line)}
-body[data-ui-theme="oled"] .modal{background:rgba(0,0,0,.7)}
 
 
 
 /* OLED: duplikat dark overrides (lebih gelap) */
-body[data-ui-theme="oled"]{--ink:#f4efeb;--muted:#b5afb0;--paper:#191718;--card:#0a0a0a;--line:#464143;--shadow:0 8px 22px rgba(0,0,0,.3);background:#0e0d0d;color-scheme:dark}
-body[data-ui-theme="oled"] .customer-head{background:#f49a24}
 
 
-body[data-ui-theme="oled"] .product-card,body[data-ui-theme="oled"] .quick-card,body[data-ui-theme="oled"] .popular-card,body[data-ui-theme="oled"] .profile-card,body[data-ui-theme="oled"] .settings-list,body[data-ui-theme="oled"] .checkout-card,body[data-ui-theme="oled"] .chat-choice article{border-color:#3d383a}
-body[data-ui-theme="oled"] .profile-card button{background:#3b332f;color:#f5b765}
-body[data-ui-theme="oled"] .sheet .ghost{background:#383435}
-body[data-ui-theme="oled"] .search input{color:#f4efeb}
-body[data-ui-theme="oled"] .promo-carousel{background:#3a2a23}
-body[data-ui-theme="oled"] .guess-product{background:#1a1a1a}
-body[data-ui-theme="oled"] .sheet-close{background:#3a3536}
-body[data-ui-theme="oled"] .note-card.due{background:#332820;border-color:#75502f}
-body[data-ui-theme="oled"] .ai-message{background:#373131;color:#eee6e1}
-body[data-ui-theme="oled"] .coin-chip,body[data-ui-theme="oled"] .coin-balance-inline{background:#4a3922;color:#ffd28f}
-body[data-ui-theme="oled"] .flash-card{background:#1a1a1a;color:#f7dfc9;border-color:#65482e}
-body[data-ui-theme="oled"] .flash-card small{color:#e3aa70}
-body[data-ui-theme="oled"] .guess-options button.correct{background:#203c29;color:#9ed5ab}
-body[data-ui-theme="oled"] .guess-options button.wrong{background:#000000;color:#f1aaa1;border-color:var(--line)}
-
-body[data-ui-theme="oled"] .kabar-carousel{border-color:#3d383a}
-body[data-ui-theme="oled"] .kabar-label{color:#f0a64d}
-body[data-ui-theme="oled"] .kabar-dot{background:#625b57}
-body[data-ui-theme="oled"] .service-card.featured,body[data-ui-theme="oled"] .segmented button.active{background:var(--card);color:var(--ink);border:2px solid var(--orange);box-shadow:0 0 0 1px var(--orange)}
-body[data-ui-theme="oled"] .checkout-summary{background:var(--card);color:var(--ink)}
-body[data-ui-theme="oled"] .service-row button,body[data-ui-theme="oled"] .choice-btn{background:#3f342e;color:var(--orange2)}
-body[data-ui-theme="oled"] .progress-track{background:#4b4441}
-body[data-ui-theme="oled"] .purchase-edit-actions .back,body[data-ui-theme="oled"] .purchase-detail-actions .back,body[data-ui-theme="oled"] .purchase-delete-actions .back{background:#383435}
-body[data-ui-theme="oled"] .margin-preview{background:#203c29;color:#a6dab3}
-body[data-ui-theme="oled"] .source-pill{background:#453527;color:#ffc47e}
 
 
-body[data-ui-theme="oled"] .unit-cost{background:#203c29;color:#a6dab3}
-body[data-ui-theme="oled"] .stock-warning{background:#000000;color:#f1aaa1;border-color:var(--line)}
-body[data-ui-theme="oled"] .summary-actions .back{background:#383435}
-body[data-ui-theme="oled"] .auth-note{background:#3d2f24;color:#f4c996}
-body[data-ui-theme="oled"] .auth-tab.active{box-shadow:none}
+
 
 
 /* FULL BLACK: area yang dilingkari user */

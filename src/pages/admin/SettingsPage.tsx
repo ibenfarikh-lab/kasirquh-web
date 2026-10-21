@@ -117,7 +117,7 @@ export default function SettingsPage() {
   }, [])
 
   const pickTheme = (t: string) => {
-    const choice: ThemeChoice = (['light', 'dark', 'oled', 'system'] as const).includes(t as ThemeChoice)
+    const choice: ThemeChoice = (['light', 'dark', 'system'] as const).includes(t as ThemeChoice)
       ? (t as ThemeChoice)
       : 'dark'
     setTheme(choice)

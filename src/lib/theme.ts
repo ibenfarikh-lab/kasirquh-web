@@ -7,20 +7,21 @@
  *   admin di 'kasirquh-admin-theme'.
  * - Yang diterapkan ke DOM: document.body.dataset.uiTheme = 'light'|'dark'
  *   (inilah yang dibaca CSS: body[data-ui-theme="..."]) + colorScheme.
- * - 'system' mengikuti prefers-color-scheme OS; 'oled' = hitam pekat AMOLED.
+ * - 'system' mengikuti prefers-color-scheme OS.
+ * - Keputusan terkunci user 2026-10-12: opsi tema HANYA Terang/Gelap/Otomatis.
+ *   Nilai lama 'oled' yang tersimpan di perangkat DIPETAKAN ke 'dark' saat
+ *   dibaca (migrasi baca di readChoice) — tidak ada lagi tema 'oled'.
  */
 
-export type ThemeChoice = 'light' | 'dark' | 'oled' | 'system'
+export type ThemeChoice = 'light' | 'dark' | 'system'
 export type Role = 'customer' | 'admin'
 
 const CUSTOMER_PREFS_KEY = 'kasirquh-customer-prefs'
 const ADMIN_THEME_KEY = 'kasirquh-admin-theme'
-const VALID: ThemeChoice[] = ['light', 'dark', 'oled', 'system']
+const VALID: ThemeChoice[] = ['light', 'dark', 'system']
 
-/** Resolved theme: 'oled' adalah tema sendiri (hitam pekat AMOLED),
- *  'system' mengikuti prefers-color-scheme OS. */
-export function resolvedTheme(choice: ThemeChoice): 'light' | 'dark' | 'oled' {
-  if (choice === 'oled') return 'oled'
+/** Resolved theme: 'system' mengikuti prefers-color-scheme OS. */
+export function resolvedTheme(choice: ThemeChoice): 'light' | 'dark' {
   if (choice === 'system') {
     try {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -43,6 +44,8 @@ export function applyTheme(choice: ThemeChoice) {
 }
 
 function readChoice(raw: string | null): ThemeChoice | null {
+  // Migrasi baca: nilai 'oled' lama (keputusan 2026-10-12: OLED = gelap).
+  if (raw === 'oled') return 'dark'
   return raw && (VALID as string[]).includes(raw) ? (raw as ThemeChoice) : null
 }
 
