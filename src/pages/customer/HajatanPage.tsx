@@ -40,7 +40,6 @@ export default function HajatanPage() {
         bundle[it.productId] = (bundle[it.productId] || 0) + Math.max(1, Math.round(Number(it.qty) || 1))
       }
       Object.entries(bundle).forEach(([id, q]) => addCustomerItem(id, q))
-      toast('Paket hajatan masuk keranjang')
       navigate('/beranda/keranjang')
       return
     }
@@ -55,7 +54,6 @@ export default function HajatanPage() {
         return
       }
       addCustomerItem(cheapest.id, 20)
-      toast('Paket hajatan masuk keranjang')
       navigate('/beranda/keranjang')
       return
     }
@@ -74,7 +72,6 @@ export default function HajatanPage() {
       bundle[p.id] = (bundle[p.id] || 0) + spec.qty
     }
     Object.entries(bundle).forEach(([id, q]) => addCustomerItem(id, q))
-    toast('Paket hajatan masuk keranjang')
     navigate('/beranda/keranjang')
   }
 

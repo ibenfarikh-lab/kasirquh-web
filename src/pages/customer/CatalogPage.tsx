@@ -145,13 +145,6 @@ export default function CatalogPage() {
                   onClick={(e) => {
                     e.stopPropagation()
                     addCustomerItem(p.id)
-                    toast(p.name + ' masuk keranjang', {
-                      type: 'success',
-                      action: {
-                        label: 'Lihat',
-                        onClick: () => navigate('/beranda/keranjang'),
-                      },
-                    })
                   }}
                 >
                   <Icon name="cart" />

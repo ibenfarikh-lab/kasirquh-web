@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../stores/products'
 import { useCartStore } from '../../stores/cart'
 import { money, groupedNumber, numericValue } from '../../lib/format'
-import { toast } from '../../components/ui'
 import type { CartMap } from '../../types'
 
 /** Port getBudgetEligible() (js/features/customer/services.js). */
@@ -64,7 +63,6 @@ export default function BudgetPage() {
   function apply() {
     if (!rows.length) return
     rows.forEach(([id, q]) => addCustomerItem(id, q))
-    toast('Paket anggaran masuk keranjang')
     navigate('/beranda/keranjang')
   }
 

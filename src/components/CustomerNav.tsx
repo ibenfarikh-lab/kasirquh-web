@@ -5,6 +5,7 @@
  * Chat & Akun terkunci untuk tamu: diklik → sheet login langsung
  * (tidak pindah halaman), sesuai perilaku vanilla.
  */
+import { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
@@ -22,6 +23,16 @@ export default function CustomerNav() {
   const count = useCartStore((s) => s.customerItemCount())
   const isGuest = useAuthStore((s) => s.session.isGuest)
   const openLoginSheet = useAuthStore((s) => s.openLoginSheet)
+
+  // Badge berdenyut tiap jumlah keranjang BERTAMBAH (pengganti toast
+  // tambah-keranjang — Opsi B user, 2026-10-21). popKey naik → badge
+  // di-remount → animasi CSS .cart-badge-pop jalan lagi dari awal.
+  const prevCount = useRef(count)
+  const [popKey, setPopKey] = useState(0)
+  useEffect(() => {
+    if (count > prevCount.current) setPopKey((k) => k + 1)
+    prevCount.current = count
+  }, [count])
 
   /** Tamu menyentuh tab terkunci → modal login, bukan halamannya. */
   function guardTab(e: React.MouseEvent, t: (typeof TABS)[number]) {
@@ -44,7 +55,7 @@ export default function CustomerNav() {
           <span className="nav-icon-wrap">
             <Icon name={t.icon} />
             {t.icon === 'cart' ? (
-              <b id="cartBadge" hidden={count === 0}>
+              <b key={popKey} id="cartBadge" className={popKey ? 'cart-badge-pop' : undefined} hidden={count === 0}>
                 {count}
               </b>
             ) : null}

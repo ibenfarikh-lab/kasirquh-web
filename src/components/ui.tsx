@@ -136,9 +136,12 @@ interface ToastState {
 let toastSeq = 1
 const TOAST_DEFAULT_DURATION = 3200
 
-export const useToastStore = create<ToastState>()((set) => ({
+export const useToastStore = create<ToastState>()((set, get) => ({
   items: [],
   push: (message, opts) => {
+    // Anti-tumpuk: pesan yang sama persis & masih tampil → jangan diduplikasi
+    // (cegah toast berlapis-lapis saat aksi yang sama diulang cepat).
+    if (get().items.some((t) => t.message === message)) return
     const id = toastSeq++
     const duration = Math.max(500, opts?.duration ?? TOAST_DEFAULT_DURATION)
     const item: ToastItem = {

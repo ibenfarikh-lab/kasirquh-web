@@ -23,7 +23,6 @@ export default function GrosirPage() {
     useCartStore.setState((s) => ({
       customerCart: { ...s.customerCart, [id]: Math.max(s.customerCart[id] || 0, p.wholesaleQty) },
     }))
-    toast('Harga grosir aktif otomatis')
     navigate('/beranda/keranjang')
   }
 

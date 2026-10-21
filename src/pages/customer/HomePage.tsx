@@ -197,7 +197,6 @@ export default function HomePage() {
 
   function addRecipeToCart(recipe: Recipe) {
     recipe.items.forEach((item) => addCustomerItem(item.productId, item.qty))
-    toast('Semua bahan masuk keranjang')
   }
 
   function shareRecipe(recipe: Recipe) {

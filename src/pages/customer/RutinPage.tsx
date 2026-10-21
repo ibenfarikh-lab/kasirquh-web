@@ -52,7 +52,6 @@ export default function RutinPage() {
         bundle[it.productId] = (bundle[it.productId] || 0) + Math.max(1, Math.round(Number(it.qty) || 1))
       }
       Object.entries(bundle).forEach(([id, q]) => addCustomerItem(id, q))
-      toast('Paket rutin masuk keranjang')
       navigate('/beranda/keranjang')
       return
     }
@@ -88,7 +87,6 @@ export default function RutinPage() {
       return
     }
     Object.entries(bundle).forEach(([id, q]) => addCustomerItem(id, q))
-    toast('Paket rutin masuk keranjang')
     navigate('/beranda/keranjang')
   }
 

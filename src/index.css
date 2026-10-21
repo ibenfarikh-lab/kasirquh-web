@@ -681,3 +681,10 @@ body[data-ui-theme="dark"] .member-card-body strong{color:#ffffff}
 .quick-card.out,.popular-card.out{overflow:hidden}
 .product-card.out img,.quick-card.out img,.popular-card.out img{filter:grayscale(.7) opacity(.8)}
 .quick-card .out-ribbon,.popular-card .out-ribbon{top:11px;left:-32px;width:104px;padding:3px 0;font-size:8px;letter-spacing:1.5px}
+
+/* Badge keranjang berdenyut tiap item bertambah — pengganti toast
+   tambah-keranjang (Opsi B user, 2026-10-21): feedback belanja cukup dari
+   badge, toast hanya untuk hal penting. Animasi dipicu class .cart-badge-pop
+   yang dipasang CustomerNav sesaat tiap jumlah keranjang naik. */
+@keyframes cart-badge-pop{0%{transform:scale(1)}35%{transform:scale(1.5)}100%{transform:scale(1)}}
+.cart-badge-pop{animation:cart-badge-pop .45s ease}

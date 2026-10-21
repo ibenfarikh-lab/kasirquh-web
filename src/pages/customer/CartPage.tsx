@@ -60,7 +60,6 @@ export default function CartPage() {
       return
     }
     useCartStore.setState({ customerCart: { ...savedMenu } })
-    toast('Menu tersimpan dimasukkan')
   }
 
   function openCheckout() {
