@@ -298,6 +298,7 @@ export function useSettingsLocal<T = SettingsLocalState>(
     coinSpendRule: st.coinSpendRule,
     flashProductId: st.flashProductId,
     flashRule: st.flashRule,
+    flashEndsAt: st.flashEndsAt,
     promoUnitPrice: st.promoUnitPrice,
     kabarStatus: st.kabarStatus,
     kabarMood: st.kabarMood,

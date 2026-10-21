@@ -621,18 +621,29 @@ function FlashCard({ sectionRef }: { sectionRef: React.Ref<HTMLElement> }) {
   const products = useProductsStore((s) => s.products)
   const settings = useSettingsLocal((s) => s.settings)
   const addCustomerItem = useCartStore((s) => s.addCustomerItem)
-  const [countdown] = useState(() => {
-    const end = new Date().setHours(24, 0, 0, 0)
-    const left = Math.max(0, Math.floor((end - Date.now()) / 1000))
-    const h = String(Math.floor(left / 3600)).padStart(2, '0')
-    const m = String(Math.floor((left % 3600) / 60)).padStart(2, '0')
-    const s = String(left % 60).padStart(2, '0')
-    return `${h}:${m}:${s}`
-  })
+
+  /* Countdown BERJALAN (interval 1 detik) menuju flashEndsAt; promo mati
+   * otomatis begitu flashEndsAt lewat (seperti Native home_tab.dart).
+   * Tanpa flashEndsAt, target fallback = akhir hari (perilaku lama). */
+  const endsAtMs =
+    settings.flashEndsAt && typeof settings.flashEndsAt.toMillis === 'function'
+      ? settings.flashEndsAt.toMillis()
+      : null
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  const end = endsAtMs ?? new Date().setHours(24, 0, 0, 0)
+  const left = Math.max(0, Math.floor((end - nowMs) / 1000))
+  const countdown = `${String(Math.floor(left / 3600)).padStart(2, '0')}:${String(
+    Math.floor((left % 3600) / 60),
+  ).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`
 
   const product = settings.flashProductId ? products.find((p) => p.id === settings.flashProductId) : undefined
 
   if (!product) return null
+  if (endsAtMs !== null && left <= 0) return null
   const price = settings.promoUnitPrice[product.id] || product.price
 
   return (
