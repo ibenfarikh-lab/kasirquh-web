@@ -172,7 +172,7 @@ function DirectChatInline({ onClose }: { onClose: () => void }) {
     setText('')
     setSending(true)
     sendChatMessage(activeDirectThread, isi)
-      .then(() => {})
+      .then(() => toast('Balasan terkirim ke pelanggan'))
       .catch((error: unknown) => {
         const e = error as { code?: string; message?: string }
         if (!e || e.code !== 'OFFLINE') toast(e && e.message ? e.message : 'Pesan gagal dikirim')
